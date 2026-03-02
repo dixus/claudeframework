@@ -1,6 +1,6 @@
 # Workflow Guide
 
-Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, batch 3).
+Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, added permission hook + /debug).
 
 ---
 
@@ -71,6 +71,9 @@ Skipping typecheck is the most common gap — tests pass, build fails on Vercel.
 
 ### Re-review reminder after `/3_fix`
 A fix can introduce a new bug, especially when multiple issues are fixed in sequence. `/3_fix` reminds you to run `/2_review` again after fixing.
+
+### Permission hook (`.claude/hooks/auto-approve.js`)
+The `PermissionRequest` hook intercepts every permission prompt before it reaches the UI. It auto-approves safe tools (Read, Write, Edit, Glob, Grep, Bash) and fast-denies known destructive patterns (`rm -rf /`, force-push to main). This removes approval fatigue without disabling safety. Registered in `.claude/settings.json` under `hooks.PermissionRequest`.
 
 ---
 

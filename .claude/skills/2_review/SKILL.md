@@ -15,13 +15,15 @@ Steps:
 3. Read all files in `.claude/context/` if the directory exists — for additional project context when evaluating correctness
 4. Identify what changed: use the project's version control system (e.g. `git diff main` or `git diff HEAD~1`); if not in a VCS repo, ask the user which files to review
 5. Read each changed file in full
-6. Evaluate against these criteria:
-   - Correctness: does it match the spec requirements? Are there logic bugs or missing cases?
-   - Code quality: does it follow existing patterns? Is anything over-engineered or unnecessarily complex?
-   - Security: any injection risks, exposed secrets, or missing input validation at system boundaries?
-   - Tests: are the relevant cases covered? Are there obvious gaps?
-   - Edge cases: what inputs or states could break this?
-   - Minimal impact: does the change touch only what's necessary, or does it introduce scope creep? Are any fixes patches hiding a root-cause problem that should be fixed properly?
+6. Evaluate against these criteria (multi-role review — address each lens):
+   - **Correctness**: does it match the spec requirements? Are there logic bugs or missing cases?
+   - **Code quality**: does it follow existing patterns? Is anything over-engineered or unnecessarily complex?
+   - **Security**: any injection risks, exposed secrets, or missing input validation at system boundaries? OWASP top-10 considerations?
+   - **Tests / QA**: are the relevant cases covered? Are there obvious edge-case gaps? Any regression risk to existing behavior?
+   - **UX / Minimal impact**: does the change touch only what's necessary? Any scope creep? Are any fixes patches hiding a root-cause problem that should be fixed properly?
+   - **PM**: does the change deliver business value? Does it align with the stated goal in the spec? Is anything built that wasn't asked for?
+   - **DevOps**: any CI/CD implications? Environment variables, build config, or deployment steps affected? Any observability gaps (missing logs, metrics)?
+   - **Spec validation**: check "Validation criteria" in the spec if present — can each criterion be confirmed from the diff?
 7. Write the review to `.claude/reviews/<name>-review.md` (use spec name if available, otherwise `latest-review.md`) with sections:
    - **Summary**: overall assessment (pass / pass with fixes / needs rework)
    - **Issues**: numbered list, each with severity (critical / major / minor), affected file + line, and a clear description

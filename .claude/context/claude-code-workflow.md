@@ -234,3 +234,75 @@ For non-standard scripts and tools, add to CLAUDE.md:
 - When to use it
 
 Prompt Claude to run `--help` on unfamiliar tools before using them. Tools Claude cannot understand are tools Claude cannot use effectively.
+
+## Added 2026-03-02 (batch 4 — awesome-claude-code repo)
+
+### Hook implementation technical standards
+
+From the `create-hook` slash command pattern (hesreallyhim/awesome-claude-code):
+
+**Input/Output — the most common failure point:**
+- Input: always read JSON from `stdin` — never `argv`. Pattern: `JSON.parse(process.stdin.read())`
+- Success response: `{continue: true, suppressOutput: true}` — keeps context clean
+- Error response: `{continue: true, additionalContext: "error details"}` — lets Claude auto-fix
+- Block operation (PreToolUse only): `exit(2)`
+
+**Hook event types:**
+- `PreToolUse`: runs before a tool call; can block (exit 2). Use for security/validation gates
+- `PostToolUse`: runs after; provides feedback/auto-fixes. Use for quality enforcement
+- `UserPromptSubmit`: runs before Claude processes a user message
+
+**Hooks run in parallel** — design each hook to be independent; don't rely on execution order.
+
+**Project tooling → suggested hooks:**
+| Detected | Hook suggestion |
+|---|---|
+| `tsconfig.json` | PostToolUse: type-check after edit; PreToolUse: block with type errors |
+| `.prettierrc` | PostToolUse: auto-format after edit |
+| `.eslintrc.*` | PostToolUse: lint + auto-fix after edit |
+| `test` script in package.json | PreToolUse: run tests before commits |
+| git repo | PreToolUse: scan for secrets before commit |
+
+**Scope:** `global` (`~/.claude/hooks/`), `project` (`.claude/hooks/`), `project-local` (`.claude/settings.local.json`).
+
+**Use `$CLAUDE_PROJECT_DIR`** in hook scripts to reference the project root — never relative paths.
+
+### Multi-role PR review (6 lenses)
+
+From the `pr-review` slash command (hesreallyhim/awesome-claude-code). Systematic review from 6 perspectives:
+
+1. **PM lens** — business value, UX impact, strategic alignment
+2. **Developer lens** — code quality, readability, performance, standards
+3. **QA lens** — test coverage, edge cases, regression risk
+4. **Security lens** — vulnerabilities, data handling, compliance (OWASP, GDPR)
+5. **DevOps lens** — CI/CD integration, infrastructure config, monitoring
+6. **UI/UX lens** — visual consistency, accessibility (WCAG AA+), interaction flow
+
+Principle: "The future is now" — any "future" improvements identified in a review must be fixed immediately, not deferred.
+
+### PRP concept (Product Requirement Prompt)
+
+A PRP = PRD + curated codebase intelligence + implementation runbook. It is the minimum viable packet an AI needs to ship production-ready code on the first pass.
+
+Vs. our `/0_spec`: a spec describes WHAT to build; a PRP packages the spec with WHERE to look in the codebase and HOW to verify correctness. Our spec's "Affected files" + "Test cases" sections are the codebase intelligence and runbook, respectively. The spec is effectively a PRP.
+
+Improvement target: ensure each spec explicitly answers "what existing patterns should the implementation mirror?" (codebase intelligence) and "how do we know it's done?" (validation criteria).
+
+### Commit quality pattern
+
+From the `commit` slash command (hesreallyhim/awesome-claude-code):
+
+- Use conventional commit format: `<emoji> <type>: <description>` (e.g. `✨ feat: add user auth`)
+- Common type → emoji mappings: `feat` ✨, `fix` 🐛, `docs` 📝, `refactor` ♻️, `test` ✅, `chore` 🔧, `perf` ⚡️
+- Before committing: analyze the diff for distinct logical concerns; if multiple concerns → split into multiple atomic commits
+- Run pre-commit checks (lint → build → docs) before each commit
+- First line under 72 characters; present tense imperative mood ("add feature" not "added feature")
+
+### Design review with live browser testing
+
+From the Design-Review-Workflow resource (hesreallyhim/awesome-claude-code):
+
+- Use **Playwright MCP** server to test actual UI components in real-time (not just static code analysis)
+- Store design principles and brand guidelines in CLAUDE.md so they're always loaded
+- Review phases: interaction flows → responsiveness → visual polish → accessibility → robustness → code health
+- Trigger automatically via GitHub Actions on PRs, or on-demand via slash command

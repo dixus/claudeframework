@@ -3,7 +3,7 @@
 > A structured, safe, and technology-agnostic development workflow for Claude Code.
 > Designed for production-grade projects — especially SaaS platforms.
 
-Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, batch 3).
+Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, added /debug + permission hook).
 
 ---
 
@@ -55,6 +55,9 @@ This framework solves all of these systematically.
 | [`/5_learn`](skills-reference.md#5_learn) | Processing new references into the knowledge base |
 | [`/6_doc`](skills-reference.md#6_doc) | Regenerating this documentation |
 | [`/audit`](skills-reference.md#audit) | Fixing vulnerable dependencies |
+| [`/commit`](skills-reference.md#commit) | Creating atomic commits with conventional messages |
+| [`/create-hook`](skills-reference.md#create-hook) | Scaffolding Claude Code hooks for this project |
+| [`/debug`](skills-reference.md#debug) | Diagnosing and fixing a failing test, type error, or runtime error |
 
 ## Directory layout
 
@@ -67,6 +70,7 @@ This framework solves all of these systematically.
     blogs/
     repos/
     index.md
+  hooks/          ← lifecycle hook scripts (e.g. auto-approve.js)
   specs/          ← generated feature specs
   reviews/        ← generated review reports
   input/          ← raw requirements (archived after spec)

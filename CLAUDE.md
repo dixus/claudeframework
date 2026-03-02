@@ -70,6 +70,8 @@ Key architectural constraint: the scoring engine (`src/lib/scoring/`) must remai
 | `/5_learn` | Process new references → extract insights → update context → run /6_doc |
 | `/6_doc` | Regenerate `.claude/docs/` from current skills and context |
 | `/audit` | Check for vulnerable dependencies → fix → verify tests |
+| `/commit` | Create atomic commits with conventional messages; splits by concern |
+| `/create-hook` | Scaffold a Claude Code lifecycle hook based on detected project tooling |
 
 `.claude/` directory layout:
 
@@ -84,4 +86,4 @@ Key architectural constraint: the scoring engine (`src/lib/scoring/`) must remai
 | `specs/` | Generated feature specs (kebab-case filenames) |
 | `reviews/` | Review reports (`<spec-name>-review.md`) |
 | `archive/` | Processed input files after spec creation |
-| `skills/` | Custom skills (0_spec through 6_doc, audit) |
+| `skills/` | Custom skills (0_spec through 6_doc, audit, commit, create-hook) |

@@ -20,7 +20,9 @@ Steps:
    - **Out of scope**: what it explicitly will not do
    - **Affected files**: list existing files that will change and why
    - **New files**: list any new files needed
-   - **Implementation notes**: key decisions, patterns to follow, edge cases to handle
+   - **Patterns to mirror**: 2–3 specific existing files whose structure, naming, or style the implementation should follow — this is the codebase intelligence that lets `/1_implement` match conventions without exploring
+   - **Implementation notes**: key decisions, edge cases to handle
+   - **Validation criteria**: explicit, observable conditions that confirm the feature is done (e.g. "navigating to /results shows a radar chart with 6 axes"); complement the test cases
    - **Test cases**: describe expected behavior with enough specificity to write a failing test from each case — include inputs, expected outputs, and key error/edge cases
 8. After writing: count the total files listed under "Affected files" + "New files". If the total exceeds 10, add a **⚠ Complexity flag** section noting that this feature may be too large for a single implementation session and suggesting decomposition into sub-specs.
 9. Suggest to the user that they move the processed files from `.claude/input/` to `.claude/archive/` now that the spec is written

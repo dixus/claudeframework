@@ -22,6 +22,7 @@ Drop raw material into `blogs/` or `repos/` and run `/5_learn` to extract insigh
 | `blogs/claude_md.pdf` | Youssef Hosni / Level Up Coding (2026-03-02) | CLAUDE.md as behavioral contract: Verification Before Done, Self-Improvement Loop, Demand Elegance, Autonomous Bug Fixing | ✅ |
 | `blogs/uninterrupted.pdf` | Code Coup / Medium (2026-03-02) | Permission Hook 3-tier system (fast approve / fast deny / LLM-cached analysis) — replaces full manual approval without --dangerously-skip-permissions | ✅ |
 | `blogs/best_practises.txt` | Habib Mrad / Medium (Dec 2025) | Agentic TDD loop (red→green), visual iteration with screenshots, autonomy isolation (blast radius), headless mode as CI/triage infrastructure | ✅ |
+| `repos/awesome-claude-code-main/` | hesreallyhim/awesome-claude-code (2026-03-02) | Hook implementation standards (stdin/stdout, event types, parallel execution); multi-role PR review (6 lenses); PRP concept; commit quality pattern with conventional commits + emoji; design review with Playwright MCP | ✅ |
 
 ## Unprocessed entries
 

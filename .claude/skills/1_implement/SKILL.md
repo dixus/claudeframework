@@ -9,7 +9,7 @@ Steps:
 1. Read the spec from `.claude/specs/<name>.md`
 2. Read CLAUDE.md — note the project's test command, lint command, build command, and typecheck command if listed
 3. Read all files in `.claude/context/` if the directory exists — long-lived project references (schemas, API docs, glossaries)
-4. Read all files listed under "Affected files" and "New files" in the spec
+4. Read all files listed under "Affected files", "New files", and "Patterns to mirror" in the spec — the "Patterns to mirror" files are the primary convention references; follow their structure, naming, and style
 5. Decomposition gate: count the total files listed under "Affected files" + "New files". If the total exceeds 10, or if the spec has a ⚠ Complexity flag, pause and ask the user whether to proceed as a single session or break the spec into smaller sub-specs first. Continue only after confirmation.
 6. Create a safety checkpoint: if the project uses git, run `git add -A && git stash` so there is a clean rollback point before any changes are made. Skip if the working tree is already clean.
 7. Enter plan mode: propose a step-by-step implementation plan and wait for approval before writing any code
@@ -24,4 +24,5 @@ Steps:
     d. Build (if a build command is listed)
 13. Fix any failures before finishing
 14. Optional quality pass: run `/simplify` to catch code smells, dead code, and CLAUDE.md violations before handing off to `/2_review`. Skip if the change is trivial.
-15. Report which files were changed and summarize what was implemented
+15. If the implementation touches multiple distinct concerns (e.g. engine logic + UI component + tests), suggest splitting into atomic commits: one commit per concern, using conventional commit format (`✨ feat:`, `✅ test:`, etc.)
+16. Report which files were changed and summarize what was implemented

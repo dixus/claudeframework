@@ -1,7 +1,7 @@
 # Knowledge Base
 
 Auto-updated by `/5_learn` → `/6_doc` when new references are processed.
-Last updated: 2026-03-02 (batch 3).
+Last updated: 2026-03-02 (batch 4 — awesome-claude-code).
 
 This file summarises what has been learned from collected references. Full distilled content lives in `.claude/context/`.
 
@@ -149,6 +149,22 @@ Key insights extracted:
 
 ---
 
+---
+
+**`references/repos/awesome-claude-code-main/`**
+Source: hesreallyhim/awesome-claude-code (2026-03-02)
+
+Key insights extracted:
+- **Hook implementation standards**: read JSON from stdin (not argv); success → `{continue: true, suppressOutput: true}`; error → `{continue: true, additionalContext: "..."}` for Claude auto-fix; block → `exit(2)` in PreToolUse; hooks run in parallel so design for independence
+- **Hook event types**: PreToolUse (can block), PostToolUse (feedback/fix), UserPromptSubmit (before prompt processing)
+- **Project tooling → hook suggestions**: TypeScript → type-check hook; Prettier → auto-format; ESLint → lint + fix; git → secret scanner
+- **Multi-role PR review (6 lenses)**: PM, Developer, QA, Security, DevOps, UI/UX — "the future is now" principle, no deferrals
+- **PRP concept**: Product Requirement Prompt = PRD + codebase intelligence + implementation runbook; our spec already functions as a PRP via "Affected files" + "Patterns to mirror" + "Test cases" sections
+- **Commit quality pattern**: conventional commits with emoji (`✨ feat:`, `🐛 fix:`, `✅ test:`); analyze diff before committing; split by distinct concerns; pre-commit checks (lint → build)
+- **Design review with Playwright MCP**: live browser testing rather than static code analysis; store design principles in CLAUDE.md; review phases: interaction flows → responsiveness → polish → accessibility → robustness → code health
+
+---
+
 ## Pending references
 
 _None — drop files into `.claude/references/` and run `/5_learn`_
@@ -156,6 +172,12 @@ _None — drop files into `.claude/references/` and run `/5_learn`_
 ---
 
 ## Suggested references to collect
+
+For Claude Code framework:
+- trailofbits/claude-code-config — opinionated production `settings.json`, statusline, CLAUDE.md template
+- trailofbits/skills — security/audit skill library, well-structured examples
+- disler/claude-code-hooks-mastery — deep dive on all 8 hook events, sub-agents, meta-agents
+- ChrisWiles/claude-code-showcase — full project config with hooks + GitHub Actions
 
 For SaaS platform development:
 - T3 Stack / create-t3-app architecture patterns
