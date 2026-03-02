@@ -1,0 +1,310 @@
+AI Maturity Score MVP
+
+Projekt: AI Maturity Assessment Tool (v0)
+Ziel: Web-basiertes Self-Assessment Tool zur Berechnung des AI Maturity Score (θ) inkl. Level-Zuordnung, Engpass-Analyse und Handlungsempfehlungen.
+Phase: MVP (Self-Assessment, keine externen Integrationen)
+
+1. Ziel & Scope
+1.1 Ziel
+
+Entwicklung eines interaktiven Assessments, das:
+
+den AI Maturity Score (0–100%) berechnet
+
+ein AI Maturity Level (0–3) zuweist
+
+Dimension-Subscores visualisiert
+
+den größten Hebel identifiziert
+
+konkrete Handlungsempfehlungen ausgibt
+
+MVP ist rein Self-Reported Assessment mit gewichteter Berechnung.
+
+2. Functional Requirements
+2.1 Assessment Struktur
+6 Dimensionen
+ID	Dimension	Gewicht
+D1	Strategy	20%
+D2	Architecture	15%
+D3	Workflow	25%
+D4	Data	15%
+D5	Talent	15%
+D6	Adoption	10%
+
+Gesamtgewicht = 100%
+
+2.2 Fragenstruktur
+
+8 Fragen pro Dimension
+
+48 Fragen total
+
+Likert-Skala: 0–4
+
+Score	Bedeutung
+0	Not started
+1	Experimenting
+2	Partially implemented
+3	Broadly implemented
+4	Fully embedded
+2.3 Beispiel-Fragen (verkürzt)
+Strategy
+
+AI ist explizit Teil unserer Unternehmensstrategie.
+
+AI Use Cases sind mit klaren KPIs hinterlegt.
+
+AI beeinflusst Pricing oder Business Model.
+
+Architecture
+
+Wir haben ein zentrales Data Warehouse.
+
+AI-Workloads sind skalierbar deployed.
+
+Data Pipelines sind automatisiert.
+
+Workflow
+
+Kernprozesse sind AI-unterstützt.
+
+Repetitive Aufgaben sind automatisiert.
+
+AI ist in Daily Ops integriert.
+
+Data
+
+Datenqualität wird gemessen.
+
+Daten sind konsistent und versioniert.
+
+Entscheidungen sind datengetrieben.
+
+Talent
+
+AI-Kompetenzen sind im Team vorhanden.
+
+Es gibt AI-Training.
+
+Hiring berücksichtigt AI-Skills.
+
+Adoption
+
+AI wird täglich genutzt.
+
+Nutzung wird getrackt.
+
+AI-Nutzung ist Teil der Kultur.
+
+3. Scoring Logic
+3.1 Dimension Score
+DimensionScore = (Sum of Answers / Max Possible) * 100
+
+Max per Dimension = 8 Fragen × 4 Punkte = 32
+Score = (Sum / 32) × 100
+
+3.2 Gesamt θ Score
+θ = 
+(D1 * 0.20) +
+(D2 * 0.15) +
+(D3 * 0.25) +
+(D4 * 0.15) +
+(D5 * 0.15) +
+(D6 * 0.10)
+
+Ergebnis: 0–100%
+
+3.3 Level-Zuordnung
+Level	Score Range
+Level 0	0–20
+Level 1	21–50
+Level 2	51–80
+Level 3	81–100
+3.4 Gating-Regeln (MVP Light)
+
+Level 3 nur möglich wenn:
+
+Workflow ≥ 70
+
+Data ≥ 60
+
+Adoption ≥ 50
+
+Level 2 nur möglich wenn:
+
+Workflow ≥ 50
+
+Data ≥ 40
+
+Sonst Downgrade auf nächstniedriges Level.
+
+4. Engpass-Logik
+#1 Blocker
+Blocker = min(D1..D6)
+
+Tool zeigt:
+
+niedrigste Dimension
+
+% Gap zu 70%
+
+Handlungsempfehlung
+
+5. Output
+5.1 Visual Components
+
+Radar Chart (6 Dimensionen)
+
+Score Card (θ + Level)
+
+Blocker Highlight
+
+Empfehlungsliste
+
+5.2 Handlungsempfehlungen (regelbasiert)
+
+Beispiel:
+
+Wenn Workflow < 50:
+→ Fokus: Automatisierung repetitiver Prozesse
+→ 8–12 Wochen AI-Workflow Pilot
+→ KPI: Cycle-Time -30%
+
+Wenn Data < 40:
+→ Data Governance Setup
+→ Clean Core Data Layer
+→ KPI: Decision latency -50%
+
+6. Non-Functional Requirements
+
+Responsive Web-App
+
+Speicherung lokal (MVP) oder einfache DB
+
+Export als PDF
+
+JSON Export für CRM
+
+7. Architektur (MVP)
+Frontend
+
+React / Next.js
+
+Component-based Assessment Flow
+
+Backend
+
+Node / Python API
+
+Stateless Calculation Engine
+
+Storage
+
+Simple DB (Postgres or Supabase)
+
+Or local storage for v0
+
+8. User Flow
+
+Landing
+
+Intro
+
+6 Dimension Blöcke
+
+Review Answers
+
+Calculation
+
+Results Dashboard
+
+PDF Export
+
+Optional Email Capture
+
+9. JSON Schema (Core)
+{
+  "company_name": "",
+  "responses": {
+    "strategy": [0,1,2,3,4,2,1,3],
+    "architecture": [],
+    "workflow": [],
+    "data": [],
+    "talent": [],
+    "adoption": []
+  },
+  "scores": {
+    "strategy": 65,
+    "architecture": 50,
+    "workflow": 72,
+    "data": 45,
+    "talent": 60,
+    "adoption": 40
+  },
+  "theta_score": 59.3,
+  "level": 2,
+  "blocker": "data"
+}
+10. KPIs für MVP Erfolg
+
+Completion Rate > 60%
+
+Average Time < 12 min
+
+Lead Capture Rate > 25%
+
+Demo Conversion > 10%
+
+11. Phase Roadmap
+Phase 1 – MVP (Self-Assessment)
+
+Fragebogen
+
+Score Engine
+
+Radar
+
+PDF
+
+Phase 2 – Assisted Assessment
+
+Reviewer Mode
+
+Evidence Upload
+
+Comments
+
+Versioning
+
+Phase 3 – Evidence-based
+
+API Integrationen (Jira, Slack, GitHub)
+
+Adoption Tracking
+
+Workflow Telemetrie
+
+Data Quality Metrics
+
+Phase 4 – Predictive Layer
+
+ARR Prediction Model
+
+Stage Transition Simulation
+
+ROI Forecasting
+
+12. Definition of Done
+
+Score korrekt berechnet
+
+Gating greift korrekt
+
+PDF generierbar
+
+UX intuitiv
+
+Deployment live
+
+Tests für Score Engine

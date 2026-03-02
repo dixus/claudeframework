@@ -1,0 +1,72 @@
+import type { DimensionKey } from './types'
+
+export const LIKERT_LABELS: readonly string[] = [
+  'Not started',
+  'Experimenting',
+  'Partially implemented',
+  'Broadly implemented',
+  'Fully embedded',
+]
+
+export const QUESTIONS: Record<DimensionKey, string[]> = {
+  strategy: [
+    'AI is explicitly part of our company strategy.',
+    'AI use cases are backed by clear, measurable business KPIs.',
+    'AI influences our pricing or business model.',
+    'We have an executive sponsor accountable for AI outcomes.',
+    'We have a documented AI roadmap with quarterly milestones.',
+    'A dedicated budget is allocated for AI initiatives.',
+    'Our AI strategy is reviewed and updated at least quarterly.',
+    'AI strategy is aligned and communicated across all business units.',
+  ],
+  architecture: [
+    'We have a central data warehouse with automated ingestion.',
+    'AI workloads are deployed on scalable, cloud-native infrastructure.',
+    'Data pipelines are automated end-to-end.',
+    'We have an API-first integration layer that exposes AI capabilities.',
+    'Our infrastructure supports model versioning and rollback.',
+    'AI models can be deployed to production without manual engineering bottlenecks.',
+    'Data, model, and application layers are architecturally separated.',
+    'We have monitoring and alerting for model performance in production.',
+  ],
+  workflow: [
+    'Core business processes are AI-assisted.',
+    'Repetitive, rule-based tasks are automated.',
+    'AI is integrated into our daily operational workflows.',
+    'We have mapped and prioritised the highest-impact AI use cases in our processes.',
+    'AI tools are embedded in our primary business workflows (not just side tools).',
+    'Our processes include feedback loops that continuously improve AI outputs.',
+    'AI reduces manual decision-making steps in key operational workflows.',
+    'We measure cycle-time or throughput improvements attributable to AI.',
+  ],
+  data: [
+    'Data quality is actively measured and monitored.',
+    'Data is consistent and versioned across all systems.',
+    'Decisions are made based on data rather than intuition.',
+    'We have a data governance framework covering ownership and access.',
+    'Data is accessible to the teams that need it, at the time they need it.',
+    'We maintain a single source of truth for key business metrics.',
+    'Data pipelines are documented, tested, and owned by named teams.',
+    'We track data lineage from source to point of consumption.',
+  ],
+  talent: [
+    'AI competencies are present across the team, not siloed in one function.',
+    'We run structured AI training and upskilling programmes.',
+    'Hiring criteria include AI skills or demonstrated aptitude.',
+    'We have dedicated AI engineers or ML operations engineers on staff.',
+    'Non-technical staff can use, interpret, and challenge AI outputs.',
+    'We have an internal AI centre of excellence or community of practice.',
+    'Leaders can evaluate, prioritise, and fund AI investment decisions confidently.',
+    'AI skill development is tracked and reported at an organisational level.',
+  ],
+  adoption: [
+    'AI tools are used daily by the majority of the team.',
+    'AI usage is tracked and reported with defined metrics (e.g. DAU, task deflection).',
+    'AI usage is a recognised and valued part of our company culture.',
+    'We celebrate and share AI success stories internally.',
+    'Team members proactively experiment with new AI tools and techniques.',
+    'AI adoption is included in onboarding for new employees.',
+    'We have a structured process for evaluating and adopting new AI capabilities.',
+    'Leadership visibly models and actively promotes AI usage.',
+  ],
+}

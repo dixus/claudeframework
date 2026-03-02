@@ -1,0 +1,26 @@
+---
+name: 1_implement
+description: Implement a feature from a spec file in .claude/specs/
+disable-model-invocation: true
+---
+Implement the feature described in a spec file. $ARGUMENTS should be the spec filename (without path or extension), e.g. `export-zip`. If no argument is given, use the most recently modified file in `.claude/specs/`.
+
+Steps:
+1. Read the spec from `.claude/specs/<name>.md`
+2. Read CLAUDE.md — note the project's test command, lint command, build command, and typecheck command if listed
+3. Read all files in `.claude/context/` if the directory exists — long-lived project references (schemas, API docs, glossaries)
+4. Read all files listed under "Affected files" and "New files" in the spec
+5. Decomposition gate: count the total files listed under "Affected files" + "New files". If the total exceeds 10, or if the spec has a ⚠ Complexity flag, pause and ask the user whether to proceed as a single session or break the spec into smaller sub-specs first. Continue only after confirmation.
+6. Create a safety checkpoint: if the project uses git, run `git add -A && git stash` so there is a clean rollback point before any changes are made. Skip if the working tree is already clean.
+7. Enter plan mode: propose a step-by-step implementation plan and wait for approval before writing any code
+8. After approval, implement each step in order, marking todos as you go
+9. For each logical unit of code added, also write or update its test cases from the spec's "Test cases" section — do not defer tests to the end
+10. Follow existing code patterns — match the style, naming conventions, and architecture of surrounding code
+11. Do not add comments, docstrings, or extra error handling beyond what the spec requires
+12. After all changes are made, run the project's verify commands in this order (read them from CLAUDE.md, skip any not listed):
+    a. Typecheck (e.g. `tsc --noEmit` or equivalent)
+    b. Lint
+    c. Tests
+    d. Build (if a build command is listed)
+13. Fix any failures before finishing
+14. Report which files were changed and summarize what was implemented

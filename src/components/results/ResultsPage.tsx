@@ -1,0 +1,40 @@
+'use client'
+
+import { useAssessmentStore } from '@/store/assessmentStore'
+import { ScoreCard } from './ScoreCard'
+import { RadarChartPanel } from './RadarChartPanel'
+import { DimensionScorecard } from './DimensionScorecard'
+import { BottleneckPanel } from './BottleneckPanel'
+
+export function ResultsPage() {
+  const result = useAssessmentStore(s => s.result)
+  const reset = useAssessmentStore(s => s.reset)
+
+  if (!result) return null
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">Your AI Maturity Results</h1>
+        <p className="text-sm text-gray-500">{result.companyName}</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ScoreCard result={result} />
+        <RadarChartPanel dimensions={result.dimensions} />
+      </div>
+
+      <DimensionScorecard dimensions={result.dimensions} />
+      <BottleneckPanel bottleneck={result.bottleneck} />
+
+      <div className="flex justify-center pt-2">
+        <button
+          onClick={reset}
+          className="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+        >
+          Start Over
+        </button>
+      </div>
+    </div>
+  )
+}
