@@ -1,6 +1,6 @@
 # Workflow Guide
 
-Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02).
+Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, batch 3).
 
 ---
 
@@ -56,6 +56,10 @@ A clean rollback point before implementation starts. If something goes badly wro
 ### Fresh session for `/2_review`
 Claude is unconsciously biased toward code it just wrote — it tends to justify its own decisions rather than challenge them. Running review in a fresh session removes this bias. Always `/clear` before running `/2_review`.
 
+### TDD loop inside `/1_implement`
+
+For each unit of code: write the test case from the spec first → run it to confirm it **fails** (red) → implement → run again to confirm it **passes** (green). Claude sees its own failure output and self-corrects within the same session. Eliminates ~80% of debugging sessions compared to writing code first.
+
 ### Verification order: typecheck → lint → tests → build
 Each catches different classes of errors:
 - **Typecheck**: type errors in non-JSX files that tests won't catch
@@ -101,6 +105,24 @@ claude --resume      # pick from list
 
 ### Parallel workstreams
 Run separate Claude sessions per workstream — each with its own context. Use git worktrees or separate checkouts to avoid conflicts.
+
+### Multi-agent escalation ladder
+
+Not every task needs multiple agents. Use the simplest setup that works:
+
+```
+Single session     → one task, one context, iterative back-and-forth
+Subagents          → focused subtasks (investigation, review, test run)
+Agent Teams        → 3+ distinct workstreams that benefit from peer-to-peer coordination
+```
+
+**Agent Teams** (experimental, enable with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) add a shared task board and direct peer-to-peer messaging between teammate instances. Use when: parallel exploration, cross-domain review (security + perf + tests affecting each other), or research tasks needing multiple perspectives synthesised before building. **Avoid** for same-file edits, simple tasks, or debugging — coordination overhead dominates. Sweet spot: 3–4 teammates.
+
+### Quality pass after implementation
+
+After `/1_implement` passes its verification suite, optionally run `/simplify` for an automated parallel quality review (dead code, code smells, CLAUDE.md violations) before handing off to `/2_review`. This catches stylistic issues that tests and typecheck miss.
+
+For large-scale migrations across many files, use `/batch` instead of hand-editing: it enters plan mode, creates per-file work units, and runs each agent in an isolated git worktree with verification built in.
 
 ---
 

@@ -1,6 +1,6 @@
 # Skills Reference
 
-Generated and maintained by `/6_doc`. Last updated: 2026-03-02.
+Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, batch 3).
 
 Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology-agnostic — they read project commands from `CLAUDE.md` rather than hardcoding tools.
 
@@ -20,7 +20,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 1. Reads CLAUDE.md, context files, and all input materials
 2. Explores codebase to find affected files and patterns
 3. **Asks 2–3 clarifying questions** (with selectable options) before writing — skips if requirements are unambiguous
-4. Writes the spec with: Goal, Requirements, Out of scope, Affected files, New files, Implementation notes, Test cases
+4. Writes the spec with: Goal, Requirements, Out of scope, Affected files, New files, Implementation notes, **Test cases** (with enough specificity to write a failing test from each case — inputs, expected outputs, key error/edge cases)
 5. **Flags complexity**: adds a ⚠ section if the total affected + new files exceeds 10, suggesting decomposition
 
 **Usage**:
@@ -46,9 +46,10 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 2. **Decomposition gate**: if total files > 10 or spec has ⚠ complexity flag, asks whether to proceed or break into sub-specs
 3. Creates a git stash checkpoint (safe rollback point)
 4. Proposes a step-by-step plan — **waits for your approval**
-5. Implements step by step, **writing tests alongside code** (not deferred to end)
+5. Implements step by step using the **TDD loop**: write test → run to confirm it fails (red) → implement → run to confirm it passes (green) — tests are never deferred to end
 6. Runs: typecheck → lint → tests → build
 7. Fixes any failures before reporting done
+8. **(Optional)** Runs `/simplify` for an automated quality pass before handing off — catches code smells and CLAUDE.md violations that tests don't cover. Skip for trivial changes.
 
 **Usage**:
 ```
@@ -78,6 +79,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 - Security (injection, secrets, input validation)
 - Test coverage and gaps
 - Edge cases
+- **Minimal impact**: does the change touch only what's necessary? Are any fixes patches that hide a root-cause problem?
 
 **Severity levels**: `critical` / `major` / `minor`
 
@@ -103,8 +105,9 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 2. Fixes each issue — minimal change only, no refactoring
 3. Runs: typecheck → lint → tests → build
 4. **Spec-anchored check**: if any fixes diverged from the spec's requirements, updates the spec to stay in sync
-5. Reports what was fixed, what was skipped, and whether the spec was updated
-6. Reminds you to re-run `/2_review` to confirm
+5. **Self-improvement gate**: flags any issues where a CLAUDE.md or context rule would prevent recurrence — surfaces these as suggestions in the report
+6. Reports what was fixed, what was skipped, spec changes, and recurrence-prevention suggestions
+7. Reminds you to re-run `/2_review` to confirm
 
 **Usage**:
 ```

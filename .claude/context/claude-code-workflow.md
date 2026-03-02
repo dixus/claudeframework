@@ -134,3 +134,103 @@ Target: **spec-anchored** for this project. At each course-correction, update th
 
 Standard prompt pattern to kick off spec creation:
 > *"Start by creating a specification document and allow for iteration before starting implementation. Ask clarifying questions, as needed, using selectable inputs to make clarifying responses simpler. Write the specification as SPECIFICATIONS.md at the root of the project."*
+
+## Added 2026-03-02 (batch 2)
+
+### Agent Teams vs Subagents (Reza Rezvani, Feb 2026)
+
+Subagents = hub-and-spoke (parent orchestrates; contractors work independently, report back). Agent Teams = peer-to-peer (shared task board; teammates message each other directly without routing through the parent).
+
+**Enable Agent Teams** (experimental as of Feb 2026): add `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` to the `env` block in `settings.json`.
+
+**Decision matrix:**
+
+| Use Agent Teams when | Use Subagents when | Use Single Session when |
+|---|---|---|
+| Parallel exploration (same problem, multiple approaches tested simultaneously) | Focused, isolated tasks (code review on one file) | Same-file edits (multiple agents → merge conflicts) |
+| Cross-domain coordination (security + perf + tests — findings affect each other) | Token-conscious work (subagents are lighter) | Simple tasks (if one agent needs 10 min, don't spawn five) |
+| Research-heavy tasks (synthesize multiple perspectives before building) | Well-defined scope (no exploration needed) | Debugging (iterative back-and-forth) |
+| Competing hypotheses (let agents argue it out) | Sequential dependencies (Step 2 truly can't start until Step 1 finishes) | Context-heavy work (full picture matters more than speed) |
+
+**Rule of thumb:** if you can describe the task in one sentence, use one agent. If 3+ distinct workstreams benefit from different perspectives, consider a team.
+
+**Known limitations:** no shared filesystem between teammates (plan artifacts as messages, not files), token usage scales roughly linearly with team size, one team per session, task status can lag.
+
+**Sweet spot:** 3–4 teammates for daily work. At 5+ the coordination overhead starts to outweigh the parallelism gain.
+
+### /simplify and /batch built-in commands (Joe Njenga, Feb 2026)
+
+Native Claude Code commands available since v2.1.63:
+
+- **`/simplify`** — run after making code changes; launches 3 parallel agents (code reuse review, code quality review, efficiency review) that check against your CLAUDE.md rules and apply all fixes in one pass. Catches: dead code, commented-out blocks, redundant logic, code smells, CLAUDE.md violations.
+
+- **`/batch`** — for large-scale parallel migrations; enters plan mode first, explores scope, asks one clarifying question about end-to-end verification, creates per-file work units, and runs each in an isolated git worktree where each agent verifies its own work. Example: `/batch migrate src/ from Jest to Vitest`.
+
+Recommended workflow when migrating or refactoring: make changes → `/simplify` (quality pass) → `/2_review` (unbiased fresh session).
+
+### CLAUDE.md as a behavioral contract (Youssef Hosni, Feb 2026)
+
+CLAUDE.md is a behavioral contract — it defines HOW to work, not WHAT to build. Beyond the existing "under 80 lines" rule, the most impactful sections to add:
+
+- **Verification Before Done**: never mark complete without proof. Gate: "Would a staff engineer approve this?" Diff behavior between main and your changes. Run tests, check logs, demonstrate correctness.
+- **Self-Improvement Loop**: after any user correction, write a rule to prevent the same mistake. Review lessons at session start. Ruthlessly iterate until mistake rate drops.
+- **Demand Elegance (Balanced)**: for non-trivial changes, pause and ask "is there a more elegant way?" Skip for simple, obvious fixes — don't over-engineer.
+- **Autonomous Bug Fixing**: when given a bug report, investigate independently (logs, errors, failing tests) — no hand-holding. Fix root causes, not symptoms.
+- **Core principles**: Simplicity First, No Laziness (root causes not patches), Minimal Impact (only touch what's necessary).
+
+### Permission Hook: 3-tier permission system (Code Coup, Feb 2026)
+
+Middle ground between full manual approval and `--dangerously-skip-permissions`. Hooks into Claude Code's `PermissionRequest` event with a three-tier decision:
+
+- **Tier 1 — Fast Approve** (no latency, no cost): Read, Glob, Grep, WebFetch, WebSearch, Write, Edit, MultiEdit, NotebookEdit, TodoWrite, Task, all MCP tools — most operations land here
+- **Tier 2 — Fast Deny** (never execute): `rm -rf /`, `git push --force origin main`, `mkfs`, fork bombs
+- **Tier 3 — LLM Analysis** (results cached 168 h, ~$1 per 5 000 decisions): ambiguous commands evaluated by a lightweight LLM (e.g. gpt-4o-mini via OpenRouter)
+
+Wire it into `settings.json`: `{"hooks": {"PermissionRequest": [{"matcher": "*", "hooks": [{"type": "command", "command": "cf-approve permission"}]}]}}`. Device-level: `~/.claude/settings.json`; project-level: `.claude/settings.local.json`.
+
+## Added 2026-03-02 (batch 3)
+
+### Agentic TDD loop (Habib Mrad, Dec 2025)
+
+The closed feedback loop for implementation quality:
+1. Write tests first (from spec test cases)
+2. Run them — confirm they **fail** (red)
+3. Implement until they **pass** (green)
+
+Claude sees its own failure output and self-corrects within the same session. This eliminates ~80% of debugging sessions vs writing code then tests after. Never trust visual output — let tests be the oracle.
+
+### Visual iteration loops
+
+When working on UI or data visualization:
+1. Provide mocks, wireframes, or screenshots in `.claude/input/` alongside requirements
+2. Let Claude generate the initial output
+3. Take a screenshot and share it back as feedback
+4. Iterate
+
+Claude's performance on visual tasks improves significantly with perceptual feedback. Screenshots are valid spec input — treat them as first-class requirements.
+
+### Autonomy isolation (blast radius principle)
+
+Two distinct operating modes:
+- **Exploratory mode** (high supervision): unfamiliar codebase, high-stakes changes — keep permissions tight, approve each action
+- **Execution mode** (high autonomy): well-understood, reversible tasks — can use `--dangerously-skip-permissions` safely
+
+**Blast radius rule**: autonomy is safe when consequences are bounded. Isolate high-autonomy sessions in containers with network disabled. Use for reversible tasks (linting, boilerplate, migrations with clear rollback). Never use for production deployments or irreversible operations without a checkpoint.
+
+### Headless mode (Claude as infrastructure)
+
+Claude Code can run as a headless programmable component, not just an interactive assistant:
+- CI pipelines — automated code review on every PR
+- Issue triage bots — classify, label, suggest fixes
+- Data processing pipelines — transform, validate, summarize
+
+Entry point: `claude -p "<task>"` or `claude --headless`. At this level, Claude is part of the system architecture — test it like any other component.
+
+### Custom tool documentation in CLAUDE.md
+
+For non-standard scripts and tools, add to CLAUDE.md:
+- What the script does
+- Example invocation
+- When to use it
+
+Prompt Claude to run `--help` on unfamiliar tools before using them. Tools Claude cannot understand are tools Claude cannot use effectively.

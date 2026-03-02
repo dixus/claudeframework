@@ -1,0 +1,193 @@
+Claude Code: Practical Best Practices for Agentic Coding
+Habib Mrad
+Habib Mrad
+
+Follow
+5 min read
+·
+Dec 17, 2025
+3
+
+
+
+
+
+
+How to effectively use agentic coding tools for real-world software engineering and research
+
+Introduction
+Agentic coding represents a shift from traditional autocomplete-style assistants toward autonomous, tool-using AI collaborators. With the release of Claude Code, Anthropic introduced a deliberately low-level, unopinionated command-line agent designed to integrate deeply into real developer workflows.
+
+This article distills the most valuable ideas from Anthropic’s official Claude Code: Best Practices for Agentic Coding and reframes them for engineers, researchers, and advanced AI practitioners who want to understand why these practices work — not just how to use them.
+
+Rather than treating Claude as a chatbot, the core insight is this:
+
+Claude Code works best when treated like a junior engineer with tools, memory, and iteration — not a magic code generator.
+
+1. Environment Design Is Prompt Engineering
+One of the most overlooked ideas in agentic systems is that context is infrastructure.
+
+Claude Code automatically pulls context from your environment. If that environment is poorly structured, results degrade. If it is carefully designed, performance compounds.
+
+1.1 CLAUDE.md as Persistent Project Memory
+Press enter or click to view image in full size
+
+From Autocomplete to Agentic Coding
+CLAUDE.md files act as long-term memory for the agent. They allow you to encode:
+
+Build commands
+Coding conventions
+Repository etiquette
+Known edge cases or pitfalls
+Testing workflows
+This transforms agent behavior from session-based to project-aware.
+
+Key insight: Treat CLAUDE.md like production prompts. Iterate on them. Short, explicit, human-readable instructions outperform long, vague documentation.
+
+1.2 Hierarchical Context for Monorepos
+Claude automatically merges multiple CLAUDE.md files based on directory structure. This enables:
+
+Global rules at repo root
+Domain-specific rules in subfolders
+This mirrors how senior engineers think: global principles + local constraints.
+
+2. Safety Is a Configuration Problem, Not a Limitation
+Press enter or click to view image in full size
+
+Curate Claude’s list of allowed tools
+Claude Code’s conservative permission model is often misunderstood as friction. In reality, it is programmable safety.
+
+You can explicitly control:
+
+Which shell commands are allowed
+Which file operations are trusted
+Which MCP or external tools are enabled
+For experienced users, this allows a clean separation between:
+
+Exploratory mode (high supervision)
+Execution mode (high autonomy)
+Agentic productivity increases dramatically once safety boundaries are explicitly defined rather than implicitly assumed.
+
+3. Tools Are Part of the Prompt
+Claude Code inherits your shell, which means your tooling choices directly shape model behavior.
+
+Press enter or click to view image in full size
+
+Claude with Docker
+Press enter or click to view image in full size
+
+Claude Code with MCP
+3.1 Bash and Custom Tooling
+Claude can only reason about tools it understands. Effective patterns include:
+
+Documenting custom scripts in CLAUDE.md
+Asking Claude to run --help
+Providing example invocations
+3.2 MCP: The Agentic Expansion Layer
+The Model Context Protocol (MCP) turns Claude into a tool-orchestrating agent rather than a single-model assistant.
+
+With MCP servers, Claude can:
+
+Browse pages (Puppeteer)
+Query monitoring tools (e.g. Sentry)
+Control simulators
+Interface with internal systems
+This is a foundational step toward AI-native developer environments.
+
+Press enter or click to view image in full size
+
+Be specific in your instructions
+4. Workflow Matters More Than Prompts
+Claude Code deliberately avoids enforcing workflows. However, several patterns consistently outperform others.
+
+4.1 Explore → Plan → Code → Commit
+This mirrors senior engineering behavior:
+
+Inspect the system
+Form a plan
+Implement deliberately
+Commit with context
+Explicitly asking Claude not to code initially prevents premature solutions and improves architectural quality.
+
+4.2 Test-Driven Agentic Development
+Agentic TDD is especially powerful:
+
+Claude writes tests
+Confirms they fail
+Implements until they pass
+This creates a closed feedback loop where the agent evaluates its own output.
+
+4.3 Visual Iteration Loops
+When working on UI or data visualization:
+
+Provide mocks or screenshots
+Let Claude generate output
+Compare visually
+Iterate
+Claude’s performance improves significantly with perceptual feedback.
+
+Press enter or click to view image in full size
+
+Give Claude images
+5. Autonomy Requires Isolation
+The --dangerously-skip-permissions mode enables uninterrupted work—but must be sandboxed.
+
+Recommended pattern:
+
+Run in containers
+Disable network access
+Use for reversible tasks (linting, boilerplate)
+This reflects a broader principle:
+
+Autonomy is safe when blast radius is controlled.
+
+6. Claude as a Knowledge Interface
+Press enter or click to view image in full size
+
+Claude Code research preview
+Press enter or click to view image in full size
+
+Using Claude to Interact with Git
+Beyond writing code, Claude Code excels at:
+
+Codebase onboarding
+Git history exploration
+Design archaeology
+Cross-language reasoning
+Many teams now treat Claude as a living architectural index rather than documentation.
+
+7. Headless Mode: From Assistant to Infrastructure
+Headless mode turns Claude into a programmable component:
+
+CI pipelines
+Issue triage bots
+Automated code review
+Data processing pipelines
+At this point, Claude is no longer a tool — it becomes part of the system architecture.
+
+8. Multi-Agent Patterns Beat Single-Agent Intelligence
+Some of the strongest results emerge when multiple Claude instances collaborate:
+
+One writes code
+One reviews
+One tests
+This separation of concerns reduces context overload and improves quality — mirroring human team structures.
+
+Git worktrees make this practical by enabling parallel, isolated agent sessions on the same repo.
+
+
+Claude Code with Git Worktree
+Key Takeaways
+Agentic coding is an engineering discipline, not a prompt trick
+Context design determines agent performance
+Tools and permissions shape intelligence
+Iteration beats one-shot brilliance
+Multi-agent workflows outperform single-agent setups
+Claude Code is not just a coding assistant — it is an early glimpse of AI-native software engineering.
+
+Further Reading
+Anthropic Engineering Blog
+Claude Code Documentation
+Model Context Protocol (MCP)
+Git Worktrees and Multi-Branch Development
+Based on Anthropic’s “Claude Code: Best Practices for Agentic Coding” by Boris Cherny, adapted and expanded for researchers and practitioners.

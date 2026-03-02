@@ -17,6 +17,11 @@ Drop raw material into `blogs/` or `repos/` and run `/5_learn` to extract insigh
 | `blogs/spec-driven-dev.pdf` | Heeki Park / Medium (2026-03-02) | Three spec-driven levels (spec-first/anchored/as-source); upfront planning reduces wholesale rewrites | ✅ |
 | `blogs/hook-driven.pdf` | Nick Tune / Medium (2026-03-02) | Hook-driven state machine (planning→developing→reviewing→committing) with real code + tests as engine | ✅ |
 | `blogs/best-prac1.pdf` | Reza Rezvani / Medium (2026-03-02) | 7-month lessons: CLAUDE.md pruning rule, task decomposition threshold, verification loop via tests | ✅ |
+| `blogs/subagents.pdf` | Reza Rezvani / Medium (2026-03-02) | Agent Teams vs Subagents decision matrix; "agent swarm trap" rule of thumb; 3-tier model (single session / subagents / agent teams) | ✅ |
+| `blogs/simplify.pdf` | Joe Njenga / Medium (2026-03-02) | /simplify (3-agent parallel quality pass) and /batch (parallel migration via isolated git worktrees) built into Claude Code v2.1.63+ | ✅ |
+| `blogs/claude_md.pdf` | Youssef Hosni / Level Up Coding (2026-03-02) | CLAUDE.md as behavioral contract: Verification Before Done, Self-Improvement Loop, Demand Elegance, Autonomous Bug Fixing | ✅ |
+| `blogs/uninterrupted.pdf` | Code Coup / Medium (2026-03-02) | Permission Hook 3-tier system (fast approve / fast deny / LLM-cached analysis) — replaces full manual approval without --dangerously-skip-permissions | ✅ |
+| `blogs/best_practises.txt` | Habib Mrad / Medium (Dec 2025) | Agentic TDD loop (red→green), visual iteration with screenshots, autonomy isolation (blast radius), headless mode as CI/triage infrastructure | ✅ |
 
 ## Unprocessed entries
 

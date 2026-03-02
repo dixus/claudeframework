@@ -3,7 +3,7 @@
 > A structured, safe, and technology-agnostic development workflow for Claude Code.
 > Designed for production-grade projects — especially SaaS platforms.
 
-Generated and maintained by `/6_doc`. Last updated: 2026-03-02.
+Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, batch 3).
 
 ---
 

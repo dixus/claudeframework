@@ -21,7 +21,7 @@ Steps:
    - **Affected files**: list existing files that will change and why
    - **New files**: list any new files needed
    - **Implementation notes**: key decisions, patterns to follow, edge cases to handle
-   - **Test cases**: what unit/integration tests should cover
+   - **Test cases**: describe expected behavior with enough specificity to write a failing test from each case — include inputs, expected outputs, and key error/edge cases
 8. After writing: count the total files listed under "Affected files" + "New files". If the total exceeds 10, add a **⚠ Complexity flag** section noting that this feature may be too large for a single implementation session and suggesting decomposition into sub-specs.
 9. Suggest to the user that they move the processed files from `.claude/input/` to `.claude/archive/` now that the spec is written
 

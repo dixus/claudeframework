@@ -14,7 +14,7 @@ Steps:
 6. Create a safety checkpoint: if the project uses git, run `git add -A && git stash` so there is a clean rollback point before any changes are made. Skip if the working tree is already clean.
 7. Enter plan mode: propose a step-by-step implementation plan and wait for approval before writing any code
 8. After approval, implement each step in order, marking todos as you go
-9. For each logical unit of code added, also write or update its test cases from the spec's "Test cases" section — do not defer tests to the end
+9. For each logical unit of code added, apply the TDD loop: (a) write the test cases from the spec's "Test cases" section, (b) run the tests to confirm they **fail** (red), (c) implement the code, (d) run tests again to confirm they **pass** (green) — do not defer tests to the end and do not skip the red step
 10. Follow existing code patterns — match the style, naming conventions, and architecture of surrounding code
 11. Do not add comments, docstrings, or extra error handling beyond what the spec requires
 12. After all changes are made, run the project's verify commands in this order (read them from CLAUDE.md, skip any not listed):
@@ -23,4 +23,5 @@ Steps:
     c. Tests
     d. Build (if a build command is listed)
 13. Fix any failures before finishing
-14. Report which files were changed and summarize what was implemented
+14. Optional quality pass: run `/simplify` to catch code smells, dead code, and CLAUDE.md violations before handing off to `/2_review`. Skip if the change is trivial.
+15. Report which files were changed and summarize what was implemented

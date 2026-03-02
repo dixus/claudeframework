@@ -21,6 +21,7 @@ Steps:
    - Security: any injection risks, exposed secrets, or missing input validation at system boundaries?
    - Tests: are the relevant cases covered? Are there obvious gaps?
    - Edge cases: what inputs or states could break this?
+   - Minimal impact: does the change touch only what's necessary, or does it introduce scope creep? Are any fixes patches hiding a root-cause problem that should be fixed properly?
 7. Write the review to `.claude/reviews/<name>-review.md` (use spec name if available, otherwise `latest-review.md`) with sections:
    - **Summary**: overall assessment (pass / pass with fixes / needs rework)
    - **Issues**: numbered list, each with severity (critical / major / minor), affected file + line, and a clear description
