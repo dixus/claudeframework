@@ -21,7 +21,7 @@ export function RadarChartPanel({ dimensions }: RadarChartPanelProps) {
   }))
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div id="radar-chart" className="bg-white rounded-xl border border-gray-200 p-6">
       <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">Dimension Radar</p>
       <ResponsiveContainer width="100%" height={300}>
         <RadarChart data={data}>

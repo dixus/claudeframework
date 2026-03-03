@@ -35,3 +35,26 @@ export interface AssessmentResult {
   gated: boolean
   bottleneck: BottleneckInfo
 }
+
+export type ModelId = 'model1' | 'model2' | 'model3'
+
+export interface BenchmarkData {
+  arrPerEmployee: string
+  monthsTo100M: string
+  peerPercent: number
+  levelMeanTheta: number
+}
+
+export interface PlaybookContent {
+  modelName: string
+  timeline: string
+  description: string
+  steps: string[]
+  expectedOutcome: string
+}
+
+export interface GlossaryTerm {
+  term: string
+  definition: string
+  example?: string
+}

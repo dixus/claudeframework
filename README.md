@@ -45,14 +45,18 @@ cp -r claude-code-framework/.claude your-project/
 
 **2. Update `CLAUDE.md`** in your project root with your tech stack and commands.
 
-**3. Start a feature:**
+**3. Drop your requirements into `.claude/input/`:**
+
+Paste PRDs, sketches, design docs, or any raw requirements there. `/0_spec` reads this directory and archives files after processing.
+
+**4. Start a feature:**
 
 ```
 /0_spec <feature name>
 /1_implement <spec name>
 ```
 
-**4. Review in a fresh session:**
+**5. Review in a fresh session:**
 
 ```
 /clear
