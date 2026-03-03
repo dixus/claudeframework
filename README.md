@@ -1,5 +1,7 @@
 # Claude Code Development Framework
 
+By [Holger Kreissl](https://github.com/hkreissl)
+
 A reusable `.claude/` directory structure that wraps Claude Code with a disciplined **spec → implement → review → fix → test** pipeline. Drop it into any project to get structured, session-safe AI-assisted development.
 
 ---
