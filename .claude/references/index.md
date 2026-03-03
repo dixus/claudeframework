@@ -1,12 +1,12 @@
 # References Index
 
-Drop raw material into `blogs/` or `repos/` and run `/5_learn` to extract insights into `.claude/context/`.
+Drop raw material into `blogs/` or `repos/` and run `/learn` to extract insights into `.claude/context/`.
 
 ## How to add a reference
 
 1. **Blog post / article**: paste the full text as a `.md` file into `blogs/`. Name it descriptively, e.g. `boris-cherny-claude-code-workflow.md`
 2. **Repository**: copy key files (README, architecture docs, example patterns) into a named subfolder under `repos/`, e.g. `repos/t3-saas-starter/`
-3. Run `/5_learn` — it reads unprocessed entries, extracts insights, and marks them as processed here
+3. Run `/learn` — it reads unprocessed entries, extracts insights, and marks them as processed here
 
 ## Processed entries
 
@@ -26,4 +26,4 @@ Drop raw material into `blogs/` or `repos/` and run `/5_learn` to extract insigh
 
 ## Unprocessed entries
 
-_None — drop files here and run `/5_learn`_
+_None — drop files here and run `/learn`_

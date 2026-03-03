@@ -1,6 +1,6 @@
 # Knowledge Base
 
-Auto-updated by `/5_learn` → `/6_doc` when new references are processed.
+Auto-updated by `/learn` → `/doc` when new references are processed.
 Last updated: 2026-03-02 (batch 4 — awesome-claude-code).
 
 This file summarises what has been learned from collected references. Full distilled content lives in `.claude/context/`.
@@ -167,7 +167,7 @@ Key insights extracted:
 
 ## Pending references
 
-_None — drop files into `.claude/references/` and run `/5_learn`_
+_None — drop files into `.claude/references/` and run `/learn`_
 
 ---
 

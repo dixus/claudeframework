@@ -1,6 +1,6 @@
 # Skills Reference
 
-Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, added /debug + permission hook, fixed step numbering in /3_fix, added PM + DevOps lenses to /2_review).
+Generated and maintained by `/doc`. Last updated: 2026-03-02 (updated 2026-03-02, added /debug + permission hook, fixed step numbering in /3_fix, added PM + DevOps lenses to /2_review).
 
 Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology-agnostic — they read project commands from `CLAUDE.md` rather than hardcoding tools.
 
@@ -146,7 +146,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 ---
 
-## `/5_learn`
+## `/learn`
 
 **Purpose**: Process new references, distill insights into the knowledge base, and improve skills.
 
@@ -163,20 +163,20 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 4. Appends durable, actionable insights to context files
 5. **Reviews every skill** against accumulated context knowledge — applies improvements directly
 6. Updates `references/index.md` with processing status
-7. Runs `/6_doc` to regenerate documentation
+7. Runs `/doc` to regenerate documentation
 
 **Usage**:
 ```
-/5_learn
+/learn
 ```
 
 ---
 
-## `/6_doc`
+## `/doc`
 
 **Purpose**: Regenerate all documentation in `.claude/docs/` from the current state of skills and context.
 
-**When to use**: Automatically triggered by `/5_learn`. Run manually after modifying skills or context files.
+**When to use**: Automatically triggered by `/learn`. Run manually after modifying skills or context files.
 
 **What it reads**:
 - All skill definitions in `.claude/skills/`
@@ -191,7 +191,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 **Usage**:
 ```
-/6_doc
+/doc
 ```
 
 ---

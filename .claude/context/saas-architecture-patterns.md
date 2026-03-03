@@ -1,7 +1,7 @@
 # SaaS Architecture Patterns
 
-Maintained by `/5_learn`. Last updated: 2026-03-02.
-Add SaaS-focused references to `.claude/references/` and run `/5_learn` to populate this file.
+Maintained by `/learn`. Last updated: 2026-03-02.
+Add SaaS-focused references to `.claude/references/` and run `/learn` to populate this file.
 
 ---
 
@@ -23,6 +23,6 @@ Suggested references to collect:
 
 ---
 
-## Patterns (populate via /5_learn)
+## Patterns (populate via /learn)
 
-_None yet — add references and run `/5_learn`_
+_None yet — add references and run `/learn`_

@@ -1,6 +1,6 @@
 # Workflow Guide
 
-Generated and maintained by `/6_doc`. Last updated: 2026-03-02 (updated 2026-03-02, added permission hook + /debug).
+Generated and maintained by `/doc`. Last updated: 2026-03-02 (updated 2026-03-02, added permission hook + /debug).
 
 ---
 
@@ -221,7 +221,7 @@ Find a useful blog post or repo
 Paste content into .claude/references/blogs/ or repos/
     │
     ▼
-/5_learn  ←── extracts insights → updates context/ → runs /6_doc
+/learn  ←── extracts insights → updates context/ → runs /doc
     │
     ▼
 All future sessions automatically benefit

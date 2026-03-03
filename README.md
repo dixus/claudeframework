@@ -13,7 +13,7 @@ A reusable `.claude/` directory structure that wraps Claude Code with a discipli
     instincts.md  ← universal "never do X" rules, loaded by every skill
   hooks/          ← lifecycle hooks (auto-approve, safety guards)
   docs/           ← generated documentation
-  references/     ← drop zone for blog posts and repos (/5_learn processes these)
+  references/     ← drop zone for blog posts and repos (/learn processes these)
   specs/          ← generated feature specs
   reviews/        ← generated review reports
   handoffs/       ← session state files written by /handoff, read by /continue
@@ -70,8 +70,8 @@ cp -r claude-code-framework/.claude your-project/
 | `/2_review` | Unbiased code review (always run in a fresh session) |
 | `/3_fix` | Fix review issues by severity: critical → major → minor |
 | `/4_test` | Full verify suite — typecheck → lint → tests → build |
-| `/5_learn` | Process blog posts and repos into the knowledge base |
-| `/6_doc` | Regenerate all docs from current skills and context |
+| `/learn` | Process blog posts and repos into the knowledge base |
+| `/doc` | Regenerate all docs from current skills and context |
 | `/audit` | Find and fix vulnerable dependencies |
 | `/commit` | Create atomic commits with conventional messages |
 | `/create-hook` | Scaffold a Claude Code lifecycle hook |
@@ -135,7 +135,7 @@ The handoff file (`.claude/handoffs/<timestamp>.md`) captures the current task, 
 
 ## Knowledge base loop
 
-Drop blog posts or repo files into `.claude/references/blogs/` or `references/repos/`, then run `/5_learn`. It extracts insights, updates the context files, improves the skills, and regenerates docs — so every future session benefits automatically.
+Drop blog posts or repo files into `.claude/references/blogs/` or `references/repos/`, then run `/learn`. It extracts insights, updates the context files, improves the skills, and regenerates docs — so every future session benefits automatically.
 
 ```
 Find a useful blog post or repo
@@ -144,7 +144,7 @@ Find a useful blog post or repo
 Paste into .claude/references/blogs/ or references/repos/
     │
     ▼
-/5_learn  ←── extracts insights → updates context/ → improves skills → runs /6_doc
+/learn  ←── extracts insights → updates context/ → improves skills → runs /doc
     │
     ▼
 All future sessions automatically benefit

@@ -1,5 +1,5 @@
 ---
-name: 6_doc
+name: doc
 description: Regenerate .claude/docs/ from current skills and context
 disable-model-invocation: true
 ---
@@ -11,7 +11,7 @@ Steps:
 3. Read `.claude/references/index.md` for the processed references changelog
 4. Read the existing docs in `.claude/docs/` so you can update rather than overwrite content that is still accurate
 
-Update each of the following files. Preserve the "Generated and maintained by `/6_doc`" header and update the "Last updated" date:
+Update each of the following files. Preserve the "Generated and maintained by `/doc`" header and update the "Last updated" date:
 
 **`.claude/docs/README.md`**
 - Framework overview and purpose

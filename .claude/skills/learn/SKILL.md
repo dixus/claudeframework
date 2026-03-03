@@ -1,5 +1,5 @@
 ---
-name: 5_learn
+name: learn
 description: Process new references, update context knowledge files, and improve skills
 disable-model-invocation: true
 ---
@@ -55,9 +55,9 @@ Processed state is tracked on the filesystem — do NOT rely on the index table 
     - For each newly processed file, add a row to the "Processed entries" table with ✅ and a one-line insight summary
     - The "File" column value should be the original relative path (e.g. `` `blogs/uninterrupted.pdf` ``) — this is an audit log only, not used for deduplication
     - Remove the file from "Unprocessed entries" if it was listed there
-12. Run `/6_doc` to regenerate documentation
+12. Run `/doc` to regenerate documentation
 13. Report:
     - Which reference files were processed (or "none — already up to date")
     - Which context files were updated
     - Which skills were changed and what improved
-    - Confirmation that `/6_doc` completed
+    - Confirmation that `/doc` completed

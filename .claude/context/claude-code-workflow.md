@@ -1,6 +1,6 @@
 # Claude Code Workflow — Distilled Best Practices
 
-Maintained by `/5_learn`. Last updated: 2026-03-02.
+Maintained by `/learn`. Last updated: 2026-03-02.
 Source material: `.claude/references/blogs/claude-code-best-practices-2026.md`
 
 ---

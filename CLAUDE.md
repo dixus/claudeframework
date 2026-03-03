@@ -54,8 +54,8 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 | `/2_review [spec]` | Write a review report to `.claude/reviews/` |
 | `/3_fix [review]` | Fix review issues: critical → major → minor |
 | `/4_test [file]` | Run typecheck → lint → tests → build; report only |
-| `/5_learn` | Process references → extract insights → update context |
-| `/6_doc` | Regenerate `.claude/docs/` from current skills and context |
+| `/learn` | Process references → extract insights → update context |
+| `/doc` | Regenerate `.claude/docs/` from current skills and context |
 | `/audit` | Check for vulnerable dependencies → fix → verify |
 | `/commit` | Create atomic commits with conventional messages |
 | `/create-hook` | Scaffold a Claude Code lifecycle hook |
