@@ -305,3 +305,55 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 /debug "TypeError: Cannot read properties of undefined"
 /debug src/lib/scoring/engine.test.ts
 ```
+
+---
+
+## `/handoff`
+
+**Purpose**: Capture current session state to a timestamped file so work can be resumed cleanly after `/clear` or context compaction.
+
+**When to use**: Before running `/clear`, ending a session mid-task, or whenever context is getting long and you want a clean restart without losing state.
+
+**Input**: Optional `$ARGUMENTS` — a short label for the handoff (e.g. `scoring-engine-wip`).
+
+**Output**: `.claude/handoffs/YYYY-MM-DD-HH-MM.md`
+
+**What it writes**:
+- Current task (one sentence)
+- Pipeline position (which skill is active or next)
+- Active spec/review file references
+- Key source files being worked on
+- Decisions made this session (non-obvious choices not visible in code)
+- Open questions
+- Exact next step to take when resuming
+
+**Usage**:
+```
+/handoff
+/handoff scoring-engine-wip
+```
+
+**After running**: Review the file, then `/clear`. In the new session, run `/continue`.
+
+---
+
+## `/continue`
+
+**Purpose**: Restore context from a handoff file and prepare to resume work in a fresh session.
+
+**When to use**: At the start of a new session when a `/handoff` file exists.
+
+**Input**: Optional `$ARGUMENTS` — filename or label of a specific handoff. Without arguments, loads the most recently modified handoff.
+
+**What it does**:
+1. Finds and reads the handoff file
+2. Reads the referenced spec and review files
+3. Briefly reads the listed key source files
+4. Reports: current task, pipeline position, open questions, proposed next step
+5. Waits for confirmation before doing anything
+
+**Usage**:
+```
+/continue
+/continue scoring-engine-wip
+```

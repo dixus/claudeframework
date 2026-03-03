@@ -99,6 +99,17 @@ claude --continue    # most recent session
 claude --resume      # pick from list
 ```
 
+### Handing off cleanly before /clear
+```
+/handoff             # writes .claude/handoffs/<timestamp>.md
+# review the file, then:
+/clear
+# in the new session:
+/continue            # reads latest handoff, restores context
+```
+
+Use this whenever context is getting long mid-task, or you need to switch tasks and come back later. The handoff file captures decisions that aren't visible in the code, so the next session doesn't have to rediscover them.
+
 ### When Claude is stuck or wrong
 ```
 # Corrected 2+ times on the same issue?
@@ -126,6 +137,12 @@ Agent Teams        → 3+ distinct workstreams that benefit from peer-to-peer co
 After `/1_implement` passes its verification suite, optionally run `/simplify` for an automated parallel quality review (dead code, code smells, CLAUDE.md violations) before handing off to `/2_review`. This catches stylistic issues that tests and typecheck miss.
 
 For large-scale migrations across many files, use `/batch` instead of hand-editing: it enters plan mode, creates per-file work units, and runs each agent in an isolated git worktree with verification built in.
+
+---
+
+## Instincts
+
+`.claude/context/instincts.md` contains short, high-priority rules that apply in every session — things like "read before editing", "no speculative code", "never skip typecheck". They are loaded automatically by all skills and override default behaviour. Edit this file to add project-specific instincts that Claude keeps violating despite being told.
 
 ---
 

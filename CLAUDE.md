@@ -60,6 +60,8 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 | `/commit` | Create atomic commits with conventional messages |
 | `/create-hook` | Scaffold a Claude Code lifecycle hook |
 | `/debug` | Diagnose and fix a failing test or type error |
+| `/handoff` | Capture session state to a file before /clear |
+| `/continue` | Restore context from a handoff file in a new session |
 
 `.claude/` directory layout:
 

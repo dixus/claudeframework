@@ -8,13 +8,15 @@ A reusable `.claude/` directory structure that wraps Claude Code with a discipli
 
 ```
 .claude/
-  skills/         ← 11 skills for the full development pipeline
+  skills/         ← 13 skills for the full development pipeline
   context/        ← curated knowledge read automatically by all skills
+    instincts.md  ← universal "never do X" rules, loaded by every skill
   hooks/          ← lifecycle hooks (auto-approve, safety guards)
   docs/           ← generated documentation
   references/     ← drop zone for blog posts and repos (/5_learn processes these)
   specs/          ← generated feature specs
   reviews/        ← generated review reports
+  handoffs/       ← session state files written by /handoff, read by /continue
 ```
 
 ## Why use this
@@ -74,6 +76,8 @@ cp -r claude-code-framework/.claude your-project/
 | `/commit` | Create atomic commits with conventional messages |
 | `/create-hook` | Scaffold a Claude Code lifecycle hook |
 | `/debug` | Diagnose and fix a failing test or type error |
+| `/handoff` | Capture session state before `/clear` |
+| `/continue` | Restore context from a handoff file in a new session |
 
 Skills are **technology-agnostic** — they read project commands from `CLAUDE.md` rather than hardcoding tools, so they work with any stack (Node, Python, Rust, Go, etc.).
 
@@ -101,6 +105,31 @@ Requirements
     ▼
 /4_test ───────────── final gate before shipping
 ```
+
+---
+
+## Session handoffs
+
+`/clear` kills context. `/handoff` saves it first.
+
+```
+# Mid-task, context getting long:
+/handoff
+
+# Review the file, then clear:
+/clear
+
+# New session — resume exactly where you left off:
+/continue
+```
+
+The handoff file (`.claude/handoffs/<timestamp>.md`) captures the current task, pipeline position, decisions made, open questions, and the exact next step — so the next session doesn't have to rediscover any of it.
+
+---
+
+## Instincts
+
+`.claude/context/instincts.md` holds short, universal "never do X" rules that every skill reads automatically: things like "read before editing", "no speculative code", "never skip typecheck". Edit this file to add rules for mistakes Claude keeps repeating.
 
 ---
 
