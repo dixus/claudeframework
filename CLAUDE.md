@@ -1,89 +1,75 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working in this repository.
 
-## Project
+## This repo
 
-**AI Maturity Score** — a web-based self-assessment tool that calculates an organisation's AI maturity (θ score) across 6 weighted dimensions, assigns a maturity level, identifies the primary bottleneck, and generates a results report with PDF export and optional lead capture.
+**Claude Code Development Framework** — a reusable `.claude/` directory with skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline.
 
-Full requirements: `.claude/input/spec.txt`
+The `src/` directory contains the **AI Maturity Score** demo app — a working example of the framework applied to a real Next.js/TypeScript project.
 
-## Tech Stack
+To use the framework in a new project: copy the `.claude/` directory into your repo and update `CLAUDE.md` for your tech stack.
+
+Full framework docs: `.claude/docs/README.md`
+
+## Demo app tech stack
 
 | Layer | Technology |
 |---|---|
 | Framework | Next.js 14 (App Router) + TypeScript |
 | Styling | Tailwind CSS + shadcn/ui |
 | State | Zustand |
-| Charts | Recharts (radar chart) |
-| PDF | @react-pdf/renderer |
-| Lead capture | Supabase (free tier) — email + JSON result blob |
+| Charts | Recharts |
 | Testing | Vitest + React Testing Library |
 | Deploy | Vercel |
 
-The scoring engine is pure client-side TypeScript. No separate API server for MVP.
-
-## Commands
+## Demo app commands
 
 ```bash
-npm run dev              # Start dev server
-npm run build            # Production build (also catches TS errors in JSX)
-npm run lint             # ESLint
-npx tsc --noEmit         # Typecheck only (no emit)
-npx vitest run           # Run all tests
-npx vitest run <file>    # Run a single test file
+npm run dev        # Start dev server
+npm run build      # Production build (also catches TS errors in JSX)
+npm run lint       # ESLint
+npx tsc --noEmit   # Typecheck only
+npx vitest run     # Run all tests
 ```
 
-## Architecture
+## Demo app architecture
 
 ```
 src/
-  lib/
-    scoring/       # Pure TS scoring engine — no React dependencies
-  components/
-    assessment/    # Multi-step questionnaire UI
-    results/       # Radar chart, scorecard, bottleneck panel
-  app/             # Next.js App Router pages
-  store/           # Zustand state (assessment progress + results)
+  lib/scoring/      # Pure TS scoring engine — no React dependencies
+  components/       # assessment/ + results/ UI
+  app/              # Next.js App Router pages
+  store/            # Zustand state
 ```
 
-Key architectural constraint: the scoring engine (`src/lib/scoring/`) must remain framework-agnostic pure functions so it can be unit-tested with Vitest without React.
+IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — do not add React dependencies.
 
-## Scoring Model (reference)
-
-- **6 dimensions**: Strategy (20%), Architecture (15%), Workflow (25%), Data (15%), Talent (15%), Adoption (10%)
-- **48 questions** (8 per dimension), Likert 0–4
-- **Dimension score**: `(sum of answers / 32) × 100`
-- **θ score**: weighted sum of dimension scores
-- **Levels**: 0 = 0–20, 1 = 21–50, 2 = 51–80, 3 = 81–100
-- **Gating**: Level 3 requires Workflow ≥ 70, Data ≥ 60, Adoption ≥ 50; Level 2 requires Workflow ≥ 50, Data ≥ 40
-
-## Development Workflow (skills)
+## Framework skills
 
 | Skill | Purpose |
 |---|---|
-| `/0_spec <feature>` | Write a spec to `.claude/specs/<kebab-name>.md` |
-| `/1_implement <spec-name>` | Implement a spec; enters plan mode first |
-| `/2_review [spec-name]` | Write a review report to `.claude/reviews/` |
-| `/3_fix [review-name]` | Fix review issues: critical → major → minor |
-| `/4_test [file]` | Run typecheck → lint → tests → build; report only, no fixes |
-| `/5_learn` | Process new references → extract insights → update context → run /6_doc |
+| `/0_spec <feature>` | Write a spec to `.claude/specs/<name>.md` |
+| `/1_implement <spec>` | Implement a spec; enters plan mode first |
+| `/2_review [spec]` | Write a review report to `.claude/reviews/` |
+| `/3_fix [review]` | Fix review issues: critical → major → minor |
+| `/4_test [file]` | Run typecheck → lint → tests → build; report only |
+| `/5_learn` | Process references → extract insights → update context |
 | `/6_doc` | Regenerate `.claude/docs/` from current skills and context |
-| `/audit` | Check for vulnerable dependencies → fix → verify tests |
-| `/commit` | Create atomic commits with conventional messages; splits by concern |
-| `/create-hook` | Scaffold a Claude Code lifecycle hook based on detected project tooling |
+| `/audit` | Check for vulnerable dependencies → fix → verify |
+| `/commit` | Create atomic commits with conventional messages |
+| `/create-hook` | Scaffold a Claude Code lifecycle hook |
+| `/debug` | Diagnose and fix a failing test or type error |
 
 `.claude/` directory layout:
 
 | Path | Purpose |
 |---|---|
-| `input/` | Raw requirements drop zone (docs, images, wireframes) |
-| `context/` | Curated knowledge read by all skills (workflow patterns, SaaS patterns) |
-| `references/` | Drop zone for blog posts and repo material; processed by `/5_learn` |
-| `references/blogs/` | Paste blog post / article content here |
-| `references/repos/` | Copy READMEs and key files from reference repos here |
-| `docs/` | Generated framework documentation (README, workflow, skills ref, knowledge base) |
-| `specs/` | Generated feature specs (kebab-case filenames) |
-| `reviews/` | Review reports (`<spec-name>-review.md`) |
-| `archive/` | Processed input files after spec creation |
-| `skills/` | Custom skills (0_spec through 6_doc, audit, commit, create-hook) |
+| `skills/` | Skill definitions (the framework itself) |
+| `context/` | Curated knowledge read by all skills |
+| `references/` | Drop zone: paste blog posts and repo files here |
+| `hooks/` | Lifecycle hook scripts (e.g. auto-approve.js) |
+| `docs/` | Generated framework documentation |
+| `specs/` | Generated feature specs |
+| `reviews/` | Review reports |
+| `input/` | Raw requirements (archived after spec) |
