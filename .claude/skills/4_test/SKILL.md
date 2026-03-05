@@ -19,5 +19,8 @@ Steps:
    - Each command run and its exit status
    - How many tests passed / failed / skipped
    - Any typecheck or lint errors with file and line reference
-   - A clear overall status: PASS or FAIL
-5. If there are failures, identify the root cause for each and suggest a fix — but do not apply fixes unless the user asks
+   - A clear overall status: **PASS** or **FAIL**
+
+**Pipeline routing (mandatory — state this explicitly in chat):**
+- Overall status is **PASS** → the verify suite is clean. If this was run as part of the pipeline, the next step is `/2_review` to validate correctness against the spec.
+- Overall status is **FAIL** → identify the root cause for each failure and suggest a specific fix — but do not apply fixes. Route to `/debug <error>` to investigate and fix individual failures, or to `/3_fix` if the failures are review-identified issues. The pipeline cannot advance with a failing suite.

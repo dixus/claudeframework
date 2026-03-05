@@ -23,9 +23,13 @@ Steps:
    - **UX / Minimal impact**: does the change touch only what's necessary? Any scope creep? Are any fixes patches hiding a root-cause problem that should be fixed properly?
    - **PM**: does the change deliver business value? Does it align with the stated goal in the spec? Is anything built that wasn't asked for?
    - **DevOps**: any CI/CD implications? Environment variables, build config, or deployment steps affected? Any observability gaps (missing logs, metrics)?
-   - **Spec validation**: check "Validation criteria" in the spec if present — can each criterion be confirmed from the diff?
+   - **Spec validation**: check "Validation criteria" in the spec if present — can each criterion be confirmed from the diff? List each criterion and whether it is met or unmet.
 7. Write the review to `.claude/reviews/<name>-review.md` (use spec name if available, otherwise `latest-review.md`) with sections:
    - **Summary**: overall assessment (pass / pass with fixes / needs rework)
    - **Issues**: numbered list, each with severity (critical / major / minor), affected file + line, and a clear description
    - **Suggestions**: optional improvements that are not blockers
-8. Print the issue list to the chat so the user sees it immediately without opening the file
+8. Print the issue list to the chat so the user sees it immediately without opening the file.
+
+**Pipeline routing (mandatory — state this explicitly in chat):**
+- Assessment is **"pass"** → pipeline is complete. Suggest running `/commit` to save the work.
+- Assessment is **"pass with fixes"** or **"needs rework"** → the loop is not done. Next step: run `/3_fix <spec-name>` to resolve the issues, then run `/2_review` again in a fresh session to confirm clean. The pipeline is not complete until review returns "pass".

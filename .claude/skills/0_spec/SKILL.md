@@ -22,9 +22,11 @@ Steps:
    - **New files**: list any new files needed
    - **Patterns to mirror**: 2–3 specific existing files whose structure, naming, or style the implementation should follow — this is the codebase intelligence that lets `/1_implement` match conventions without exploring
    - **Implementation notes**: key decisions, edge cases to handle
-   - **Validation criteria**: explicit, observable conditions that confirm the feature is done (e.g. "navigating to /results shows a radar chart with 6 axes"); complement the test cases
+   - **Validation criteria**: explicit, observable conditions that confirm the feature is done (e.g. "navigating to /results shows a radar chart with 6 axes"); complement the test cases. These will be verified by both `/1_implement` and `/3_fix` — write them precisely enough to be checkable.
    - **Test cases**: describe expected behavior with enough specificity to write a failing test from each case — include inputs, expected outputs, and key error/edge cases
 8. After writing: count the total files listed under "Affected files" + "New files". If the total exceeds 10, add a **⚠ Complexity flag** section noting that this feature may be too large for a single implementation session and suggesting decomposition into sub-specs.
-9. Suggest to the user that they move the processed files from `.claude/input/` to `.claude/archive/` now that the spec is written
+9. Suggest to the user that they move the processed files from `.claude/input/` to `.claude/archive/` now that the spec is written.
+
+**Pipeline handoff:** Next step is `/1_implement <spec-name>` to implement the spec. The full pipeline is: spec → implement → review → fix (if needed) → review again → commit.
 
 Create the `.claude/specs/` directory if it doesn't exist. Do not implement anything — spec only.
