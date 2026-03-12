@@ -23,17 +23,19 @@ $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everyt
 **If a single concern** (or `--all` was passed):
 - Proceed to pre-commit checks (step 4)
 
-4. Run pre-commit checks in this order — read the commands from CLAUDE.md (skip any not listed):
+4. **Backlog check**: if the commit message references a task/PRD identifier (e.g. `PRD-17`, `TASK-5`), search for a backlog or tracker file in `.claude/input/` that contains that identifier as a heading. If found and the heading does not already have a ✅ marker, add ✅ to the heading and include the file in the commit. Skip this step if no backlog file exists.
+
+5. Run pre-commit checks in this order — read the commands from CLAUDE.md (skip any not listed):
    a. Typecheck (e.g. `tsc --noEmit`)
    b. Lint (e.g. `npm run lint`)
    - Do NOT run tests or build here — those are for `/4_test`, not commit gates
    - If a check fails: report the failure and ask the user whether to fix it first or proceed anyway
 
-5. Stage the appropriate files:
+6. Stage the appropriate files:
    - If specific files were agreed for this commit, stage only those: `git add <files>`
    - If committing everything: `git add -A`
 
-6. Compose the commit message using conventional commit format:
+7. Compose the commit message using conventional commit format:
 
    ```
    <emoji> <type>(<scope>): <short description>
@@ -57,14 +59,14 @@ $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everyt
    | `ci` | 🚀 | CI/CD pipeline changes |
    | `revert` | ⏪️ | Reverts a previous commit |
 
-7. Create the commit:
+8. Create the commit:
    ```
    git commit -m "<message>"
    ```
 
-8. If multiple commits were planned, repeat steps 5–7 for each remaining group
+9. If multiple commits were planned, repeat steps 6–8 for each remaining group
 
-9. Report:
+10. Report:
    - Each commit created (hash + message)
    - Any pre-commit check failures that were skipped
    - Reminder: push only when explicitly asked

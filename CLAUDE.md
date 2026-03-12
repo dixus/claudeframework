@@ -49,6 +49,7 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 
 | Skill | Purpose |
 |---|---|
+| `/ship <feature>` | **Full pipeline**: orchestrates spec → implement → review → fix (loop) → commit, each in a clean subagent |
 | `/0_spec <feature>` | Write a spec to `.claude/specs/<name>.md` |
 | `/1_implement <spec>` | Implement a spec; enters plan mode first |
 | `/2_review [spec]` | Write a review report to `.claude/reviews/` |

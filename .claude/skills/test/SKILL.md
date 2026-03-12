@@ -5,6 +5,8 @@ disable-model-invocation: true
 ---
 Run the full verify suite and report the results. Do not fix anything — report only.
 
+Primary use case: run this skill when CI is red, after a merge/rebase, or before starting a new PRD to confirm the baseline is clean. This is intentionally read-only — no fixes are applied here.
+
 Use a subagent to run the commands so the output does not consume the main session's context. The subagent should return a structured summary.
 
 Steps:
@@ -21,6 +23,11 @@ Steps:
    - Any typecheck or lint errors with file and line reference
    - A clear overall status: **PASS** or **FAIL**
 
-**Pipeline routing (mandatory — state this explicitly in chat):**
-- Overall status is **PASS** → the verify suite is clean. If this was run as part of the pipeline, the next step is `/2_review` to validate correctness against the spec.
-- Overall status is **FAIL** → identify the root cause for each failure and suggest a specific fix — but do not apply fixes. Route to `/debug <error>` to investigate and fix individual failures, or to `/3_fix` if the failures are review-identified issues. The pipeline cannot advance with a failing suite.
+**ACTION REQUIRED — do not end your response without doing this:**
+
+If running as a subagent (no direct user interaction), skip the question and return the structured summary instead.
+
+- If overall status is **PASS**: Ask: "All checks pass. This was run as [standalone check / part of pipeline]. Shall I proceed to `/2_review <spec-name>`?"
+- If overall status is **FAIL**: Identify the root cause for each failure and suggest a specific fix — but do not apply fixes. Then ask: "Suite is FAIL with [N] failures. How do you want to proceed? A) Route to `/3_fix` if these are known review issues B) Route to `/debug` for a specific error C) Show me the full error output first"
+
+Do not end your response without asking this question.
