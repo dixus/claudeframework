@@ -14,7 +14,7 @@ Steps:
 4. Read all files listed under "Affected files", "New files", and "Patterns to mirror" in the spec — the "Patterns to mirror" files are the primary convention references; follow their structure, naming, and style
    4b. Context budget check: count the total files from steps 3 and 4. If the total exceeds 15, read "Patterns to mirror" files in full and only read the relevant sections of remaining files. Note which files were fully read vs. partially read.
 5. Decomposition gate: count the total files listed under "Affected files" + "New files". If the total exceeds 10, or if the spec has a ⚠ Complexity flag, pause and ask the user whether to proceed as a single session or break the spec into smaller sub-specs first. Continue only after confirmation.
-6. Create a safety checkpoint: if the project uses git, run `git add -A && git stash` so there is a clean rollback point before any changes are made. Skip if the working tree is already clean.
+6. Create a safety checkpoint: if the project uses git, run `git checkout -b checkpoint/<spec-name>` from the current branch, then immediately switch back with `git checkout -`. This creates a named rollback point that survives crashes and avoids stash collisions. Skip if the working tree is already clean (no staged or unstaged changes).
 7. Enter plan mode: propose a step-by-step implementation plan and wait for approval before writing any code
 8. **Phase management** — check whether this is a phased implementation:
    a. If `.claude/specs/<name>-phases.md` already exists (resuming a later phase): read it, find the next `pending` phase, set its status to `in-progress`, and implement only that phase's scope. If all phases are `done`, report completion and stop.

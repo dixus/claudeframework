@@ -1,6 +1,6 @@
 # Workflow Guide
 
-Generated and maintained by `/doc`. Last updated: 2026-03-02 (updated 2026-03-02, added permission hook + /debug).
+Generated and maintained by `/doc`. Last updated: 2026-03-12.
 
 ---
 
@@ -12,8 +12,14 @@ Claude's context window fills fast and performance degrades as it fills. A singl
 
 ## The pipeline
 
+There are two ways to run the pipeline: **manual** (step-by-step control) and **automated** (`/ship` — hands-off).
+
+### Manual mode
+
+Run each skill yourself with `/clear` between phases for clean context:
+
 ```
-Requirements
+Requirements → .claude/input/
     │
     ▼
 /0_spec ──────────────── reads: input/, context/, codebase
@@ -35,10 +41,46 @@ Requirements
     │                    runs: typecheck → lint → tests → build
     │                    writes: source fixes
     │
-    ▼
-/4_test ──────────────── runs: typecheck → lint → tests → build
-                         writes: nothing (report only)
+    ▼ (repeat /2_review → /3_fix until pass)
+    │
+/commit ─────────────── stages, splits, commits
 ```
+
+Use manual mode when you want to inspect and steer between steps — e.g., reviewing the spec before implementing, or adjusting fix strategy between review cycles.
+
+### Automated mode — `/ship`
+
+`/ship <feature>` orchestrates the entire pipeline end-to-end with no manual intervention (one question batch upfront, then hands-off until commit):
+
+```
+/ship <feature>
+    │
+    ├── Step 0: branch setup              creates feat/<spec-name>
+    ├── Step 1: clarifying questions       single batch, only interruption
+    ├── Subagent A: spec          [opus]   writes specs/<name>.md
+    ├── Subagent B: implement     [opus]   writes source, runs verify
+    ├── Subagent C: review        [opus]   writes reviews/<name>-review.md
+    ├── Subagent D: fix           [sonnet] applies fixes → loop back to C (max 3)
+    ├── Step 5: smoke test        [sonnet] Docker stack + smoke_test.py
+    ├── Step 5d: final verify gate         typecheck → lint → tests → build
+    ├── Subagent F: commit        [sonnet] atomic commits on feature branch
+    └── Step 7: finalize                   merge/PR/leave on branch (your choice)
+```
+
+Each subagent gets a **clean context window** — the spec file, review file, and git diff are the handoff mechanism. The orchestrator never reads code files directly.
+
+Use `/ship` when requirements are clear and you want to go from input to merged code with minimal intervention.
+
+### Standalone utilities
+
+These are not pipeline steps — use them anytime:
+
+| Skill | Purpose |
+|---|---|
+| `/test` | Run the full verify suite and report results (no fixes) |
+| `/simplify` | Parallel quality review — dead code, code smells, CLAUDE.md violations |
+| `/debug` | Investigate a specific error or failing test |
+| `/batch` | Large-scale migrations — per-file agents in isolated worktrees |
 
 ---
 
@@ -50,11 +92,11 @@ Jumping straight to implementation solves the wrong problem or solves the right 
 ### Plan mode in `/1_implement`
 Claude proposes a step-by-step plan and waits for approval before writing any code. This is your last chance to redirect before files change.
 
-### Git stash checkpoint in `/1_implement`
-A clean rollback point before implementation starts. If something goes badly wrong mid-session, `git stash pop` returns you to the pre-implementation state.
+### Named checkpoint branch in `/1_implement`
+Before implementation starts, a `checkpoint/<spec-name>` branch is created at the current commit. This is a named rollback point that survives crashes and avoids stash collisions. If something goes badly wrong mid-session, `git checkout checkpoint/<spec-name>` returns you to the pre-implementation state.
 
 ### Fresh session for `/2_review`
-Claude is unconsciously biased toward code it just wrote — it tends to justify its own decisions rather than challenge them. Running review in a fresh session removes this bias. Always `/clear` before running `/2_review`.
+Claude is unconsciously biased toward code it just wrote — it tends to justify its own decisions rather than challenge them. Running review in a fresh session removes this bias. Always `/clear` before running `/2_review`. In `/ship`, this happens automatically — each subagent starts with a clean context.
 
 ### TDD loop inside `/1_implement`
 
@@ -72,6 +114,25 @@ Skipping typecheck is the most common gap — tests pass, build fails on Vercel.
 ### Re-review reminder after `/3_fix`
 A fix can introduce a new bug, especially when multiple issues are fixed in sequence. `/3_fix` reminds you to run `/2_review` again after fixing.
 
+### Final verify gate in `/ship`
+After smoke tests pass, the full verify suite runs one last time before committing. Smoke test fixes or late-stage changes can introduce regressions that the earlier review/fix loop didn't catch. This gate prevents broken code from being committed.
+
+### Model routing in `/ship`
+Not every pipeline step needs the most powerful model. `/ship` routes each subagent to the appropriate model:
+
+| Step | Model | Why |
+|---|---|---|
+| Spec, Implement, Review | **opus** | Deep reasoning — architecture, requirements analysis, multi-lens review |
+| Fix, Smoke tests, Commit | **sonnet** | Execution-heavy — targeted fixes guided by explicit instructions |
+
+This saves ~40% of token cost on a typical `/ship` run without quality risk. The thinking-heavy steps stay on opus; the mechanical steps use sonnet.
+
+### Circuit breakers
+The pipeline has hard limits to prevent infinite loops:
+- **Review/fix loop**: max 3 cycles. If the same issues keep recurring, escalate to the user — the problem is in the spec or architecture, not the fix.
+- **Smoke test fix loop**: max 3 attempts. On failure, restores the original smoke test file and escalates.
+- **Verify failures**: max 2 fix attempts per gate. Stops and reports blockers rather than looping.
+
 ### Permission hook (`.claude/hooks/auto-approve.js`)
 The `PermissionRequest` hook intercepts every permission prompt before it reaches the UI. It auto-approves safe tools (Read, Write, Edit, Glob, Grep, Bash) and fast-denies known destructive patterns (`rm -rf /`, force-push to main). This removes approval fatigue without disabling safety. Registered in `.claude/settings.json` under `hooks.PermissionRequest`.
 
@@ -79,7 +140,15 @@ The `PermissionRequest` hook intercepts every permission prompt before it reache
 
 ## Session patterns
 
-### Starting a new feature
+### Ship a feature end-to-end
+```
+/ship <feature name>
+# answer clarifying questions (if any)
+# wait for pipeline to complete
+# choose: merge to main / open PR / leave on branch
+```
+
+### Manual: starting a new feature
 ```
 /clear
 /0_spec <feature name>
@@ -87,7 +156,7 @@ The `PermissionRequest` hook intercepts every permission prompt before it reache
 /1_implement <spec name>
 ```
 
-### Reviewing after implementation
+### Manual: reviewing after implementation
 ```
 /clear          ← fresh session = unbiased review
 /2_review <spec name>
@@ -127,6 +196,7 @@ Not every task needs multiple agents. Use the simplest setup that works:
 ```
 Single session     → one task, one context, iterative back-and-forth
 Subagents          → focused subtasks (investigation, review, test run)
+/ship              → full feature pipeline, automated context management
 Agent Teams        → 3+ distinct workstreams that benefit from peer-to-peer coordination
 ```
 

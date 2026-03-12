@@ -12,13 +12,13 @@ Orchestrate the full spec-to-commit pipeline for the feature described in $ARGUM
 ```
 Main session (orchestrator — reads summaries only)
   ├── Step 0: branch setup          →  creates feat/<spec-name>
-  ├── Subagent A: questions + spec  →  writes .claude/specs/<name>.md
-  ├── Subagent B: implement         →  commits to branch, returns summary
-  ├── Subagent C: review            →  writes .claude/reviews/<name>-review.md
-  ├── Subagent D: fix               →  applies fixes  →  loop back to C
-  ├── Subagent E: smoke test        →  validates against Docker stack
-  ├── Subagent F: commit            →  atomic commits on feature branch
-  └── Step 7: merge + push          →  merges feat/<spec-name> → main
+  ├── Subagent A: spec        [opus]   →  writes .claude/specs/<name>.md
+  ├── Subagent B: implement   [opus]   →  commits to branch, returns summary
+  ├── Subagent C: review      [opus]   →  writes .claude/reviews/<name>-review.md
+  ├── Subagent D: fix         [sonnet] →  applies fixes  →  loop back to C
+  ├── Subagent E: smoke test  [sonnet] →  validates against Docker stack
+  ├── Subagent F: commit      [sonnet] →  atomic commits on feature branch
+  └── Step 7: merge + push            →  merges feat/<spec-name> → main
 ```
 
 ---
@@ -45,7 +45,7 @@ If requirements are fully unambiguous, skip to Step 2.
 
 ## Step 2 — Spec subagent
 
-Launch a subagent with:
+Launch a subagent (model: **opus**) with:
 > "Read `.claude/skills/0_spec/SKILL.md` and follow all steps exactly. The feature to spec is: $ARGUMENTS. The user has already answered clarifying questions; their answers are: [paste answers from Step 1 here, or 'none — requirements are unambiguous']. Do not ask further questions — skip step 6. You are running as a subagent. Write the spec and return: (1) the spec filename, (2) the file count from Affected files + New files, (3) a one-paragraph summary of what will be built."
 
 Read the returned summary. Do not read the spec file itself.
@@ -56,7 +56,7 @@ Read the returned summary. Do not read the spec file itself.
 
 ## Step 3 — Implement subagent
 
-Launch a subagent with:
+Launch a subagent (model: **opus**) with:
 > "Read `.claude/skills/1_implement/SKILL.md` and follow all steps exactly for spec: <spec-name>. Auto-proceed through plan mode (step 7) without waiting for approval. You are running as a subagent. Return: (1) list of files changed, (2) verify suite status (pass/fail), (3) any blockers that prevented completion."
 
 Read the returned summary. Do not read any changed files.
@@ -71,7 +71,7 @@ Maintain a cycle counter starting at 0.
 
 ### Review subagent
 
-Launch a subagent with:
+Launch a subagent (model: **opus**) with:
 > "Read `.claude/skills/2_review/SKILL.md` and follow all steps exactly for spec: <spec-name>. You are running as a subagent. Return: (1) the overall assessment (pass / pass with fixes / needs rework), (2) the full numbered issue list with severities."
 
 Read the returned assessment. Do not read the review file itself.
@@ -82,7 +82,7 @@ Route:
 
 ### Fix subagent
 
-Launch a subagent with:
+Launch a subagent (model: **sonnet**) with:
 > "Read `.claude/skills/3_fix/SKILL.md` and follow all steps exactly for spec: <spec-name>. You are running as a subagent. Return: (1) list of issues fixed, (2) any issues skipped and why, (3) verify suite status, (4) any lessons written to `.claude/context/lessons.md`."
 
 Read the returned summary. Loop back to Review subagent.
@@ -99,7 +99,7 @@ Run `docker compose up -d` from the `infra/docker/` directory (or project root �
 
 ### 5b. Write smoke tests
 
-Launch a subagent with:
+Launch a subagent (model: **sonnet**) with:
 > "Read `smoke_test.py`, the spec at `.claude/specs/<spec-name>.md`, and the Pydantic response schemas in the relevant `schemas.py` file (check the spec's Affected/New files list). Add smoke test coverage for the new PRD's API routes — follow the existing patterns in `smoke_test.py`. Match field names exactly to the Pydantic response schemas — do not guess field names. You are running as a subagent. Return: (1) which routes were added, (2) list of response schema field names used."
 
 ### 5c. Run and fix loop (max 3 attempts)
@@ -107,17 +107,24 @@ Launch a subagent with:
 Maintain an attempt counter starting at 0.
 
 1. Run `python smoke_test.py` and capture output
-2. If all checks pass → proceed to Step 6
+2. If all checks pass → proceed to Step 5d
 3. If any check fails → increment attempt counter. If counter ≥ 3, run `git checkout smoke_test.py` to restore the original smoke test file, then stop and escalate to user with the failure output
-4. On failure, launch a fix subagent:
+4. On failure, launch a fix subagent (model: **sonnet**):
    > "Read `smoke_test.py` and the Pydantic response schemas in the relevant `schemas.py`. The smoke test failed with this output: [paste failure output]. Fix only the smoke test assertions — do not modify API code. Common causes: wrong field names, wrong response structure (object vs list), wrong status codes. You are running as a subagent. Return: what was fixed and why."
 5. Loop back to step 1
+
+### 5d. Final verify gate
+
+Run the project's full verify suite (typecheck → lint → tests → build) one last time. Smoke test fixes or late-stage changes may have introduced regressions that the earlier review/fix loop didn't catch.
+
+- If all checks pass → proceed to Step 6
+- If any check fails → launch a fix subagent to resolve, then re-run. If it fails after two attempts, stop and escalate to the user — do not commit broken code.
 
 ---
 
 ## Step 6 — Commit subagent
 
-Launch a subagent with:
+Launch a subagent (model: **sonnet**) with:
 > "Read `.claude/skills/commit/SKILL.md` and follow all steps exactly. Split into atomic commits if multiple concerns are present. You are running as a subagent. Return the commit hash(es) and message(s)."
 
 ---

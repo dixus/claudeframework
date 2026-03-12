@@ -26,6 +26,13 @@ Steps:
    - **New files**: list any new files needed
    - **Patterns to mirror**: 2–3 specific existing files whose structure, naming, or style the implementation should follow — this is the codebase intelligence that lets `/1_implement` match conventions without exploring
    - **Implementation notes**: key decisions, edge cases to handle
+   - **UX concept** *(include this section when the feature has user-facing UI)*:
+     - **Component tree**: hierarchical breakdown of components needed (leaf → container), noting which are new vs existing. Use indentation to show nesting.
+     - **Interaction flows**: describe each distinct user journey as a numbered sequence of steps. For multi-step flows (wizards, forms, onboarding), include: trigger → intermediate states → success state → error/edge states. Use mermaid `stateDiagram-v2` for complex flows with branching.
+     - **State & data flow**: which component owns which state, what gets lifted, what goes into global store vs local state. Map data dependencies (e.g. "ResultsChart reads `scores` from Zustand store, computed by `calculateScores()` in scoring engine").
+     - **Responsive behavior**: specify layout changes at breakpoints if the feature involves layout (e.g. "stack cards vertically below `md`"). Skip if not applicable.
+     - **Accessibility**: required keyboard navigation, ARIA roles, focus management, screen reader considerations. At minimum: all interactive elements keyboard-reachable, form inputs labeled, error states announced.
+     - **Reuse check**: list existing UI components/patterns in the codebase that can be reused or extended instead of built from scratch. Avoid creating new components when existing ones can be composed.
    - **Validation criteria**: explicit, observable conditions that confirm the feature is done (e.g. "navigating to /results shows a radar chart with 6 axes"); complement the test cases. These will be verified by both `/1_implement` and `/3_fix` — write them precisely enough to be checkable.
    - **Test cases**: describe expected behavior with enough specificity to write a failing test from each case — include inputs, expected outputs, and key error/edge cases
    - **Decisions made by Claude**: list any architectural or implementation decisions that were not specified in the requirements — makes assumptions visible to the reviewer

@@ -69,13 +69,15 @@ That's it. `/ship` orchestrates the entire pipeline automatically — spec, impl
     │
     ├─ 1. Create feature branch
     ├─ 2. Front-load all questions (single batch)
-    ├─ 3. ▸ Subagent: /0_spec → writes spec file
-    ├─ 4. ▸ Subagent: /1_implement → implements with TDD
-    ├─ 5. ▸ Subagent: /2_review + /3_fix (max 3 cycles)
-    │       └─ Delta review: cycle 2+ only reviews new changes
-    ├─ 6. ▸ Subagent: /test → final verification
+    ├─ 3. ▸ Subagent: /0_spec        [opus]   → writes spec file
+    ├─ 4. ▸ Subagent: /1_implement   [opus]   → implements with TDD
+    ├─ 5. ▸ Subagent: /2_review      [opus]   → review report
+    │   └─ Subagent: /3_fix          [sonnet] → fix → loop (max 3 cycles)
+    ├─ 6. ▸ Subagent: /commit        [sonnet] → atomic conventional commits
     └─ 7. Finalize: merge / push / PR
 ```
+
+**Model routing:** Opus for phases that require deep reasoning (spec, implement, review). Sonnet for mechanical phases (fix, commit) — faster and cheaper without sacrificing quality.
 
 **Built-in guardrails:**
 - Complexity gate — stops if >10 files need changing, suggests decomposition
