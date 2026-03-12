@@ -2,35 +2,25 @@
 
 By [Holger Kreissl](https://github.com/hkreissl)
 
-A reusable `.claude/` directory structure that wraps Claude Code with a disciplined **spec → implement → review → fix → test** pipeline. Drop it into any project to get structured, session-safe AI-assisted development.
+A reusable `.claude/` directory that turns Claude Code into a disciplined software engineering pipeline. One command — `/ship` — takes a feature from requirements to committed code, with spec writing, implementation, review, and fixes each running in isolated subagents with clean context.
+
+Drop it into any project. Works with any tech stack.
 
 ---
 
-## What's included
-
-```
-.claude/
-  skills/         ← 13 skills for the full development pipeline
-  context/        ← curated knowledge read automatically by all skills
-    instincts.md  ← universal "never do X" rules, loaded by every skill
-  hooks/          ← lifecycle hooks (auto-approve, safety guards)
-  docs/           ← generated documentation
-  references/     ← drop zone for blog posts and repos (/learn processes these)
-  specs/          ← generated feature specs
-  reviews/        ← generated review reports
-  handoffs/       ← session state files written by /handoff, read by /continue
-```
-
-## Why use this
+## The problem
 
 Claude Code is powerful but context-hungry. Without structure:
 
 - Sessions accumulate unrelated work and quality degrades
-- Reviews are biased because Claude reviews code it just wrote
-- Type errors slip through because `tsc` is never run independently
+- Claude reviews code it just wrote — biased by default
+- Type errors and lint issues slip through when verification is ad hoc
 - Knowledge from blog posts and external repos is lost between sessions
+- Large features overwhelm a single session's context window
 
-This framework fixes all of these systematically with a set of reusable skills.
+## The solution
+
+A set of 15 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
@@ -43,142 +33,188 @@ git clone https://github.com/holgerimbery/claude-code-framework.git
 cp -r claude-code-framework/.claude your-project/
 ```
 
-**2. Update `CLAUDE.md`** in your project root with your tech stack and commands.
+**2. Update `CLAUDE.md`** in your project root with your tech stack, commands, and architecture.
 
-**3. Drop your requirements into `.claude/input/`:**
-
-Paste PRDs, sketches, design docs, or any raw requirements there. `/0_spec` reads this directory and archives files after processing.
-
-**4. Start a feature:**
+**3. Ship a feature:**
 
 ```
-/0_spec <feature name>
-/1_implement <spec name>
+/ship add user authentication
 ```
 
-**5. Review in a fresh session:**
+That's it. `/ship` orchestrates the entire pipeline automatically — spec, implement, review, fix loop, and commit — each phase in a clean subagent.
 
-```
+### Or run phases manually
+
+```bash
+# Write the spec
+/0_spec add user authentication
+
+# Implement (enters plan mode first)
+/1_implement user-authentication
+
+# Fresh session for unbiased review
 /clear
-/2_review <spec name>
-/3_fix <review name>
-/4_test
+/2_review user-authentication
+/3_fix user-authentication-review
 ```
 
 ---
 
-## Skills
+## `/ship` — the orchestrator
+
+`/ship` is a thin orchestrator that never accumulates implementation context. Each phase runs in a dedicated subagent; **files are the handoff mechanism** between them.
+
+```
+/ship <feature description>
+    │
+    ├─ 1. Create feature branch
+    ├─ 2. Front-load all questions (single batch)
+    ├─ 3. ▸ Subagent: /0_spec → writes spec file
+    ├─ 4. ▸ Subagent: /1_implement → implements with TDD
+    ├─ 5. ▸ Subagent: /2_review + /3_fix (max 3 cycles)
+    │       └─ Delta review: cycle 2+ only reviews new changes
+    ├─ 6. ▸ Subagent: /test → final verification
+    └─ 7. Finalize: merge / push / PR
+```
+
+**Built-in guardrails:**
+- Complexity gate — stops if >10 files need changing, suggests decomposition
+- Review circuit breaker — escalates after 3 fix cycles without resolution
+- Recurring issue detection — if the same issue appears twice, escalates instead of retrying
+
+---
+
+## All skills
+
+### Core pipeline
 
 | Skill | Purpose |
 |---|---|
-| `/0_spec` | Translate requirements into a structured spec |
-| `/1_implement` | Implement a spec with mandatory plan approval |
-| `/2_review` | Unbiased code review (always run in a fresh session) |
-| `/3_fix` | Fix review issues by severity: critical → major → minor |
-| `/4_test` | Full verify suite — typecheck → lint → tests → build |
-| `/learn` | Process blog posts and repos into the knowledge base |
-| `/doc` | Regenerate all docs from current skills and context |
-| `/audit` | Find and fix vulnerable dependencies |
-| `/commit` | Create atomic commits with conventional messages |
+| `/ship <feature>` | Full pipeline orchestrator — spec → implement → review → fix → commit |
+| `/0_spec <feature>` | Write a structured spec from requirements in `.claude/input/` |
+| `/1_implement <spec>` | Implement with mandatory plan approval and TDD enforcement |
+| `/2_review [spec]` | 8-lens code review with severity classification |
+| `/3_fix [review]` | Fix issues by severity (critical → major → minor) with circuit breaker |
+| `/test [file]` | Run typecheck → lint → tests → build (report only, no fixes) |
+
+### Development tools
+
+| Skill | Purpose |
+|---|---|
+| `/commit` | Atomic conventional commits with multi-concern detection |
+| `/debug` | Diagnose and fix a failing test, type error, or runtime error |
+| `/audit` | Find and fix vulnerable dependencies across package managers |
+| `/healthcheck` | Scan Docker container logs for errors, crashes, and warnings |
 | `/create-hook` | Scaffold a Claude Code lifecycle hook |
-| `/debug` | Diagnose and fix a failing test or type error |
+
+### Knowledge & session management
+
+| Skill | Purpose |
+|---|---|
+| `/learn` | Process blog posts and repos into the knowledge base |
+| `/doc` | Regenerate `.claude/docs/` from current skills and context |
 | `/handoff` | Capture session state before `/clear` |
-| `/continue` | Restore context from a handoff file in a new session |
+| `/continue` | Resume from a handoff file in a new session |
 
-Skills are **technology-agnostic** — they read project commands from `CLAUDE.md` rather than hardcoding tools, so they work with any stack (Node, Python, Rust, Go, etc.).
-
----
-
-## The pipeline
-
-```
-Requirements
-    │
-    ▼
-/0_spec ──────────── writes: .claude/specs/<name>.md
-    │
-    ▼ (you review the spec)
-    │
-/1_implement ──────── runs TDD loop, verifies typecheck + lint + tests + build
-    │
-    ▼ (/clear — fresh session for unbiased review)
-    │
-/2_review ─────────── writes: .claude/reviews/<name>-review.md
-    │
-    ▼
-/3_fix ────────────── fixes by severity, re-verifies
-    │
-    ▼
-/4_test ───────────── final gate before shipping
-```
+All skills are **technology-agnostic** — they read project commands from `CLAUDE.md`, so they work with Node, Python, Rust, Go, or any other stack.
 
 ---
 
-## Session handoffs
+## Pipeline guardrails
+
+The framework doesn't just run phases — it enforces quality at every step:
+
+| Guardrail | Where | What it does |
+|---|---|---|
+| **Complexity flag** | `/0_spec` | Warns when spec implies >10 files; suggests decomposition |
+| **Ambiguity gate** | `/0_spec` | Blocks on vague requirements; surfaces clarifying questions |
+| **TDD enforcement** | `/1_implement` | Red-green cycle — test must fail before implementation |
+| **Pre-flight self-review** | `/1_implement` | Checks 6 lenses before handing off to review |
+| **Phase support** | `/1_implement` | Splits large features into multi-phase implementation |
+| **Delta review** | `/2_review` | Cycle 2+ only reviews changes since last fix |
+| **8-lens review** | `/2_review` | Correctness, code quality, security, tests, UX, PM, DevOps, spec validation |
+| **Circuit breaker** | `/3_fix` | Escalates recurring issues instead of retrying |
+| **Lessons capture** | `/3_fix` | Writes preventive rules to `context/lessons.md` |
+| **Spec sync** | `/3_fix` | Updates spec if fixes diverged from requirements |
+
+---
+
+## Project structure
+
+```
+.claude/
+  skills/          ← 15 skills defining the full pipeline
+  context/         ← curated knowledge read by all skills
+    instincts.md   ← universal rules loaded every session
+    lessons.md     ← corrections captured from fix cycles
+  hooks/           ← lifecycle hooks (auto-approve, safety guards)
+  docs/            ← generated documentation
+  references/      ← drop zone for blog posts and repos
+  specs/           ← generated feature specs
+  reviews/         ← review reports
+  input/           ← raw requirements (archived after spec)
+  handoffs/        ← session state files (gitignored)
+```
+
+---
+
+## Instincts & lessons
+
+**Instincts** (`.claude/context/instincts.md`) are universal rules loaded before every session: read before editing, no speculative code, never skip typecheck, plan mode for 3+ step tasks. Edit this file to encode rules for mistakes Claude keeps repeating.
+
+**Lessons** (`.claude/context/lessons.md`) are automatically captured by `/3_fix` during review cycles. Every fixed issue becomes a preventive rule — so the same mistake doesn't happen twice across any future session. Over time, this file builds up a project-specific knowledge base of corrections and patterns that all skills read at startup. This is how the framework learns from your project.
+
+---
+
+## Session management
 
 `/clear` kills context. `/handoff` saves it first.
 
-```
-# Mid-task, context getting long:
-/handoff
-
-# Review the file, then clear:
-/clear
-
-# New session — resume exactly where you left off:
-/continue
+```bash
+/handoff          # Captures task, pipeline position, decisions, next step
+/clear            # Clean slate
+/continue         # Restores everything in the new session
 ```
 
-The handoff file (`.claude/handoffs/<timestamp>.md`) captures the current task, pipeline position, decisions made, open questions, and the exact next step — so the next session doesn't have to rediscover any of it.
+Handoff files live in `.claude/handoffs/` (gitignored — they're personal session state, not project artifacts).
 
 ---
 
-## Instincts
+## Knowledge base
 
-`.claude/context/instincts.md` holds short, universal "never do X" rules that every skill reads automatically: things like "read before editing", "no speculative code", "never skip typecheck". Edit this file to add rules for mistakes Claude keeps repeating.
-
----
-
-## Knowledge base loop
-
-Drop blog posts or repo files into `.claude/references/blogs/` or `references/repos/`, then run `/learn`. It extracts insights, updates the context files, improves the skills, and regenerates docs — so every future session benefits automatically.
+Drop blog posts or repo files into `.claude/references/`, then run `/learn`:
 
 ```
-Find a useful blog post or repo
-    │
-    ▼
-Paste into .claude/references/blogs/ or references/repos/
-    │
-    ▼
-/learn  ←── extracts insights → updates context/ → improves skills → runs /doc
-    │
-    ▼
-All future sessions automatically benefit
+Blog post / repo file
+    → .claude/references/blogs/ or repos/
+    → /learn
+    → Extracts insights → updates context/ → improves skills → runs /doc
+    → All future sessions benefit
 ```
+
+Processed files are moved to `processed/` so `/learn` is idempotent.
 
 ---
 
 ## Permission hook
 
-`.claude/hooks/auto-approve.js` intercepts every permission prompt before it reaches the UI. It auto-approves safe tools (Read, Write, Edit, Glob, Grep, Bash) and blocks known destructive patterns (`rm -rf /`, force-push to main). This removes approval fatigue without disabling safety.
-
-Registered automatically in `.claude/settings.json`.
+`.claude/hooks/auto-approve.js` auto-approves safe tools (Read, Write, Edit, Glob, Grep, Bash) and blocks destructive patterns (`rm -rf /`, force-push to main). Removes approval fatigue without disabling safety. Registered in `.claude/settings.json`.
 
 ---
 
 ## Demo project
 
-The `src/` directory contains an **AI Maturity Score** app — a full Next.js 14 + TypeScript project built using this framework. It demonstrates the framework applied to a real product:
+The `src/` directory contains an **AI Maturity Score** app — a Next.js 14 + TypeScript project built entirely using this framework:
 
-- Pure TypeScript scoring engine with 16 unit tests
-- Multi-step assessment UI (Likert scale, 48 questions across 6 dimensions)
+- Pure TypeScript scoring engine with unit tests
+- Multi-step assessment UI (48 questions across 6 dimensions)
 - Radar chart results with bottleneck detection
 - Zustand state management
 
 ```bash
 npm install
-npm run dev        # Start dev server at localhost:3000
-npx vitest run     # Run unit tests
+npm run dev        # localhost:3000
+npx vitest run     # Unit tests
 npm run build      # Production build
 ```
 
@@ -186,7 +222,13 @@ npm run build      # Production build
 
 ## Further reading
 
-- [`.claude/docs/README.md`](.claude/docs/README.md) — framework overview
-- [`.claude/docs/workflow.md`](.claude/docs/workflow.md) — workflow rationale and session patterns
-- [`.claude/docs/skills-reference.md`](.claude/docs/skills-reference.md) — each skill documented with examples
-- [`.claude/docs/knowledge-base.md`](.claude/docs/knowledge-base.md) — distilled insights from collected references
+- [Framework overview](.claude/docs/README.md)
+- [Workflow rationale](.claude/docs/workflow.md)
+- [Skills reference](.claude/docs/skills-reference.md)
+- [Knowledge base](.claude/docs/knowledge-base.md)
+
+---
+
+## License
+
+MIT
