@@ -1,6 +1,6 @@
 # Workflow Guide
 
-Generated and maintained by `/doc`. Last updated: 2026-03-12.
+Generated and maintained by `/doc`. Last updated: 2026-03-20.
 
 ---
 
@@ -75,27 +75,31 @@ Use `/ship` when requirements are clear and you want to go from input to merged 
 
 These are not pipeline steps — use them anytime:
 
-| Skill | Purpose |
-|---|---|
-| `/test` | Run the full verify suite and report results (no fixes) |
+| Skill       | Purpose                                                                |
+| ----------- | ---------------------------------------------------------------------- |
+| `/test`     | Run the full verify suite and report results (no fixes)                |
 | `/simplify` | Parallel quality review — dead code, code smells, CLAUDE.md violations |
-| `/debug` | Investigate a specific error or failing test |
-| `/batch` | Large-scale migrations — per-file agents in isolated worktrees |
+| `/debug`    | Investigate a specific error or failing test                           |
+| `/batch`    | Large-scale migrations — per-file agents in isolated worktrees         |
 
 ---
 
 ## Why each step exists
 
 ### `/0_spec` before coding
+
 Jumping straight to implementation solves the wrong problem or solves the right problem in a fragile order. The spec forces you to think about what to build before touching code.
 
 ### Plan mode in `/1_implement`
+
 Claude proposes a step-by-step plan and waits for approval before writing any code. This is your last chance to redirect before files change.
 
 ### Named checkpoint branch in `/1_implement`
+
 Before implementation starts, a `checkpoint/<spec-name>` branch is created at the current commit. This is a named rollback point that survives crashes and avoids stash collisions. If something goes badly wrong mid-session, `git checkout checkpoint/<spec-name>` returns you to the pre-implementation state.
 
 ### Fresh session for `/2_review`
+
 Claude is unconsciously biased toward code it just wrote — it tends to justify its own decisions rather than challenge them. Running review in a fresh session removes this bias. Always `/clear` before running `/2_review`. In `/ship`, this happens automatically — each subagent starts with a clean context.
 
 ### TDD loop inside `/1_implement`
@@ -103,7 +107,9 @@ Claude is unconsciously biased toward code it just wrote — it tends to justify
 For each unit of code: write the test case from the spec first → run it to confirm it **fails** (red) → implement → run again to confirm it **passes** (green). Claude sees its own failure output and self-corrects within the same session. Eliminates ~80% of debugging sessions compared to writing code first.
 
 ### Verification order: typecheck → lint → tests → build
+
 Each catches different classes of errors:
+
 - **Typecheck**: type errors in non-JSX files that tests won't catch
 - **Lint**: style violations, unused imports, code quality rules
 - **Tests**: logic errors, regression protection
@@ -112,35 +118,92 @@ Each catches different classes of errors:
 Skipping typecheck is the most common gap — tests pass, build fails on Vercel.
 
 ### Re-review reminder after `/3_fix`
+
 A fix can introduce a new bug, especially when multiple issues are fixed in sequence. `/3_fix` reminds you to run `/2_review` again after fixing.
 
 ### Final verify gate in `/ship`
+
 After smoke tests pass, the full verify suite runs one last time before committing. Smoke test fixes or late-stage changes can introduce regressions that the earlier review/fix loop didn't catch. This gate prevents broken code from being committed.
 
 ### Model routing in `/ship`
+
 Not every pipeline step needs the most powerful model. `/ship` routes each subagent to the appropriate model:
 
-| Step | Model | Why |
-|---|---|---|
-| Spec, Implement, Review | **opus** | Deep reasoning — architecture, requirements analysis, multi-lens review |
-| Fix, Smoke tests, Commit | **sonnet** | Execution-heavy — targeted fixes guided by explicit instructions |
+| Step                     | Model      | Why                                                                     |
+| ------------------------ | ---------- | ----------------------------------------------------------------------- |
+| Spec, Implement, Review  | **opus**   | Deep reasoning — architecture, requirements analysis, multi-lens review |
+| Fix, Smoke tests, Commit | **sonnet** | Execution-heavy — targeted fixes guided by explicit instructions        |
 
 This saves ~40% of token cost on a typical `/ship` run without quality risk. The thinking-heavy steps stay on opus; the mechanical steps use sonnet.
 
 ### Circuit breakers
+
 The pipeline has hard limits to prevent infinite loops:
+
 - **Review/fix loop**: max 3 cycles. If the same issues keep recurring, escalate to the user — the problem is in the spec or architecture, not the fix.
 - **Smoke test fix loop**: max 3 attempts. On failure, restores the original smoke test file and escalates.
 - **Verify failures**: max 2 fix attempts per gate. Stops and reports blockers rather than looping.
 
 ### Permission hook (`.claude/hooks/auto-approve.js`)
+
 The `PermissionRequest` hook intercepts every permission prompt before it reaches the UI. It auto-approves safe tools (Read, Write, Edit, Glob, Grep, Bash) and fast-denies known destructive patterns (`rm -rf /`, force-push to main). This removes approval fatigue without disabling safety. Registered in `.claude/settings.json` under `hooks.PermissionRequest`.
+
+---
+
+## Lifecycle hooks
+
+Four hooks are registered in `.claude/settings.json` and run automatically on every relevant event. They enforce quality deterministically — no reliance on Claude following advisory instructions.
+
+All hooks follow the same technical contract: read JSON from `stdin`, write JSON to `stdout`. They run in parallel and are designed to be independent (no shared state, no execution order assumptions). Scripts live in `.claude/hooks/`.
+
+### `auto-approve.js` (PermissionRequest)
+
+**Event**: `PermissionRequest` | **Matcher**: `*` (all tools)
+
+A 3-tier permission system that replaces manual approval prompts without sacrificing safety:
+
+- **Tier 1 — Auto-approve**: Read, Write, Edit, MultiEdit, Glob, Grep, WebFetch, WebSearch, TodoWrite, Task, NotebookEdit, and all non-destructive Bash commands. Response: `{ continue: true, suppressOutput: true }`.
+- **Tier 2 — Auto-deny**: Known destructive Bash patterns — `rm -rf /`, `git push --force origin main`, `mkfs`, fork bombs, raw disk writes. Response: `{ continue: false, additionalContext: "..." }`.
+- **Tier 3 — Pass through**: Anything not matched by Tier 1 or 2 falls through to the normal Claude Code permission prompt.
+
+### `protect-secrets.js` (PreToolUse)
+
+**Event**: `PreToolUse` | **Matcher**: `Edit|Write`
+
+Blocks writes to files matching secret/credential patterns before the tool call executes. Matched filenames: `.env`, `.env.*`, `credentials.*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.keystore`, `id_rsa`, `id_ed25519`, `secrets.*`, `.npmrc`, `.pypirc`, `service-account*.json`.
+
+When a match is found, the hook exits with code 2 (blocks the tool call entirely) and writes a diagnostic message to stderr. Non-sensitive files pass through silently.
+
+### `auto-format.js` (PostToolUse)
+
+**Event**: `PostToolUse` | **Matcher**: `Edit|Write`
+
+Automatically formats files after every Edit or Write operation. Detects file type from the tool input path and runs the appropriate formatter:
+
+- **Python** (`.py`): `ruff format` + `ruff check --fix`
+- **JS/TS/CSS/JSON/MD** (`.ts`, `.tsx`, `.js`, `.jsx`, `.json`, `.css`, `.md`): `npx prettier --write`
+
+Silently skips if the formatter is not installed or the file extension doesn't match. Uses `$CLAUDE_PROJECT_DIR` for absolute paths and respects per-app config directories.
+
+### `post-compact.js` (PostCompact)
+
+**Event**: `PostCompact` | **Matcher**: (none — fires on every compaction)
+
+When Claude's context window is compacted mid-session, critical pipeline state can be lost. This hook re-injects the current state as `additionalContext` so Claude stays oriented. It reads (in order):
+
+1. Current git branch and uncommitted changes
+2. Most recent spec file (first 30 lines — goal and requirements)
+3. Most recent review file (first 20 lines — verdict and issue summary)
+4. Most recent handoff file (full content)
+
+If no pipeline state exists, the hook produces no output. The injected context is prefixed with `--- POST-COMPACTION STATE RECOVERY ---` for visibility.
 
 ---
 
 ## Session patterns
 
 ### Ship a feature end-to-end
+
 ```
 /ship <feature name>
 # answer clarifying questions (if any)
@@ -149,6 +212,7 @@ The `PermissionRequest` hook intercepts every permission prompt before it reache
 ```
 
 ### Manual: starting a new feature
+
 ```
 /clear
 /0_spec <feature name>
@@ -157,18 +221,21 @@ The `PermissionRequest` hook intercepts every permission prompt before it reache
 ```
 
 ### Manual: reviewing after implementation
+
 ```
 /clear          ← fresh session = unbiased review
 /2_review <spec name>
 ```
 
 ### Resuming a paused session
+
 ```
 claude --continue    # most recent session
 claude --resume      # pick from list
 ```
 
 ### Handing off cleanly before /clear
+
 ```
 /handoff             # writes .claude/handoffs/<timestamp>.md
 # review the file, then:
@@ -180,6 +247,7 @@ claude --resume      # pick from list
 Use this whenever context is getting long mid-task, or you need to switch tasks and come back later. The handoff file captures decisions that aren't visible in the code, so the next session doesn't have to rediscover them.
 
 ### When Claude is stuck or wrong
+
 ```
 # Corrected 2+ times on the same issue?
 /clear
@@ -187,6 +255,7 @@ Use this whenever context is getting long mid-task, or you need to switch tasks 
 ```
 
 ### Parallel workstreams
+
 Run separate Claude sessions per workstream — each with its own context. Use git worktrees or separate checkouts to avoid conflicts.
 
 ### Multi-agent escalation ladder
@@ -218,13 +287,13 @@ For large-scale migrations across many files, use `/batch` instead of hand-editi
 
 ## Context hygiene rules
 
-| Signal | Action |
-|---|---|
-| Starting a new unrelated task | `/clear` |
-| About to run `/2_review` | `/clear` first |
-| Claude making same mistake repeatedly | `/clear` + better prompt |
+| Signal                                 | Action                                              |
+| -------------------------------------- | --------------------------------------------------- |
+| Starting a new unrelated task          | `/clear`                                            |
+| About to run `/2_review`               | `/clear` first                                      |
+| Claude making same mistake repeatedly  | `/clear` + better prompt                            |
 | Exploring a large area of the codebase | Use a subagent (`"investigate X using a subagent"`) |
-| Context getting long mid-task | `/compact Focus on <topic>` |
+| Context getting long mid-task          | `/compact Focus on <topic>`                         |
 
 ---
 
@@ -237,7 +306,7 @@ The `CLAUDE.md` file is loaded every session. Keep it short — bloated files ca
 - **Exclude**: things Claude infers from reading code, standard language conventions
 - **Emphasis**: add `IMPORTANT:` to rules that must never be broken
 - **Review trigger**: if Claude repeatedly makes the same mistake, the rule is missing or buried
-- **Pruning rule**: for each line, ask *"Would removing this cause Claude to make mistakes?"* If not, cut it. Prune monthly.
+- **Pruning rule**: for each line, ask _"Would removing this cause Claude to make mistakes?"_ If not, cut it. Prune monthly.
 - **Modular rules**: use `.claude/rules/<topic>.md` with YAML `paths:` frontmatter to scope rules to specific file patterns — keeps the root CLAUDE.md slim and reduces irrelevant context
 
 ### Memory architecture
@@ -262,7 +331,7 @@ Claude Code's memory system has four layers (loaded in this order; more specific
 
 ## Task decomposition
 
-Before starting a task, ask: *"Could a senior engineer complete this in one focused session?"* If not, decompose it.
+Before starting a task, ask: _"Could a senior engineer complete this in one focused session?"_ If not, decompose it.
 
 - Accuracy drops noticeably beyond **~15 file modifications** in a single context
 - One task → one session → verify independently → move on
@@ -272,11 +341,11 @@ Before starting a task, ask: *"Could a senior engineer complete this in one focu
 
 The project targets **spec-anchored** development:
 
-| Level | Description | When to use |
-|---|---|---|
-| spec-first | Write spec, implement from it; spec may drift | Small one-off features |
+| Level             | Description                                       | When to use                  |
+| ----------------- | ------------------------------------------------- | ---------------------------- |
+| spec-first        | Write spec, implement from it; spec may drift     | Small one-off features       |
 | **spec-anchored** | Keep spec alive; update it when course-correcting | **Default for this project** |
-| spec-as-source | Human edits spec only; AI regenerates code | Experimental / future |
+| spec-as-source    | Human edits spec only; AI regenerates code        | Experimental / future        |
 
 At each course-correction, update the spec in `.claude/specs/` before continuing. This keeps original intent visible and prevents drift across sessions.
 
