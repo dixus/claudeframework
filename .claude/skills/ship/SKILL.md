@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Orchestrate the full pipeline — each phase runs in a clean subagent context, files on disk are the handoff mechanism
+description: Orchestrate the full spec → implement → review → fix → commit pipeline. Use when shipping a complete feature end-to-end.
 disable-model-invocation: true
 argument-hint: <feature description> [--dry-run]
 ---

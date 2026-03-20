@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Process new references, update context knowledge files, and improve skills
+description: Process new references into context knowledge and propose skill improvements. Use after adding blog posts, repos, or docs to .claude/references/.
 disable-model-invocation: true
 ---
 

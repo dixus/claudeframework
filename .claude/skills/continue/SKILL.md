@@ -1,6 +1,6 @@
 ---
 name: continue
-description: Resume work from a handoff file after /clear or in a new session
+description: Resume work from a handoff file. Use at the start of a new session to pick up where a previous session left off.
 disable-model-invocation: true
 argument-hint: "[handoff-file]"
 ---

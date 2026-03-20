@@ -1,6 +1,6 @@
 ---
 name: doc
-description: Regenerate .claude/docs/ from current skills and context
+description: Regenerate .claude/docs/ from current skills and context. Use after adding or modifying skills, context files, or framework structure.
 disable-model-invocation: true
 ---
 Regenerate the framework documentation in `.claude/docs/` to reflect the current state of skills, context, and processed references.

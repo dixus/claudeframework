@@ -1,6 +1,6 @@
 ---
 name: create-hook
-description: Scaffold a Claude Code hook for this project based on detected tooling
+description: Scaffold a Claude Code hook (command or HTTP) for this project. Use when you want to automate quality checks, formatting, or notifications on tool events.
 disable-model-invocation: true
 argument-hint: "[hook description]"
 ---
@@ -34,20 +34,26 @@ Ask only what you don't already know from the user's description:
    - `PostToolUse`: after a tool call — provides feedback/fixes. Best for quality enforcement.
    - `UserPromptSubmit`: before Claude processes a message. Best for context injection.
 
-2. **Tool matcher** — which tool(s) should trigger it? (e.g. `Write`, `Edit`, `Bash`, `*` for all)
+2. **Hook type** — how should it run?
+   - `command`: run a local script (default). Best for most hooks.
+   - `http`: POST JSON to a URL. Best for external integrations (Slack notifications, logging dashboards, CI triggers). The hook payload is sent as the request body; the response body is treated the same as command stdout.
 
-3. **Scope** — where should the hook live?
+3. **Tool matcher** — which tool(s) should trigger it? (e.g. `Write`, `Edit`, `Bash`, `*` for all)
+
+4. **Scope** — where should the hook live?
    - `project`: `.claude/hooks/` — committed to git, shared with team
    - `global`: `~/.claude/hooks/` — applies to all your projects
    - `project-local`: registered in `.claude/settings.local.json` — your personal preference, gitignored
 
-4. **Claude integration** — should Claude see the hook's output and act on it?
+5. **Claude integration** — should Claude see the hook's output and act on it?
    - Yes → use `additionalContext` in the response body for errors; Claude will try to fix them
    - No → use `suppressOutput: true` for silent operation
 
-5. **File scope** — what file extensions should trigger it? (e.g. `.ts,.tsx`, `*` for all)
+6. **File scope** — what file extensions should trigger it? (e.g. `.ts,.tsx`, `*` for all)
 
 ## Step 3 — Create the hook script
+
+**If the user chose an HTTP hook**: skip this step — no script file is needed. Go directly to Step 4.
 
 Create the hook script at the appropriate location:
 - Project scope: `.claude/hooks/<hook-name>.js` (or `.sh` for simple bash hooks)
@@ -73,7 +79,9 @@ Update the appropriate `settings.json`:
 - Global scope: `~/.claude/settings.json`
 - Project-local: `.claude/settings.local.json`
 
-Add an entry under the correct event key:
+Add an entry under the correct event key.
+
+**Command hook** (runs a local script):
 ```json
 {
   "hooks": {
@@ -84,6 +92,25 @@ Add an entry under the correct event key:
           {
             "type": "command",
             "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/<hook-name>.js"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**HTTP hook** (POSTs JSON to a URL):
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://example.com/hooks/on-edit"
           }
         ]
       }

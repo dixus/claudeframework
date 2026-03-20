@@ -1,6 +1,6 @@
 ---
 name: 2_review
-description: Review implementation changes and write a report to .claude/reviews/
+description: Review implementation changes and write a report to .claude/reviews/. Use after implementation is complete, before merging or committing.
 disable-model-invocation: true
 argument-hint: "[spec-name]"
 ---

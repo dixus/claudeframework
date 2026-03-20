@@ -1,6 +1,6 @@
 ---
 name: 0_spec
-description: Write a feature spec from requirements in .claude/input/
+description: Write a feature spec from requirements in .claude/input/. Use when starting a new feature, before implementation begins.
 disable-model-invocation: true
 argument-hint: <feature name or description>
 ---

@@ -1,6 +1,6 @@
 ---
 name: debug
-description: Diagnose and fix a failing test, type error, or runtime error
+description: Diagnose and fix a failing test, type error, or runtime error. Use when a specific test or build step is failing.
 disable-model-invocation: true
 argument-hint: "<error message, test name, or file path>"
 ---

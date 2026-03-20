@@ -1,6 +1,6 @@
 ---
 name: 1_implement
-description: Implement a feature from a spec file in .claude/specs/
+description: Implement a feature from a spec file in .claude/specs/. Use after a spec is written and approved.
 disable-model-invocation: true
 argument-hint: <spec-name>
 ---

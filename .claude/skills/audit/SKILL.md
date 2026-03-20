@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Audit and fix vulnerable dependencies
+description: Audit and fix vulnerable dependencies. Use periodically or when security alerts flag a dependency.
 disable-model-invocation: true
 ---
 Check for and fix vulnerable dependencies.

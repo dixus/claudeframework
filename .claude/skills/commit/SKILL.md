@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Create well-structured atomic commits with conventional commit messages
+description: Create well-structured atomic commits with conventional commit messages. Use when ready to commit working changes.
 disable-model-invocation: true
 argument-hint: "[--all]"
 ---

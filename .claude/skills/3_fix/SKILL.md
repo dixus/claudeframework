@@ -1,6 +1,6 @@
 ---
 name: 3_fix
-description: Fix issues found in a review report in .claude/reviews/
+description: Fix issues found in a review report in .claude/reviews/. Use after a review identifies issues that need fixing.
 disable-model-invocation: true
 argument-hint: "[review-file]"
 ---

@@ -28,7 +28,7 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## The solution
 
-17 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
+18 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
@@ -161,6 +161,7 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 | Skill       | Purpose                                                                          |
 | ----------- | -------------------------------------------------------------------------------- |
 | `/learn`    | Process blog posts and repos into the knowledge base; propose skill improvements |
+| `/scout`    | Search the web for new Claude Code patterns and suggest framework optimizations  |
 | `/doc`      | Regenerate `.claude/docs/` from current skills and context                       |
 | `/handoff`  | Capture session state before `/clear`                                            |
 | `/continue` | Resume from a handoff file in a new session                                      |
@@ -231,7 +232,7 @@ This means the framework gets stricter and more project-aware with every feature
 
 ```
 .claude/
-  skills/          ← 17 skills defining the full pipeline
+  skills/          ← 18 skills defining the full pipeline
   context/         ← curated knowledge read by all skills
     instincts.md   ← universal rules loaded every session
     lessons.md     ← corrections inbox (graduates to CLAUDE.md)
@@ -278,6 +279,17 @@ Blog post / repo file
 `/learn` is safe — it proposes skill changes but never applies them directly. Proposals go to `.claude/reviews/learn-proposals.md` for review.
 
 Processed files are moved to `processed/` so `/learn` is idempotent.
+
+### Staying current
+
+`/scout` searches the web for new Claude Code features, community skills, and best practices, then compares them against the current framework:
+
+```
+/scout              # Full analysis — fetches top 5 results, writes report
+/scout --quick      # Titles and links only — fast scan
+```
+
+Scout reports go to `.claude/reviews/scout-<date>.md`. Promising links can be saved to `.claude/references/` for deeper `/learn` processing — the two skills chain naturally.
 
 ---
 

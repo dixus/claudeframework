@@ -1,6 +1,6 @@
 ---
 name: test
-description: Run the full verify suite and report results — no fixes applied
+description: Run the full verify suite and report results — no fixes applied. Use to check baseline health before starting work, after a merge, or when CI is red.
 disable-model-invocation: true
 argument-hint: "[file-or-pattern]"
 ---

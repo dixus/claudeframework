@@ -1,6 +1,6 @@
 ---
 name: healthcheck
-description: Scan Docker container logs for errors, crashes, and warnings across all services
+description: Scan Docker container logs for errors, crashes, and warnings. Use when services are misbehaving or after a deployment to verify health.
 disable-model-invocation: false
 argument-hint: "[service-name]"
 ---

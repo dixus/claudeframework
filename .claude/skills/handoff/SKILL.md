@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Capture current session state to a handoff file so work can be resumed cleanly after /clear or compaction
+description: Capture current session state to a handoff file. Use before /clear, when context is getting full, or when ending a session mid-task.
 disable-model-invocation: true
 argument-hint: "[label]"
 ---
