@@ -3,9 +3,9 @@ name: ship
 description: Orchestrate the full spec → implement → review → fix → commit pipeline. Use when shipping a complete feature end-to-end.
 disable-model-invocation: true
 argument-hint: <feature description> [--dry-run]
+model: claude-opus-4-6
+effort: high
 ---
-
-> **Recommended model: `claude-opus-4-6`** — orchestration decisions and the review subagent both require deep reasoning.
 
 Orchestrate the full spec-to-commit pipeline for the feature described in $ARGUMENTS or in `.claude/input/`.
 
@@ -16,7 +16,8 @@ Orchestrate the full spec-to-commit pipeline for the feature described in $ARGUM
 ```
 Main session (orchestrator — reads summaries only)
   ├── Step 0: branch setup              →  creates feat/<spec-name>
-  ├── Subagent A: spec          [opus]  →  writes .claude/specs/<name>.md
+  ├── Step 1b: historical patterns      →  reads metrics.csv → builds spec guidance
+  ├── Subagent A: spec          [opus]  →  writes .claude/specs/<name>.md (informed by patterns)
   ├── Subagent B: implement     [opus]  →  commits to branch, returns summary
   ├── Subagent C: review        [opus]  →  writes .claude/reviews/<name>-review.md
   ├── Subagent D: fix           [sonnet]→  applies fixes  →  loop back to C
@@ -48,7 +49,33 @@ Read only CLAUDE.md and `.claude/input/` to understand the feature scope.
 Ask all clarifying questions in a **single batch** before launching any subagent. Use selectable options where possible.
 Wait for answers. This is the only user interruption before commit.
 
-If requirements are fully unambiguous, skip to Step 2.
+If requirements are fully unambiguous, skip to Step 1b.
+
+---
+
+## Step 1b — Historical pattern analysis (orchestrator)
+
+Read `.claude/metrics.csv` if it exists. If the file has fewer than 3 rows (excluding the header), skip this step — not enough data for meaningful patterns.
+
+**Analysis:**
+
+1. Derive the likely `area` for the current feature from $ARGUMENTS and `.claude/input/` context (e.g. "add payment webhook" → `api` or `payment`)
+2. Filter metrics rows where `area` matches (or is closely related to) the current feature's area
+3. If 2+ matching rows exist, compute:
+   - **avg_review_cycles** — mean of `review_cycles` across matching rows
+   - **common_issue_categories** — the `issue_categories` values that appear in 2+ matching rows
+   - **avg_files_changed** — mean of `files_changed` across matching rows
+4. If no matching rows exist, check all rows for overall patterns (high avg review cycles across the board may indicate systemic issues)
+
+**Build a `historical_context` block** (plain text, 2-5 lines max) to pass to the spec subagent. Examples:
+
+> Features in the `api` area averaged 2.3 review cycles. Recurring issue categories: validation, edge-cases. Spec should include explicit input validation rules and edge case handling for each endpoint.
+
+> Features in the `ui` area averaged 1.0 review cycles. No recurring issues. No additional spec guidance needed.
+
+> Not enough historical data for this area. No additional spec guidance.
+
+If no meaningful patterns are found, set `historical_context` to empty and proceed — this step is purely additive.
 
 ---
 
@@ -56,7 +83,7 @@ If requirements are fully unambiguous, skip to Step 2.
 
 Launch a subagent (model: **opus**) with:
 
-> "Read `.claude/skills/0_spec/SKILL.md` and follow all steps exactly. The feature to spec is: $ARGUMENTS. The user has already answered clarifying questions; their answers are: [paste answers from Step 1 here, or 'none — requirements are unambiguous']. Do not ask further questions — skip step 6. You are running as a subagent. Write the spec and return: (1) the spec filename, (2) the file count from Affected files + New files, (3) a one-paragraph summary of what will be built."
+> "Read `.claude/skills/0_spec/SKILL.md` and follow all steps exactly. The feature to spec is: $ARGUMENTS. The user has already answered clarifying questions; their answers are: [paste answers from Step 1 here, or 'none — requirements are unambiguous']. Do not ask further questions — skip step 6. Historical pattern analysis from prior pipeline runs: [paste historical_context from Step 1b here, or 'none — no historical data']. You are running as a subagent. Write the spec and return: (1) the spec filename, (2) the file count from Affected files + New files, (3) a one-paragraph summary of what will be built."
 
 Read the returned summary. Do not read the spec file itself.
 
@@ -221,18 +248,20 @@ Append one row to `.claude/metrics.csv`. Create the file with a header row if it
 **Format:**
 
 ```
-date,spec,files_changed,review_cycles,issues_found,issues_critical,issues_major,commits,outcome
+date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_major,issue_categories,commits,outcome
 ```
 
 **Fields:**
 
 - `date` — ISO date (YYYY-MM-DD)
 - `spec` — spec filename without path/extension
+- `area` — primary codebase area affected (e.g. `scoring`, `auth`, `ui`, `api`, `infra`). Derive from the dominant directory in the changed files list. Use a single word, lowercase. If unclear, use `general`
 - `files_changed` — count from Step 3 summary
 - `review_cycles` — how many review/fix iterations (0 = passed first review)
 - `issues_found` — total issues across all review cycles
 - `issues_critical` — count of critical-severity issues
 - `issues_major` — count of major-severity issues
+- `issue_categories` — semicolon-separated list of issue types found across all review cycles (e.g. `validation;edge-cases;types`). Use short lowercase labels. Empty if no issues
 - `commits` — number of commits created in Step 6
 - `outcome` — `shipped` / `escalated` / `aborted`
 

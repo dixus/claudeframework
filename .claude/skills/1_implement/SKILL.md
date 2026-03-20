@@ -3,9 +3,9 @@ name: 1_implement
 description: Implement a feature from a spec file in .claude/specs/. Use after a spec is written and approved.
 disable-model-invocation: true
 argument-hint: <spec-name>
+model: claude-opus-4-6
+effort: high
 ---
-
-> **Recommended model: `claude-opus-4-6`** — plan mode (step 7) requires architectural reasoning; Sonnet is acceptable for straightforward implementations with no plan mode.
 
 Implement the feature described in a spec file. $ARGUMENTS should be the spec filename (without path or extension), e.g. `export-zip`. If no argument is given, use the most recently modified file in `.claude/specs/`.
 

@@ -3,9 +3,10 @@ name: 2_review
 description: Review implementation changes and write a report to .claude/reviews/. Use after implementation is complete, before merging or committing.
 disable-model-invocation: true
 argument-hint: "[spec-name]"
+model: claude-opus-4-6
+effort: high
+allowed-tools: Read, Glob, Grep, WebFetch, WebSearch, Agent
 ---
-
-> **Recommended model: `claude-opus-4-6`** — multi-lens review (correctness, security, spec validation, etc.) requires deep reasoning. Using Sonnet risks missing subtle issues.
 
 Review the current implementation changes and produce a written review report.
 

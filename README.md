@@ -107,7 +107,8 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
     │
     ├─ 0. Create feature branch
     ├─ 1. Front-load all questions (single batch)
-    ├─ 2. ▸ Subagent: /0_spec        [opus]   → writes spec file
+    ├─ 1b. Historical pattern analysis        → reads metrics.csv → builds spec guidance
+    ├─ 2. ▸ Subagent: /0_spec        [opus]   → writes spec file (informed by patterns)
     ├─ 3. ▸ Subagent: /1_implement   [opus]   → implements with TDD
     ├─ 4. ▸ Subagent: /2_review      [opus]   → review report
     │   └─ Subagent: /3_fix          [sonnet] → fix → re-review (max 3 cycles)
@@ -174,32 +175,33 @@ All skills are **technology-agnostic** — they read project commands from `CLAU
 
 The framework doesn't just run phases — it enforces quality at every step. All numeric thresholds are configurable in `CLAUDE.md` under `## Framework thresholds`:
 
-| Guardrail                  | Where              | What it does                                                                                   |
-| -------------------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
-| **Complexity flag**        | `/0_spec`          | Warns when spec implies >10 files; suggests decomposition                                      |
-| **Ambiguity gate**         | `/0_spec`          | Blocks on vague requirements; surfaces clarifying questions                                    |
-| **TDD enforcement**        | `/1_implement`     | Red-green cycle — test must fail before implementation                                         |
-| **Impact analysis**        | `/1_implement`     | Checks blast radius before modifying shared function signatures                                |
-| **Pre-flight self-review** | `/1_implement`     | Checks 6 lenses before handing off to review                                                   |
-| **Phase support**          | `/1_implement`     | Splits large features into multi-phase implementation                                          |
-| **Delta review**           | `/2_review`        | Cycle 2+ only reviews changes since last fix                                                   |
-| **9-lens review**          | `/2_review`        | Correctness, code quality, security, tests, UX, PM, DevOps, spec validation, spec completeness |
-| **Spec completeness**      | `/2_review`        | Walks every requirement from the spec; missing = critical, partial = major                     |
-| **Circuit breaker**        | `/3_fix`           | Escalates recurring issues instead of retrying                                                 |
-| **Lessons capture**        | `/3_fix`           | Writes preventive rules to `context/lessons.md`                                                |
-| **Lesson graduation**      | `/ship`            | Matures proven lessons into permanent one-line rules in `CLAUDE.md`                            |
-| **Integration check**      | `/ship`            | After all phases complete, verifies data flow, interface contracts, and glue code across phases |
-| **Spec sync**              | `/3_fix`           | Updates spec if fixes diverged from requirements                                               |
-| **Metrics**                | `/ship`            | Tracks files changed, review cycles, issues, and outcome per feature                           |
+| Guardrail                  | Where          | What it does                                                                                    |
+| -------------------------- | -------------- | ----------------------------------------------------------------------------------------------- |
+| **Complexity flag**        | `/0_spec`      | Warns when spec implies >10 files; suggests decomposition                                       |
+| **Ambiguity gate**         | `/0_spec`      | Blocks on vague requirements; surfaces clarifying questions                                     |
+| **TDD enforcement**        | `/1_implement` | Red-green cycle — test must fail before implementation                                          |
+| **Impact analysis**        | `/1_implement` | Checks blast radius before modifying shared function signatures                                 |
+| **Pre-flight self-review** | `/1_implement` | Checks 6 lenses before handing off to review                                                    |
+| **Phase support**          | `/1_implement` | Splits large features into multi-phase implementation                                           |
+| **Delta review**           | `/2_review`    | Cycle 2+ only reviews changes since last fix                                                    |
+| **9-lens review**          | `/2_review`    | Correctness, code quality, security, tests, UX, PM, DevOps, spec validation, spec completeness  |
+| **Spec completeness**      | `/2_review`    | Walks every requirement from the spec; missing = critical, partial = major                      |
+| **Circuit breaker**        | `/3_fix`       | Escalates recurring issues instead of retrying                                                  |
+| **Lessons capture**        | `/3_fix`       | Writes preventive rules to `context/lessons.md`                                                 |
+| **Lesson graduation**      | `/ship`        | Matures proven lessons into permanent one-line rules in `CLAUDE.md`                             |
+| **Integration check**      | `/ship`        | After all phases complete, verifies data flow, interface contracts, and glue code across phases |
+| **Spec sync**              | `/3_fix`       | Updates spec if fixes diverged from requirements                                                |
+| **Metrics**                | `/ship`        | Tracks files changed, review cycles, issues, area, and issue categories per feature             |
+| **Historical patterns**    | `/ship`        | Reads metrics history; auto-refines spec depth in areas with recurring review friction          |
 
 All numeric thresholds have sensible defaults but can be tuned per project. Add a `## Framework thresholds` section to your `CLAUDE.md` to override any of them:
 
-| Threshold | Default | What it controls |
-|---|---|---|
-| `complexity_gate_max_files` | 10 | Max files before spec/implement triggers a decomposition warning |
-| `review_fix_max_cycles` | 3 | Max review → fix iterations before `/ship` escalates |
-| `lesson_graduation_age_days` | 14 | Days before a lesson graduates from inbox to permanent CLAUDE.md rule |
-| `delta_review_escalation_pct` | 50 | % of original diff size that triggers escalation from delta to full review |
+| Threshold                     | Default | What it controls                                                           |
+| ----------------------------- | ------- | -------------------------------------------------------------------------- |
+| `complexity_gate_max_files`   | 10      | Max files before spec/implement triggers a decomposition warning           |
+| `review_fix_max_cycles`       | 3       | Max review → fix iterations before `/ship` escalates                       |
+| `lesson_graduation_age_days`  | 14      | Days before a lesson graduates from inbox to permanent CLAUDE.md rule      |
+| `delta_review_escalation_pct` | 50      | % of original diff size that triggers escalation from delta to full review |
 
 If the section is omitted, all defaults apply — zero configuration required.
 
@@ -207,7 +209,9 @@ If the section is omitted, all defaults apply — zero configuration required.
 
 ## How the framework learns
 
-The framework has a built-in learning loop that prevents the same mistakes from repeating:
+The framework has two learning channels that reinforce each other:
+
+### Channel 1: Rule-based learning (lessons → CLAUDE.md)
 
 ```
 /3_fix captures a correction
@@ -220,11 +224,29 @@ After 14+ days, /ship graduates proven lessons:
     → every future session enforces the rule automatically
 ```
 
+### Channel 2: Pattern-based learning (metrics → spec refinement)
+
+```
+/ship completes → appends metrics row (area, review cycles, issue categories)
+    ↓
+Next /ship in same area → reads metrics.csv
+    ↓
+Detects: "api features average 2.8 review cycles, recurring: validation, edge-cases"
+    ↓
+Passes pattern context to /0_spec → spec adds explicit validation rules + edge case sections
+    ↓
+Better spec → fewer review issues → metrics improve over time
+```
+
+This is a **self-improving loop**: the framework doesn't just remember _rules_ — it recognizes _patterns_ across runs and automatically produces more detailed specs in areas that historically cause review friction.
+
 **Instincts** (`.claude/context/instincts.md`) are universal rules loaded every session: read before editing, no speculative code, never skip typecheck, plan mode for 3+ step tasks.
 
 **Lessons** (`.claude/context/lessons.md`) are the inbox — corrections captured during review cycles. They graduate into permanent `CLAUDE.md` rules once proven over time.
 
-This means the framework gets stricter and more project-aware with every feature shipped.
+**Metrics** (`.claude/metrics.csv`) are the pattern source — aggregate data across all pipeline runs, read by `/ship` to guide spec depth.
+
+This means the framework gets stricter, more project-aware, and more precise with every feature shipped.
 
 ---
 
@@ -322,9 +344,9 @@ npm run build      # Production build
 `/ship` appends one row to `.claude/metrics.csv` after every pipeline run:
 
 ```
-date,spec,files_changed,review_cycles,issues_found,issues_critical,issues_major,commits,outcome
-2026-03-15,user-auth,8,1,3,0,2,2,shipped
-2026-03-17,file-upload,12,2,7,1,4,3,shipped
+date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_major,issue_categories,commits,outcome
+2026-03-15,user-auth,auth,8,1,3,0,2,validation,2,shipped
+2026-03-17,file-upload,api,12,2,7,1,4,validation;edge-cases,3,shipped
 ```
 
 This is append-only — open in any spreadsheet or `column -t -s, .claude/metrics.csv` to spot trends like rising review cycles or recurring issue categories.

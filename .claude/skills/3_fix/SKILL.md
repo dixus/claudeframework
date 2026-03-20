@@ -3,10 +3,14 @@ name: 3_fix
 description: Fix issues found in a review report in .claude/reviews/. Use after a review identifies issues that need fixing.
 disable-model-invocation: true
 argument-hint: "[review-file]"
+model: claude-opus-4-6
+effort: high
 ---
+
 Fix issues found in a review report.
 
 Steps:
+
 1. Read CLAUDE.md — note the project's test command, lint command, build command, and typecheck command if listed
 2. If $ARGUMENTS is provided, read `.claude/reviews/<name>-review.md`. Otherwise read the most recently modified file in `.claude/reviews/`
 3. If a corresponding spec exists in `.claude/specs/`, read it too — fixes must stay within the spec's stated requirements

@@ -3,8 +3,10 @@ name: healthcheck
 description: Scan Docker container logs for errors, crashes, and warnings. Use when services are misbehaving or after a deployment to verify health.
 disable-model-invocation: false
 argument-hint: "[service-name]"
+compatibility: Requires Docker and docker compose
 ---
-Check the health of all running Docker services. $ARGUMENTS is optional — pass a service name (api, worker, web-buyer, web-supplier) to check only that service.
+
+Check the health of all running Docker services. $ARGUMENTS is optional — pass a service name to check only that service.
 
 ## Goal
 
@@ -12,10 +14,14 @@ Detect errors, crashes, and warnings in running containers and report a clear su
 
 ## Steps
 
-1. Run `docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.override.yml ps` to see which containers are running and their status (healthy, unhealthy, restarting, exited).
+1. **Auto-detect Docker Compose configuration:**
+   - Check CLAUDE.md for a docker compose command or path
+   - If not specified, detect the compose file: look for `docker-compose.yml`, `docker-compose.yaml`, `compose.yml`, `compose.yaml` in the project root, then `infra/docker/`, then `docker/`
+   - If an override file exists alongside it (e.g. `docker-compose.override.yml`), include it with `-f`
+   - Run `docker compose <detected flags> ps` to see which containers are running and their status (healthy, unhealthy, restarting, exited)
 
-2. For each app service (or just $ARGUMENTS if specified), collect recent logs:
-   - `docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.override.yml logs --tail=100 <service>`
+2. **Auto-detect services:** parse the output of `docker compose ps --format json` to get the list of running services. For each app service (or just $ARGUMENTS if specified), collect recent logs:
+   - `docker compose <detected flags> logs --tail=100 <service>`
 
 3. Scan logs for problems — look for these patterns:
    - `ERROR`, `CRITICAL`, `FATAL`, `Exception`, `Traceback`, `panic`, `ENOENT`
@@ -37,10 +43,9 @@ Detect errors, crashes, and warnings in running containers and report a clear su
    ```
    Service       | Status | Issues
    ------------- | ------ | ------
-   api           | OK     | —
-   worker        | ERROR  | 2 BUG, 1 CONFIG
-   web-buyer     | OK     | —
-   web-supplier  | OK     | —
+   <service-1>   | OK     | —
+   <service-2>   | ERROR  | 2 BUG, 1 CONFIG
+   ...
    ```
 
    Then list each issue with classification, source location, and suggested fix.

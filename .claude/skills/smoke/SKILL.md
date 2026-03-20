@@ -3,6 +3,7 @@ name: smoke
 description: Write and run smoke tests against the Docker stack from a spec. Use after deploying to a Docker environment to verify end-to-end behavior.
 disable-model-invocation: true
 argument-hint: "[spec-name]"
+compatibility: Requires Docker and docker compose
 ---
 
 Run smoke tests against the running Docker stack for a spec.

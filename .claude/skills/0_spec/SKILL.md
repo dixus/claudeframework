@@ -3,17 +3,25 @@ name: 0_spec
 description: Write a feature spec from requirements in .claude/input/. Use when starting a new feature, before implementation begins.
 disable-model-invocation: true
 argument-hint: <feature name or description>
+model: claude-opus-4-6
+effort: high
 ---
-> **Recommended model: `claude-opus-4-6`** — spec writing requires deep reasoning about requirements, architecture, and edge cases.
 
 Create a detailed spec for the following feature: $ARGUMENTS
 
 $ARGUMENTS is an optional feature name or focus hint. The primary requirements source is .claude/input/.
 
 Steps:
+
 1. Read CLAUDE.md for project context and conventions
 2. Read all files in `.claude/context/` if the directory exists — these are long-lived project references (schemas, API docs, glossaries)
 3. Read all files in `.claude/input/` if the directory exists — these are the raw requirements materials (docs, images, wireframes, PDFs). Treat them as the primary source of truth for what to build
+   3b. **Historical pattern awareness** — if the subagent prompt includes historical pattern analysis (from `/ship` Step 1b), use it to increase spec depth in problem areas. For example:
+   - If prior features in this area had recurring `validation` issues → add an explicit "Input validation rules" subsection under Implementation notes listing every input, its type, its constraints, and what happens on invalid input
+   - If prior features had recurring `edge-cases` issues → add an explicit "Edge cases" subsection listing boundary conditions, empty states, concurrent access scenarios, and off-by-one risks
+   - If prior features had recurring `types` issues → add explicit type signatures in Implementation notes for all new/changed functions
+   - If prior features had high review cycles (>2 avg) → write more granular test cases and tighter validation criteria
+   - If no historical data is provided (standalone `/0_spec` run), skip this step — it changes nothing about the default behavior
 4. Explore the codebase to understand the relevant architecture — find and read the files most likely affected by this feature
    4b. **Check completed work**: Before deferring any scope (especially frontend) because a dependency "is not yet implemented", verify the actual completion status using whatever tracking the project uses (see CLAUDE.md). Never assume a dependency is missing — check first.
 5. Identify: which files will change, what new files are needed, and what existing patterns to follow
@@ -28,7 +36,7 @@ Steps:
    - **New files**: list any new files needed
    - **Patterns to mirror**: 2–3 specific existing files whose structure, naming, or style the implementation should follow — this is the codebase intelligence that lets `/1_implement` match conventions without exploring
    - **Implementation notes**: key decisions, edge cases to handle
-   - **UX concept** *(REQUIRED when the PRD includes a Frontend section — never silently drop frontend scope; if deferring, state the target PRD explicitly)*:
+   - **UX concept** _(REQUIRED when the PRD includes a Frontend section — never silently drop frontend scope; if deferring, state the target PRD explicitly)_:
      - **Component tree**: hierarchical breakdown of components needed (leaf → container), noting which are new vs existing. Use indentation to show nesting.
      - **Interaction flows**: describe each distinct user journey as a numbered sequence of steps. For multi-step flows (wizards, forms, onboarding), include: trigger → intermediate states → success state → error/edge states. Use mermaid `stateDiagram-v2` for complex flows with branching.
      - **State & data flow**: which component owns which state, what gets lifted, what goes into global store vs local state. Map data dependencies (e.g. "ResultsChart reads `scores` from Zustand store, computed by `calculateScores()` in scoring engine").

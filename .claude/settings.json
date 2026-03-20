@@ -1,24 +1,8 @@
 {
   "permissions": {
-    "allow": [
-      "Edit(*)",
-      "Write(*)",
-      "Read(*)",
-      "Bash(*)"
-    ]
+    "allow": ["Edit(*)", "Write(*)", "Read(*)", "Bash(*)"]
   },
   "hooks": {
-    "PermissionRequest": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-approve.js"
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
@@ -37,17 +21,6 @@
           {
             "type": "command",
             "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/auto-format.js"
-          }
-        ]
-      }
-    ],
-    "PostCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/post-compact.js"
           }
         ]
       }

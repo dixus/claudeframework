@@ -1,10 +1,23 @@
 ---
 name: learn
-description: Process new references into context knowledge and propose skill improvements. Use after adding blog posts, repos, or docs to .claude/references/.
+description: Process new references into context knowledge and propose skill improvements. Use after adding blog posts, repos, or docs to .claude/references/, or pass a URL to fetch and ingest directly.
 disable-model-invocation: true
+argument-hint: "[url]"
 ---
 
 Process new material from `.claude/references/` and distill insights into `.claude/context/`. Then review every skill against the accumulated knowledge and apply any improvements.
+
+## URL ingestion (when $ARGUMENTS is a URL)
+
+If `$ARGUMENTS` starts with `http://` or `https://`, treat it as a URL to ingest:
+
+1. WebFetch the URL and extract the main content (article text, README, docs — skip nav/ads/boilerplate)
+2. Generate a slug from the page title or URL path (e.g. `claude-code-best-practices.md`)
+3. Write the extracted content as markdown to `references/blogs/<slug>.md`
+4. Log: "Saved <url> → references/blogs/<slug>.md"
+5. Continue to the processing steps below — the new file will be picked up as unprocessed
+
+This bridges the scout-learn pipeline: `/scout` produces "Worth investigating" URLs, and `/learn <url>` ingests them directly.
 
 ## Idempotency rule — filesystem-based, read this first
 
@@ -23,7 +36,7 @@ Processed state is tracked on the filesystem — do NOT rely on the index table 
 
 **For blog/article files** (individual files in `references/blogs/`):
 
-1. Read the full content
+1. Read the full content. For PDF files, use the `pages` parameter to read in chunks of 20 pages (e.g. `pages: "1-20"`, then `pages: "21-40"`) — do not attempt to read an entire large PDF at once.
 2. Identify which context file(s) it belongs to:
    - Claude Code workflow, prompting, session management → `.claude/context/claude-code-workflow.md`
    - SaaS architecture, auth, billing, infra, multi-tenancy → `.claude/context/saas-architecture-patterns.md`
