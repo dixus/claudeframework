@@ -2,9 +2,16 @@
 
 By [Holger Kreissl](https://github.com/hkreissl)
 
-A reusable `.claude/` directory that turns Claude Code into a disciplined software engineering pipeline. One command — `/ship` — takes a feature from requirements to committed code, with spec writing, implementation, review, and fixes each running in isolated subagents with clean context.
+A reusable `.claude/` directory that turns Claude Code into a disciplined software engineering pipeline. Drop it into any project, any tech stack. One command — `/ship` — takes a feature from requirements to committed code.
 
-Drop it into any project. Works with any tech stack.
+### What makes this different
+
+Most Claude Code workflows run everything in one session. This framework doesn't.
+
+- **Bias-free review** — the review phase runs in isolated context, never seeing implementation decisions. Claude can't rubber-stamp its own code.
+- **The framework learns** — every correction from a review cycle is captured. After 14 days, proven rules graduate into permanent `CLAUDE.md` rules. The framework gets stricter with every feature shipped.
+- **Zero context pollution** — each phase (spec, implement, review, fix, commit) runs in its own subagent. Files on disk are the handoff mechanism, not the context window.
+- **Configurable guardrails** — complexity gates, circuit breakers, recurring issue detection, and all thresholds tunable per project.
 
 ---
 
@@ -21,7 +28,7 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## The solution
 
-A set of 17 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically. The framework learns from every review cycle and graduates proven rules into permanent project configuration.
+17 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
