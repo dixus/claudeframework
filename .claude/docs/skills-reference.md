@@ -122,7 +122,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 ---
 
-## `/4_test`
+## `/test`
 
 **Purpose**: Full verification suite — report only, no fixes.
 
@@ -140,8 +140,8 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 **Usage**:
 ```
-/4_test
-/4_test src/lib/scoring/engine.test.ts   ← specific file only
+/test
+/test src/lib/scoring/engine.test.ts   ← specific file only
 ```
 
 ---
@@ -228,7 +228,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 1. Runs `git status` + `git diff HEAD` to understand scope
 2. **Analyses the diff for distinct concerns** — proposes splitting into atomic commits if multiple unrelated things changed
 3. Confirms the split with the user (or proceeds as single commit)
-4. Runs pre-commit checks per CLAUDE.md: typecheck → lint (no tests — those are for `/4_test`)
+4. Runs pre-commit checks per CLAUDE.md: typecheck → lint (no tests — those are for `/test`)
 5. Stages the appropriate files and writes the commit message in **conventional commit format**:
    `<emoji> <type>(<scope>): <short description>` — e.g. `✨ feat(scoring): add gating logic`
 6. Creates each commit; repeats for multi-commit splits

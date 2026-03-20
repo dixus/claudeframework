@@ -2,6 +2,7 @@
 name: debug
 description: Diagnose and fix a failing test, type error, or runtime error
 disable-model-invocation: true
+argument-hint: "<error message, test name, or file path>"
 ---
 Diagnose and fix a specific failure. $ARGUMENTS is optional — pass an error message, test name, or file path to focus the investigation.
 

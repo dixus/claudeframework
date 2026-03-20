@@ -1,7 +1,8 @@
 ---
-name: 4_test
+name: test
 description: Run the full verify suite and report results — no fixes applied
 disable-model-invocation: true
+argument-hint: "[file-or-pattern]"
 ---
 Run the full verify suite and report the results. Do not fix anything — report only.
 

@@ -2,7 +2,9 @@
 name: 2_review
 description: Review implementation changes and write a report to .claude/reviews/
 disable-model-invocation: true
+argument-hint: "[spec-name]"
 ---
+
 > **Recommended model: `claude-opus-4-6`** — multi-lens review (correctness, security, spec validation, etc.) requires deep reasoning. Using Sonnet risks missing subtle issues.
 
 Review the current implementation changes and produce a written review report.
@@ -12,6 +14,7 @@ IMPORTANT: For best results, run this skill in a fresh session (/clear first) so
 Use a subagent to do the file investigation so the reading does not consume the main session's context. The subagent should return its findings and you write the report from those findings.
 
 Steps:
+
 1. Read CLAUDE.md for project context and conventions
 2. If $ARGUMENTS is provided, treat it as a spec filename and read `.claude/specs/<name>.md` to understand what was intended
 3. **Phase awareness**: check if `.claude/specs/<name>-phases.md` exists. If it does:
@@ -38,35 +41,39 @@ Steps:
    - **PM**: does the change deliver business value? Does it align with the stated goal in the spec? Is anything built that wasn't asked for?
    - **DevOps**: any CI/CD implications? Environment variables, build config, or deployment steps affected? Any observability gaps (missing logs, metrics)?
    - **Spec validation**: check "Validation criteria" in the spec if present — can each criterion be confirmed from the diff? List each criterion and whether it is met or unmet.
+   - **Spec completeness**: walk every requirement, validation criterion, and test case listed in the spec. For each, mark ✅ implemented / ❌ missing / ⚠️ partially implemented. A missing requirement (❌) is automatically **critical** severity. A partial implementation (⚠️) is **major**. Present the full checklist in the Issues section grouped under "Spec completeness gaps". This lens catches the most common error class: code that passes quality review but silently omits spec items.
 
 ### Delta Review Mode (subsequent review cycles)
 
 9. When a previous review file exists, do a **focused delta review** instead of a full re-review. This prevents discovering "new" issues each cycle and ensures convergence:
    a. Read the previous review file (`.claude/reviews/<name>-review.md`)
    b. Identify what changed since the last review: `git diff` against the state before fixes (use commit hashes or stash references from the fix cycle)
-   c. **Escalation check**: if the fix diff is large (>50% of the original implementation diff) or touches files not mentioned in the previous review, the fixes are too invasive for delta mode — fall back to **full review mode** (steps 6-8) to catch issues the broader changes may have introduced. State "escalating to full review — fix scope was too broad" in the report.
+   c. **Escalation check**: if the fix diff is large (exceeds `delta_review_escalation_pct` from CLAUDE.md, default: 50% of the original implementation diff) or touches files not mentioned in the previous review, the fixes are too invasive for delta mode — fall back to **full review mode** (steps 6-8) to catch issues the broader changes may have introduced. State "escalating to full review — fix scope was too broad" in the report.
    d. For each issue from the previous review:
-      - **Verify the fix**: read the affected code — is the issue actually resolved? Mark as ✅ fixed or ❌ still present
-   e. **Regression scan**: review ONLY the lines/files changed by the fix cycle — check for:
-      - New bugs introduced by the fix
-      - Verify step regressions (did something that was passing now break?)
-      - Scope creep (did the fix touch more than necessary?)
-   f. Do NOT re-evaluate unchanged code against the full 8-lens criteria — that was already done in the first cycle
-   g. Only flag genuinely new issues that exist in code touched by the fix cycle
+   - **Verify the fix**: read the affected code — is the issue actually resolved? Mark as ✅ fixed or ❌ still present
+     e. **Regression scan**: review ONLY the lines/files changed by the fix cycle — check for:
+   - New bugs introduced by the fix
+   - Verify step regressions (did something that was passing now break?)
+   - Scope creep (did the fix touch more than necessary?)
+     f. **Spec completeness re-check**: if the previous review had any ❌ or ⚠️ spec completeness items, re-verify those specific items against the current code — mark them ✅ resolved or ❌ still missing
+     g. Do NOT re-evaluate unchanged code against the other lens criteria — that was already done in the first cycle
+     h. Only flag genuinely new issues that exist in code touched by the fix cycle
 
 ### Severity-Based Verdict (applies to both modes)
 
 10. Write the review to `.claude/reviews/<name>-review.md` (use spec name if available, otherwise `latest-review.md`) with sections:
-   - **Summary**: overall assessment — use the severity-based verdict rules below
-   - **Issues**: numbered list, each with severity (critical / major / minor), affected file + line, and a clear description
-   - **Suggestions**: optional improvements that are not blockers (never block a "pass" verdict)
 
-   **Verdict rules:**
-   - **"pass"** → no critical or major issues. Minor-only issues (if any) go in the Suggestions section, not Issues. The implementation ships as-is.
-   - **"pass with fixes"** → no critical issues, but 1+ major issues that must be fixed. Minor issues go in Suggestions.
-   - **"needs rework"** → 1+ critical issues (architectural problems, security vulnerabilities, spec requirements not met, data loss risk).
+- **Summary**: overall assessment — use the severity-based verdict rules below
+- **Issues**: numbered list, each with severity (critical / major / minor), affected file + line, and a clear description
+- **Suggestions**: optional improvements that are not blockers (never block a "pass" verdict)
 
-   Key principle: **minor issues never block shipping.** Style nits, optional refactors, "nice to have" improvements, and subjective preferences belong in Suggestions and do not trigger another fix/review cycle.
+**Verdict rules:**
+
+- **"pass"** → no critical or major issues. Minor-only issues (if any) go in the Suggestions section, not Issues. The implementation ships as-is.
+- **"pass with fixes"** → no critical issues, but 1+ major issues that must be fixed. Minor issues go in Suggestions.
+- **"needs rework"** → 1+ critical issues (architectural problems, security vulnerabilities, spec requirements not met, data loss risk).
+
+Key principle: **minor issues never block shipping.** Style nits, optional refactors, "nice to have" improvements, and subjective preferences belong in Suggestions and do not trigger another fix/review cycle.
 
 11. Print the issue list to the chat so the user sees it immediately without opening the file.
 

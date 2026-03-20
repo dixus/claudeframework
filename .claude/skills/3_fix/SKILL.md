@@ -2,6 +2,7 @@
 name: 3_fix
 description: Fix issues found in a review report in .claude/reviews/
 disable-model-invocation: true
+argument-hint: "[review-file]"
 ---
 Fix issues found in a review report.
 

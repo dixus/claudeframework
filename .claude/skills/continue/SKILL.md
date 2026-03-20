@@ -2,6 +2,7 @@
 name: continue
 description: Resume work from a handoff file after /clear or in a new session
 disable-model-invocation: true
+argument-hint: "[handoff-file]"
 ---
 Restore context from a handoff file and prepare to resume work.
 

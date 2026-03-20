@@ -2,6 +2,7 @@
 name: healthcheck
 description: Scan Docker container logs for errors, crashes, and warnings across all services
 disable-model-invocation: false
+argument-hint: "[service-name]"
 ---
 Check the health of all running Docker services. $ARGUMENTS is optional — pass a service name (api, worker, web-buyer, web-supplier) to check only that service.
 

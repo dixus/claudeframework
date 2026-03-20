@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working in this repository.
 
 ## This repo
 
-**Claude Code Development Framework** — a reusable `.claude/` directory with skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline.
+**Claude Code Development Framework** — a reusable `.claude/` directory with 17 skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline with built-in learning.
 
 The `src/` directory contains the **AI Maturity Score** demo app — a working example of the framework applied to a real Next.js/TypeScript project.
 
@@ -14,14 +14,14 @@ Full framework docs: `.claude/docs/README.md`
 
 ## Demo app tech stack
 
-| Layer | Technology |
-|---|---|
+| Layer     | Technology                           |
+| --------- | ------------------------------------ |
 | Framework | Next.js 14 (App Router) + TypeScript |
-| Styling | Tailwind CSS + shadcn/ui |
-| State | Zustand |
-| Charts | Recharts |
-| Testing | Vitest + React Testing Library |
-| Deploy | Vercel |
+| Styling   | Tailwind CSS + shadcn/ui             |
+| State     | Zustand                              |
+| Charts    | Recharts                             |
+| Testing   | Vitest + React Testing Library       |
+| Deploy    | Vercel                               |
 
 ## Demo app commands
 
@@ -47,32 +47,62 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 
 ## Framework skills
 
-| Skill | Purpose |
-|---|---|
-| `/ship <feature>` | **Full pipeline**: orchestrates spec → implement → review → fix (loop) → commit, each in a clean subagent |
-| `/0_spec <feature>` | Write a spec to `.claude/specs/<name>.md` |
-| `/1_implement <spec>` | Implement a spec; enters plan mode first |
-| `/2_review [spec]` | Write a review report to `.claude/reviews/` |
-| `/3_fix [review]` | Fix review issues: critical → major → minor |
-| `/4_test [file]` | Run typecheck → lint → tests → build; report only |
-| `/learn` | Process references → extract insights → update context |
-| `/doc` | Regenerate `.claude/docs/` from current skills and context |
-| `/audit` | Check for vulnerable dependencies → fix → verify |
-| `/commit` | Create atomic commits with conventional messages |
-| `/create-hook` | Scaffold a Claude Code lifecycle hook |
-| `/debug` | Diagnose and fix a failing test or type error |
-| `/handoff` | Capture session state to a file before /clear |
-| `/continue` | Restore context from a handoff file in a new session |
+### Core pipeline
 
-`.claude/` directory layout:
+| Skill                 | Purpose                                                                      |
+| --------------------- | ---------------------------------------------------------------------------- |
+| `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit. `--dry-run` runs spec only and reports scope |
+| `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                |
+| `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis |
+| `/2_review [spec]`    | 9-lens code review with severity classification and spec completeness check  |
+| `/3_fix [review]`     | Fix issues by severity (critical → major → minor) with circuit breaker       |
+| `/test [file]`        | Run typecheck → lint → tests → build (report only, no fixes)                 |
 
-| Path | Purpose |
+### Development tools
+
+| Skill                | Purpose                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| `/commit`            | Atomic conventional commits with multi-concern detection                           |
+| `/debug`             | Diagnose and fix a failing test, type error, or runtime error                      |
+| `/impact <function>` | Blast radius analysis — find all call sites, test mocks, and consumers (read-only) |
+| `/smoke [spec]`      | Write and run smoke tests against a Docker stack from a spec                       |
+| `/audit`             | Find and fix vulnerable dependencies across package managers                       |
+| `/healthcheck`       | Scan Docker container logs for errors, crashes, and warnings                       |
+| `/create-hook`       | Scaffold a Claude Code lifecycle hook                                              |
+
+### Knowledge & session management
+
+| Skill       | Purpose                                                                          |
+| ----------- | -------------------------------------------------------------------------------- |
+| `/learn`    | Process blog posts and repos into the knowledge base; propose skill improvements |
+| `/doc`      | Regenerate `.claude/docs/` from current skills and context                       |
+| `/handoff`  | Capture session state before `/clear`                                            |
+| `/continue` | Resume from a handoff file in a new session                                      |
+
+## Framework thresholds (optional)
+
+This section is optional. If omitted, all skills use the defaults shown below. To customize, uncomment and change any value.
+
+<!-- Uncomment any line to override the default:
+| Threshold | Value |
 |---|---|
-| `skills/` | Skill definitions (the framework itself) |
-| `context/` | Curated knowledge read by all skills |
+| `complexity_gate_max_files` | 10 |
+| `review_fix_max_cycles` | 3 |
+| `lesson_graduation_age_days` | 14 |
+| `delta_review_escalation_pct` | 50 |
+-->
+
+## `.claude/` directory layout
+
+| Path          | Purpose                                         |
+| ------------- | ----------------------------------------------- |
+| `skills/`     | 17 skill definitions (the framework itself)     |
+| `context/`    | Curated knowledge read by all skills            |
 | `references/` | Drop zone: paste blog posts and repo files here |
-| `hooks/` | Lifecycle hook scripts (e.g. auto-approve.js) |
-| `docs/` | Generated framework documentation |
-| `specs/` | Generated feature specs |
-| `reviews/` | Review reports |
-| `input/` | Raw requirements (archived after spec) |
+| `hooks/`      | Lifecycle hook scripts (e.g. auto-approve.js)   |
+| `docs/`       | Generated framework documentation               |
+| `specs/`      | Generated feature specs                         |
+| `reviews/`    | Review reports                                  |
+| `input/`      | Raw requirements                                |
+| `handoffs/`   | Session state files (gitignored)                |
+| `metrics.csv` | Pipeline run log (append-only)                  |

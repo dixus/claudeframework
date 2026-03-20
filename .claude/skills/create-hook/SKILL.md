@@ -2,6 +2,7 @@
 name: create-hook
 description: Scaffold a Claude Code hook for this project based on detected tooling
 disable-model-invocation: true
+argument-hint: "[hook description]"
 ---
 Analyse the project, suggest useful hooks, then create and validate the one the user selects.
 

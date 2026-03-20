@@ -3,11 +3,13 @@ name: learn
 description: Process new references, update context knowledge files, and improve skills
 disable-model-invocation: true
 ---
+
 Process new material from `.claude/references/` and distill insights into `.claude/context/`. Then review every skill against the accumulated knowledge and apply any improvements.
 
 ## Idempotency rule — filesystem-based, read this first
 
 Processed state is tracked on the filesystem — do NOT rely on the index table for deduplication:
+
 - Blog files: physically moved to a `processed/` subfolder
 - Repo directories: marked with an empty `processed/.done` file inside the repo dir (too large to move)
 
@@ -46,8 +48,15 @@ Processed state is tracked on the filesystem — do NOT rely on the index table 
    - Are there missing steps that current best practices demand?
    - Are there steps that are now outdated or weaker than the state of the art?
    - Does a skill lack a safety check, decomposition gate, or verification step that the context recommends?
-9. Apply all warranted improvements directly to the skill files — do not ask for confirmation
-10. For each change made, note: which skill, what changed, and why (one line each)
+9. **Propose, do not apply.** Write all suggested skill improvements to `.claude/reviews/learn-proposals.md` with this format for each proposal:
+   ```
+   ### Skill: <skill-name>
+   **What:** <one-line description of the change>
+   **Why:** <which reference or context insight motivates this>
+   **Diff:** <show the specific lines to change — old → new>
+   ```
+   Do NOT modify skill files directly. The user reviews proposals and decides which to accept. This prevents a poorly written reference from corrupting a working skill.
+10. For each proposal, note: which skill, what would change, and why (one line each)
 
 ## After processing
 

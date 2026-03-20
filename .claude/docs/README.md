@@ -40,7 +40,7 @@ This framework solves all of these systematically.
 /3_fix <review name>
 
 # Final gate before shipping:
-/4_test
+/test
 ```
 
 ## Skills overview
@@ -51,7 +51,7 @@ This framework solves all of these systematically.
 | [`/1_implement`](skills-reference.md#1_implement) | Implementing a spec with plan approval |
 | [`/2_review`](skills-reference.md#2_review) | Code review against spec (fresh session) |
 | [`/3_fix`](skills-reference.md#3_fix) | Fixing review issues by severity |
-| [`/4_test`](skills-reference.md#4_test) | Full verify suite — report only |
+| [`/test`](skills-reference.md#4_test) | Full verify suite — report only |
 | [`/learn`](skills-reference.md#learn) | Processing new references into the knowledge base |
 | [`/doc`](skills-reference.md#doc) | Regenerating this documentation |
 | [`/audit`](skills-reference.md#audit) | Fixing vulnerable dependencies |

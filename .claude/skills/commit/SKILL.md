@@ -2,7 +2,9 @@
 name: commit
 description: Create well-structured atomic commits with conventional commit messages
 disable-model-invocation: true
+argument-hint: "[--all]"
 ---
+
 Create one or more commits from the current working tree changes.
 
 $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everything as a single commit.
@@ -14,6 +16,7 @@ $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everyt
 3. Analyse the diff for distinct logical concerns — ask: would a reviewer understand this as one coherent change, or are there multiple independent things happening?
 
 **If multiple distinct concerns are detected** (and `--all` was not passed):
+
 - List the concerns found (e.g. "engine logic change", "new test file", "updated README")
 - Propose a split: one atomic commit per concern
 - For each proposed commit: describe what it covers and suggest the message
@@ -21,6 +24,7 @@ $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everyt
 - After confirmation, guide through staging and committing each group in sequence
 
 **If a single concern** (or `--all` was passed):
+
 - Proceed to pre-commit checks (step 4)
 
 4. **Backlog check**: if the commit message references a task/PRD identifier (e.g. `PRD-17`, `TASK-5`), search for a backlog or tracker file in `.claude/input/` that contains that identifier as a heading. If found and the heading does not already have a ✅ marker, add ✅ to the heading and include the file in the commit. Skip this step if no backlog file exists.
@@ -60,6 +64,7 @@ $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everyt
    | `revert` | ⏪️ | Reverts a previous commit |
 
 8. Create the commit:
+
    ```
    git commit -m "<message>"
    ```
@@ -67,6 +72,7 @@ $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everyt
 9. If multiple commits were planned, repeat steps 6–8 for each remaining group
 
 10. Report:
-   - Each commit created (hash + message)
-   - Any pre-commit check failures that were skipped
-   - Reminder: push only when explicitly asked
+
+- Each commit created (hash + message)
+- Any pre-commit check failures that were skipped
+- Reminder: push only when explicitly asked

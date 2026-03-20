@@ -2,6 +2,7 @@
 name: handoff
 description: Capture current session state to a handoff file so work can be resumed cleanly after /clear or compaction
 disable-model-invocation: true
+argument-hint: "[label]"
 ---
 Capture the current session state into a timestamped handoff file.
 
