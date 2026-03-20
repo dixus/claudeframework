@@ -31,6 +31,7 @@ Short, high-priority rules that apply in every session regardless of project or 
 ## Self-improvement
 
 - **Capture corrections.** After any user correction, add the lesson to `.claude/context/lessons.md` — what went wrong and the rule that prevents it.
+- **Lessons are temporary.** `lessons.md` is an inbox, not an archive. Lessons that prove themselves get graduated into one-line rules in CLAUDE.md `## Learned Rules`. Graduation happens automatically via `/ship` (Step 4b) and `/commit` (when > 20 entries). Do not manually accumulate lessons indefinitely.
 - **Read lessons on start.** Check `.claude/context/lessons.md` at the start of any session that resembles a past correction.
 - **Prefer root causes.** Fix the underlying mistake pattern, not just the symptom.
 

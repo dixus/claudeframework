@@ -1,6 +1,6 @@
 ---
 name: impact
-description: Analyze blast radius of a code change — find all call sites, test mocks, and frontend hooks affected before modifying shared code
+description: Analyze blast radius of a code change — find all call sites, test mocks, and consumers. Use before modifying shared functions, interfaces, or modules.
 disable-model-invocation: true
 argument-hint: <function, file, class, or method name>
 ---

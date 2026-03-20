@@ -1,6 +1,6 @@
 ---
 name: smoke
-description: Run smoke tests against the Docker stack — write new tests from spec, run, fix assertions (max 3 attempts)
+description: Write and run smoke tests against the Docker stack from a spec. Use after deploying to a Docker environment to verify end-to-end behavior.
 disable-model-invocation: true
 argument-hint: "[spec-name]"
 ---
