@@ -13,6 +13,10 @@ import { RECOMMENDATIONS } from "./recommendations";
 import { CAPABILITY_PLAYBOOKS } from "./playbooks";
 import { getRoadmapForStage } from "./roadmaps";
 import { GROWTH_ENGINES } from "./growth-engines";
+import {
+  computeCoordinationCurves,
+  getCoordinationInsight,
+} from "./coordination";
 
 // Weights per Architecture Document v4.5.3
 const DIMENSIONS = [
@@ -356,6 +360,16 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
     if (roadmap) {
       result.roadmap = roadmap;
     }
+
+    const curves = computeCoordinationCurves(
+      input.enablers.teamSize,
+      thetaScore,
+    );
+    const { text: insight, savings } = getCoordinationInsight(
+      thetaScore,
+      input.enablers.teamSize,
+    );
+    result.coordination = { curves, insight, savings };
   }
 
   if (input.growthEngine) {

@@ -96,6 +96,11 @@ export interface AssessmentResult {
   scalingVelocity?: ScalingVelocity;
   roadmap?: import("./roadmaps").StageRoadmap;
   growthEngine?: import("./growth-engines").GrowthEngine;
+  coordination?: {
+    curves: import("./coordination").CoordinationModel[];
+    insight: string;
+    savings: number;
+  };
 }
 
 export type ModelId = "model1" | "model2" | "model3";

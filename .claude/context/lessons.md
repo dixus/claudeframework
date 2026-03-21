@@ -52,3 +52,11 @@ Each entry: what went wrong → rule that prevents it.
 **What went wrong**: In `computeScalingVelocity()`, the `fixBottleneck` what-if scenario used a hard assignment `{ ...capScores, [bottleneckCapability]: 85 }`. The `fixAll` scenario correctly used `Math.max`, but `fixBottleneck` did not, meaning if the bottleneck capability was already above 85, it would be lowered to 85 — producing a `fixBottleneckS` value less than `currentS`, which is logically wrong.
 
 **Rule**: When implementing a "raise X to at least Y" what-if scenario, always use `Math.max(currentValue, targetValue)` — never a bare assignment. A "floor" operation (`Math.max`) is semantically different from a "set" operation. If one scenario in a set uses `Math.max`, review all sibling scenarios for consistency before completing the implementation.
+
+---
+
+## 2026-03-21 — Unused function parameter when chart data doesn't include the user's position
+
+**What went wrong**: `computeCoordinationCurves(teamSize, theta)` accepted a `teamSize` parameter but generated data only for a hardcoded array `[10, 25, 50, 100, 200, 500]`. If the company's team size (e.g., 80) was not in that array, the `ReferenceLine x={teamSize}` in the chart had no matching data point, so the "You are here" marker rendered with no dot on the company curve.
+
+**Rule**: When a chart function accepts a user-specific value (team size, date, etc.) to anchor a marker, always inject that value into the data array if it isn't already present, then sort the array. Never accept a parameter and silently ignore it — either use it or remove it. Pattern: `const sizes = BASE_SIZES.includes(value) ? BASE_SIZES : [...BASE_SIZES, value].sort((a, b) => a - b)`.

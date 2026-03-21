@@ -12,6 +12,7 @@ import { CapabilityPlaybookPanel } from "./CapabilityPlaybookPanel";
 import { GrowthEnginePanel } from "./GrowthEnginePanel";
 import { ScalingPanel } from "./ScalingPanel";
 import { VelocityPanel } from "./VelocityPanel";
+import { CoordinationPanel } from "./CoordinationPanel";
 import { RoadmapPanel } from "./RoadmapPanel";
 import { PdfExportButton } from "./PdfExportButton";
 
@@ -51,6 +52,15 @@ export function ResultsPage() {
 
       {result.scalingVelocity && (
         <VelocityPanel velocity={result.scalingVelocity} />
+      )}
+
+      {result.coordination && result.enablers && (
+        <CoordinationPanel
+          curves={result.coordination.curves}
+          insight={result.coordination.insight}
+          savings={result.coordination.savings}
+          teamSize={result.enablers.teamSize}
+        />
       )}
 
       {result.roadmap && (
