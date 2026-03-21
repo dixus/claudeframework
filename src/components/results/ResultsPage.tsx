@@ -8,6 +8,7 @@ import { BottleneckPanel } from "./BottleneckPanel";
 import { InsightsPanel } from "./InsightsPanel";
 import { PlaybookPanel } from "./PlaybookPanel";
 import { CapabilityPanel } from "./CapabilityPanel";
+import { CapabilityPlaybookPanel } from "./CapabilityPlaybookPanel";
 import { ScalingPanel } from "./ScalingPanel";
 import { PdfExportButton } from "./PdfExportButton";
 
@@ -43,6 +44,10 @@ export function ResultsPage() {
           capabilities={result.capabilities}
           bottleneck={result.capabilityBottleneck}
         />
+      )}
+
+      {result.playbook && (
+        <CapabilityPlaybookPanel playbook={result.playbook} />
       )}
 
       <InsightsPanel result={result} />
