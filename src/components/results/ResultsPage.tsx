@@ -10,6 +10,7 @@ import { PlaybookPanel } from "./PlaybookPanel";
 import { CapabilityPanel } from "./CapabilityPanel";
 import { CapabilityPlaybookPanel } from "./CapabilityPlaybookPanel";
 import { ScalingPanel } from "./ScalingPanel";
+import { RoadmapPanel } from "./RoadmapPanel";
 import { PdfExportButton } from "./PdfExportButton";
 
 export function ResultsPage() {
@@ -37,6 +38,13 @@ export function ResultsPage() {
 
       {result.meta && (
         <ScalingPanel meta={result.meta} thetaScore={result.thetaScore} />
+      )}
+
+      {result.roadmap && (
+        <RoadmapPanel
+          roadmap={result.roadmap}
+          currentTheta={result.thetaScore}
+        />
       )}
 
       {result.capabilities && result.capabilityBottleneck && (

@@ -90,6 +90,7 @@ export interface AssessmentResult {
   meta?: MetaResult;
   enablers?: EnablerInput;
   playbook?: CapabilityPlaybook;
+  roadmap?: import("./roadmaps").StageRoadmap;
 }
 
 export type ModelId = "model1" | "model2" | "model3";

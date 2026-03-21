@@ -10,6 +10,7 @@ import type {
 } from "./types";
 import { RECOMMENDATIONS } from "./recommendations";
 import { CAPABILITY_PLAYBOOKS } from "./playbooks";
+import { getRoadmapForStage } from "./roadmaps";
 
 // Weights per Architecture Document v4.5.3
 const DIMENSIONS = [
@@ -250,6 +251,11 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
     );
     result.meta = computeMeta(thetaScore, capScores, enablerScore);
     result.enablers = input.enablers;
+
+    const roadmap = getRoadmapForStage(input.enablers.fundingStage);
+    if (roadmap) {
+      result.roadmap = roadmap;
+    }
   }
 
   return result;
