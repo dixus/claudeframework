@@ -3,11 +3,15 @@
 import { useAssessmentStore } from "@/store/assessmentStore";
 import { IntroStep } from "./IntroStep";
 import { CompanyStep } from "./CompanyStep";
+import { EnablerStep } from "./EnablerStep";
+import { CapabilityStep } from "./CapabilityStep";
 import { PhaseIntro } from "./PhaseIntro";
 import { ScreeningPhase } from "./ScreeningPhase";
 import { DeepDivePhase } from "./DeepDivePhase";
 import { ReviewStep } from "./ReviewStep";
 import { ResultsPage } from "@/components/results/ResultsPage";
+
+// Steps: 0=Intro, 1=Company, 2=Enablers, 3=Capabilities, 4=Screening, 5=DeepDive, 6=Review, 7=Results
 
 export function AssessmentShell() {
   const step = useAssessmentStore((s) => s.step);
@@ -24,10 +28,9 @@ export function AssessmentShell() {
   }
 
   function backFromDeepDiveIntro() {
-    // Go back to last screening question
     useAssessmentStore.setState({
       phase: "screening",
-      step: 2,
+      step: 4,
       screeningIndex: 5,
     });
   }
@@ -38,7 +41,11 @@ export function AssessmentShell() {
     content = <IntroStep />;
   } else if (step === 1) {
     content = <CompanyStep />;
-  } else if (step === 2 && phase === "screening-intro") {
+  } else if (step === 2) {
+    content = <EnablerStep />;
+  } else if (step === 3) {
+    content = <CapabilityStep />;
+  } else if (step === 4 && phase === "screening-intro") {
     content = (
       <PhaseIntro
         phase="screening"
@@ -46,9 +53,9 @@ export function AssessmentShell() {
         onBack={prevStep}
       />
     );
-  } else if (step === 2 && phase === "screening") {
+  } else if (step === 4 && phase === "screening") {
     content = <ScreeningPhase />;
-  } else if (step === 3 && phase === "deepdive-intro") {
+  } else if (step === 5 && phase === "deepdive-intro") {
     content = (
       <PhaseIntro
         phase="deepdive"
@@ -57,11 +64,11 @@ export function AssessmentShell() {
         deepDiveCount={deepDiveQueue.length}
       />
     );
-  } else if (step === 3 && phase === "deepdive") {
+  } else if (step === 5 && phase === "deepdive") {
     content = <DeepDivePhase />;
-  } else if (step === 4) {
+  } else if (step === 6) {
     content = <ReviewStep />;
-  } else if (step === 5) {
+  } else if (step === 7) {
     content = <ResultsPage />;
   }
 

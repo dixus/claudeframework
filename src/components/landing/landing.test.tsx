@@ -9,7 +9,7 @@ import GlossaryPage from "@/app/glossary/page";
 describe("LandingPage", () => {
   it("renders all sections", () => {
     render(<LandingPage />);
-    expect(screen.getByText("AI Maturity Framework")).toBeDefined();
+    expect(screen.getByText("AI Maturity Score")).toBeDefined();
     expect(screen.getByText("Maturity Levels")).toBeDefined();
     expect(screen.getByText("Assessment Dimensions")).toBeDefined();
     expect(screen.getByText("Why Take the Assessment")).toBeDefined();
@@ -17,7 +17,9 @@ describe("LandingPage", () => {
 
   it("has CTA link to /assessment", () => {
     render(<LandingPage />);
-    const ctaLinks = screen.getAllByRole("link", { name: /start assessment/i });
+    const ctaLinks = screen.getAllByRole("link", {
+      name: /start.*assessment/i,
+    });
     expect(ctaLinks.length).toBeGreaterThanOrEqual(1);
     expect(ctaLinks[0].getAttribute("href")).toBe("/assessment");
   });

@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import type { DimensionKey, AssessmentResult } from "../lib/scoring/types";
+import type {
+  DimensionKey,
+  AssessmentResult,
+  CapabilityKey,
+  EnablerInput,
+} from "../lib/scoring/types";
 import { computeResult } from "../lib/scoring/engine";
 import {
   determineAdaptiveLevel,
@@ -16,28 +21,53 @@ const DIMENSION_KEYS: DimensionKey[] = [
   "adoption",
 ];
 
+const CAPABILITY_KEYS: CapabilityKey[] = [
+  "c1_strategy",
+  "c2_setup",
+  "c3_execution",
+  "c4_operationalization",
+];
+
 const initialResponses = (): Record<DimensionKey, number[]> =>
   Object.fromEntries(
     DIMENSION_KEYS.map((k) => [k, Array(8).fill(0)]),
   ) as Record<DimensionKey, number[]>;
 
+const initialCapabilityResponses = (): Record<CapabilityKey, number> =>
+  Object.fromEntries(CAPABILITY_KEYS.map((k) => [k, 0])) as Record<
+    CapabilityKey,
+    number
+  >;
+
+const initialEnablers = (): EnablerInput => ({
+  fundingStage: "" as EnablerInput["fundingStage"],
+  teamSize: 0,
+  annualRevenue: 0,
+});
+
+// Steps: 0=Intro, 1=Company, 2=Enablers, 3=Capabilities, 4=Screening, 5=DeepDive, 6=Review, 7=Results
+const MAX_STEP = 7;
+
 interface AssessmentState {
   step: number;
   companyName: string;
   responses: Record<DimensionKey, number[]>;
+  enablers: EnablerInput;
+  capabilityResponses: Record<CapabilityKey, number>;
   result: AssessmentResult | null;
   phase: "screening-intro" | "screening" | "deepdive-intro" | "deepdive" | null;
   screeningIndex: number;
   deepDiveQueue: Array<{ dimension: DimensionKey; questionIndex: number }>;
   deepDivePosition: number;
   adaptiveLevels: Record<DimensionKey, AdaptiveLevel> | null;
-  /** Tracks question IDs that have been explicitly answered (format: "dimension:index") */
   answeredQuestions: Set<string>;
 }
 
 interface AssessmentActions {
   setCompanyName: (name: string) => void;
   setAnswer: (dimension: DimensionKey, index: number, value: number) => void;
+  setEnablers: (enablers: EnablerInput) => void;
+  setCapabilityAnswer: (key: CapabilityKey, value: number) => void;
   nextStep: () => void;
   prevStep: () => void;
   submit: () => void;
@@ -69,6 +99,8 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
   step: 0,
   companyName: "",
   responses: initialResponses(),
+  enablers: initialEnablers(),
+  capabilityResponses: initialCapabilityResponses(),
   result: null,
   phase: null,
   screeningIndex: 0,
@@ -78,6 +110,13 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
   answeredQuestions: new Set<string>(),
 
   setCompanyName: (name) => set({ companyName: name }),
+
+  setEnablers: (enablers) => set({ enablers }),
+
+  setCapabilityAnswer: (key, value) =>
+    set((state) => ({
+      capabilityResponses: { ...state.capabilityResponses, [key]: value },
+    })),
 
   setAnswer: (dimension, index, value) =>
     set((state) => {
@@ -93,25 +132,27 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
 
   nextStep: () =>
     set((state) => {
-      const next = Math.min(5, state.step + 1);
-      if (next === 2) {
+      const next = Math.min(MAX_STEP, state.step + 1);
+      // Step 4 = screening phase
+      if (next === 4) {
         return { step: next, phase: "screening-intro", screeningIndex: 0 };
       }
       return { step: next };
     }),
+
   prevStep: () =>
     set((state) => {
-      if (state.step === 4) {
+      if (state.step === 6) {
         // From Review, go back to last deep-dive question
         return {
-          step: 3,
+          step: 5,
           phase: "deepdive",
           deepDivePosition: Math.max(0, state.deepDiveQueue.length - 1),
         };
       }
-      if (state.step === 2) {
-        // From screening intro, go back to Company step
-        return { step: 1, phase: null };
+      if (state.step === 4) {
+        // From screening intro, go back to Capabilities step
+        return { step: 3, phase: null };
       }
       return { step: Math.max(0, state.step - 1) };
     }),
@@ -121,8 +162,10 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       result: computeResult({
         companyName: state.companyName,
         responses: state.responses,
+        enablers: state.enablers.fundingStage ? state.enablers : undefined,
+        capabilityResponses: state.capabilityResponses,
       }),
-      step: 5,
+      step: MAX_STEP,
     })),
 
   reset: () =>
@@ -130,6 +173,8 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       step: 0,
       companyName: "",
       responses: initialResponses(),
+      enablers: initialEnablers(),
+      capabilityResponses: initialCapabilityResponses(),
       result: null,
       phase: null,
       screeningIndex: 0,
@@ -167,7 +212,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         deepDiveQueue: queue,
         deepDivePosition: 0,
         phase: "deepdive-intro",
-        step: 3,
+        step: 5,
       };
     }),
 
@@ -178,7 +223,6 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         levels[dim] = determineAdaptiveLevel(state.responses[dim][0]);
       }
       const queue = buildDeepDiveQueue(levels);
-      // Reset answers for questions that are now excluded
       const newResponses = { ...state.responses };
       for (const dim of DIMENSION_KEYS) {
         const followUps = getFollowUpQuestions(dim, levels[dim]);
@@ -214,7 +258,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         return { deepDivePosition: state.deepDivePosition + 1 };
       }
       // All deep-dive questions answered — go to Review
-      return { step: 4, phase: null };
+      return { step: 6, phase: null };
     }),
 
   goBackDeepDive: () =>
@@ -222,7 +266,6 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       if (state.deepDivePosition > 0) {
         return { deepDivePosition: state.deepDivePosition - 1 };
       }
-      // At first deep-dive question — go back to deep-dive intro
       return { phase: "deepdive-intro" };
     }),
 
@@ -231,7 +274,6 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       if (state.screeningIndex > 0) {
         return { screeningIndex: state.screeningIndex - 1 };
       }
-      // At first screening question — go back to screening intro
       return { phase: "screening-intro" };
     }),
 }));

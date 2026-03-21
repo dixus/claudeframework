@@ -1,19 +1,19 @@
 const DIMENSIONS = [
   {
     label: "Strategy",
-    weight: "20%",
+    weight: "25%",
     emoji: "\uD83C\uDFAF",
     description: "AI vision, roadmap, and executive commitment",
   },
   {
     label: "Architecture",
-    weight: "15%",
+    weight: "20%",
     emoji: "\uD83C\uDFD7\uFE0F",
     description: "Technical infrastructure and AI platform readiness",
   },
   {
     label: "Workflow",
-    weight: "25%",
+    weight: "15%",
     emoji: "\u2699\uFE0F",
     description: "Process redesign and AI-human task allocation",
   },

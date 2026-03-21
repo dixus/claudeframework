@@ -3,19 +3,19 @@ const VALUE_PROPS = [
     icon: "\uD83C\uDFAF",
     title: "Personalised \u03B8 Score",
     description:
-      "Get a weighted composite score that reflects your unique AI maturity across all six dimensions.",
+      "Get a weighted composite score measuring your AI maturity across six dimensions — plus a META score predicting your time to \u20AC100M ARR.",
   },
   {
     icon: "\uD83D\uDCCB",
-    title: "Actionable Recommendations",
+    title: "Capability Diagnosis",
     description:
-      "Receive tailored playbooks and next steps based on your current maturity level and gaps.",
+      "Identify your scaling bottleneck across 4 capabilities (Strategy, Setup, Execution, Operationalization) using the validated SST framework.",
   },
   {
     icon: "\uD83D\uDCC8",
-    title: "Peer Benchmarks",
+    title: "Superlinear Scaling",
     description:
-      "Compare your scores against industry benchmarks from 62 companies across sectors.",
+      "See where you fall on the scaling curve — from linear (0.8) to superlinear (1.8) — benchmarked against 62 AI-native companies.",
   },
 ] as const;
 

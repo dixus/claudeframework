@@ -26,6 +26,16 @@ describe("initial state", () => {
       expect(state.responses[key]).toEqual([0, 0, 0, 0, 0, 0, 0, 0]);
     }
   });
+
+  it("has initial enablers and capability responses", () => {
+    const state = useAssessmentStore.getState();
+    expect(state.enablers.teamSize).toBe(0);
+    expect(state.enablers.annualRevenue).toBe(0);
+    expect(state.capabilityResponses.c1_strategy).toBe(0);
+    expect(state.capabilityResponses.c2_setup).toBe(0);
+    expect(state.capabilityResponses.c3_execution).toBe(0);
+    expect(state.capabilityResponses.c4_operationalization).toBe(0);
+  });
 });
 
 // Test 2: setCompanyName
@@ -71,10 +81,10 @@ describe("nextStep", () => {
     expect(useAssessmentStore.getState().step).toBe(1);
   });
 
-  it("clamps at 5", () => {
-    useAssessmentStore.setState({ step: 5 });
+  it("clamps at 7", () => {
+    useAssessmentStore.setState({ step: 7 });
     useAssessmentStore.getState().nextStep();
-    expect(useAssessmentStore.getState().step).toBe(5);
+    expect(useAssessmentStore.getState().step).toBe(7);
   });
 });
 
@@ -94,11 +104,11 @@ describe("prevStep", () => {
 
 // Test 7: submit
 describe("submit", () => {
-  it("computes result, sets step=5, and result.companyName matches store", () => {
+  it("computes result, sets step=7, and result.companyName matches store", () => {
     useAssessmentStore.getState().setCompanyName("Test Corp");
     useAssessmentStore.getState().submit();
     const state = useAssessmentStore.getState();
-    expect(state.step).toBe(5);
+    expect(state.step).toBe(7);
     expect(state.result).not.toBeNull();
     expect(state.result!.companyName).toBe("Test Corp");
     expect(typeof state.result!.thetaScore).toBe("number");
@@ -118,10 +128,38 @@ describe("reset", () => {
     expect(state.companyName).toBe("");
     expect(state.result).toBeNull();
     expect(state.responses.data).toEqual([0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(state.enablers.teamSize).toBe(0);
+    expect(state.capabilityResponses.c1_strategy).toBe(0);
   });
 });
 
-// Test 9 (moved from assessment.test.tsx): Store — screening and adaptive levels
+// Test 9: Enablers
+describe("setEnablers", () => {
+  it("updates enabler values", () => {
+    useAssessmentStore.getState().setEnablers({
+      fundingStage: "series-b",
+      teamSize: 80,
+      annualRevenue: 5000,
+    });
+    const state = useAssessmentStore.getState();
+    expect(state.enablers.fundingStage).toBe("series-b");
+    expect(state.enablers.teamSize).toBe(80);
+    expect(state.enablers.annualRevenue).toBe(5000);
+  });
+});
+
+// Test 10: Capability answers
+describe("setCapabilityAnswer", () => {
+  it("updates a single capability score", () => {
+    useAssessmentStore.getState().setCapabilityAnswer("c2_setup", 3);
+    expect(useAssessmentStore.getState().capabilityResponses.c2_setup).toBe(3);
+    expect(useAssessmentStore.getState().capabilityResponses.c1_strategy).toBe(
+      0,
+    );
+  });
+});
+
+// Test 11: screening and adaptive levels
 describe("Store — screening and adaptive levels", () => {
   it("screening stores answers at index 0 (test case 1)", () => {
     const store = useAssessmentStore.getState();
@@ -219,7 +257,6 @@ describe("Store — screening and adaptive levels", () => {
 
   it("total question count — mixed (test case 8)", () => {
     const store = useAssessmentStore.getState();
-    // 2 beginner + 2 intermediate + 2 advanced
     store.setScreeningAnswer("strategy", 0); // beginner → 3
     store.setScreeningAnswer("architecture", 1); // beginner → 3
     store.setScreeningAnswer("workflow", 2); // intermediate → 5
@@ -232,15 +269,12 @@ describe("Store — screening and adaptive levels", () => {
 
   it("back navigation recomputes queue (test case 11)", () => {
     const store = useAssessmentStore.getState();
-    // Start with advanced for strategy
     store.setScreeningAnswer("strategy", 4);
     store.computeAdaptiveLevels();
-    // Answer some deep-dive questions at indices 4-7
     store.setAnswer("strategy", 4, 3);
     store.setAnswer("strategy", 5, 2);
     store.setAnswer("strategy", 6, 1);
     store.setAnswer("strategy", 7, 1);
-    // Now change screening answer to beginner
     store.setScreeningAnswer("strategy", 0);
     store.computeAdaptiveLevels();
     const state = useAssessmentStore.getState();
@@ -248,7 +282,6 @@ describe("Store — screening and adaptive levels", () => {
       (q) => q.dimension === "strategy",
     );
     expect(strategyQs).toHaveLength(3);
-    // Answers at indices 4-7 should be reset to 0
     expect(state.responses.strategy[4]).toBe(0);
     expect(state.responses.strategy[5]).toBe(0);
     expect(state.responses.strategy[6]).toBe(0);
@@ -256,7 +289,7 @@ describe("Store — screening and adaptive levels", () => {
   });
 });
 
-// Test 10 (moved from assessment.test.tsx): getFollowUpQuestions pure function
+// Test 12: getFollowUpQuestions pure function
 describe("getFollowUpQuestions", () => {
   it("returns correct indices for beginner (test case 9)", () => {
     expect(getFollowUpQuestions("strategy", "beginner")).toEqual([1, 2, 3]);
@@ -275,7 +308,7 @@ describe("getFollowUpQuestions", () => {
   });
 });
 
-// Test 11 (moved from assessment.test.tsx): Scoring engine compatibility (test case 10)
+// Test 13: Scoring engine compatibility
 describe("Scoring engine compatibility", () => {
   it("accepts adaptive flow responses with 0s for skipped", () => {
     const store = useAssessmentStore.getState();
@@ -287,7 +320,6 @@ describe("Scoring engine compatibility", () => {
       "talent",
       "adoption",
     ] as const;
-    // Set all to beginner
     for (const dim of dims) {
       store.setScreeningAnswer(dim, 1);
       store.setAnswer(dim, 1, 2);
@@ -304,9 +336,50 @@ describe("Scoring engine compatibility", () => {
     expect(result.dimensions).toHaveLength(6);
     expect(typeof result.thetaScore).toBe("number");
   });
+
+  it("computes META when enablers and capabilities provided", () => {
+    const store = useAssessmentStore.getState();
+    const dims = [
+      "strategy",
+      "architecture",
+      "workflow",
+      "data",
+      "talent",
+      "adoption",
+    ] as const;
+    for (const dim of dims) {
+      store.setScreeningAnswer(dim, 3);
+      store.setAnswer(dim, 1, 3);
+      store.setAnswer(dim, 2, 3);
+      store.setAnswer(dim, 3, 3);
+    }
+    store.setCapabilityAnswer("c1_strategy", 3);
+    store.setCapabilityAnswer("c2_setup", 2);
+    store.setCapabilityAnswer("c3_execution", 3);
+    store.setCapabilityAnswer("c4_operationalization", 2);
+    store.setEnablers({
+      fundingStage: "series-b",
+      teamSize: 50,
+      annualRevenue: 5000,
+    });
+
+    const state = useAssessmentStore.getState();
+    const result = computeResult({
+      companyName: "Meta Corp",
+      responses: state.responses,
+      enablers: state.enablers,
+      capabilityResponses: state.capabilityResponses,
+    });
+    expect(result.meta).toBeDefined();
+    expect(result.meta!.metaScore).toBeGreaterThan(0);
+    expect(result.meta!.predictedMonthsTo100M).toBeGreaterThan(0);
+    expect(result.meta!.scalingCoefficient).toBeGreaterThanOrEqual(0.8);
+    expect(result.capabilities).toHaveLength(4);
+    expect(result.capabilityBottleneck).toBeDefined();
+  });
 });
 
-// Test 12 (moved from assessment.test.tsx): advanceScreening transitions to deep-dive after 6 questions
+// Test 14: advanceScreening transitions to deep-dive after 6 questions
 describe("advanceScreening flow", () => {
   it("transitions to deep-dive after all 6 screening answers", () => {
     const store = useAssessmentStore.getState();
@@ -318,20 +391,17 @@ describe("advanceScreening flow", () => {
       "talent",
       "adoption",
     ] as const;
-    // Answer all screening questions
     for (const dim of dims) store.setScreeningAnswer(dim, 2);
-    // Set step to 2 and phase to screening
     useAssessmentStore.setState({
-      step: 2,
+      step: 4,
       phase: "screening",
       screeningIndex: 0,
     });
-    // Advance through all 6
     for (let i = 0; i < 6; i++) {
       useAssessmentStore.getState().advanceScreening();
     }
     const state = useAssessmentStore.getState();
-    expect(state.step).toBe(3);
+    expect(state.step).toBe(5);
     expect(state.phase).toBe("deepdive-intro");
     expect(state.adaptiveLevels).not.toBeNull();
     expect(state.deepDiveQueue.length).toBeGreaterThan(0);
