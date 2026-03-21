@@ -12,26 +12,53 @@
  * Silently skips if the formatter is not installed or the file doesn't match.
  */
 
-const { execSync } = require('child_process');
-const path = require('path');
+const { execSync } = require("child_process");
+const path = require("path");
 
-const PYTHON_EXTENSIONS = new Set(['.py']);
-const PRETTIER_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.md']);
+const PYTHON_EXTENSIONS = new Set([".py"]);
+const PRETTIER_EXTENSIONS = new Set([
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".json",
+  ".css",
+  ".md",
+]);
 
 const PROJECT_DIR = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
+/**
+ * Walk up from a file path to find the nearest directory containing a config file.
+ * Falls back to PROJECT_DIR if nothing is found.
+ */
+function findNearestConfigDir(filePath, configNames) {
+  const fs = require("fs");
+  let dir = path.dirname(filePath);
+  const root = path.parse(dir).root;
+  while (dir !== root) {
+    for (const name of configNames) {
+      if (fs.existsSync(path.join(dir, name))) return dir;
+    }
+    dir = path.dirname(dir);
+  }
+  return PROJECT_DIR;
+}
+
 async function readStdin() {
   return new Promise((resolve) => {
-    let data = '';
-    process.stdin.setEncoding('utf8');
-    process.stdin.on('data', chunk => { data += chunk; });
-    process.stdin.on('end', () => resolve(data));
+    let data = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk) => {
+      data += chunk;
+    });
+    process.stdin.on("end", () => resolve(data));
   });
 }
 
 function tryExec(cmd, cwd) {
   try {
-    execSync(cmd, { cwd, stdio: 'pipe', timeout: 10000 });
+    execSync(cmd, { cwd, stdio: "pipe", timeout: 10000 });
     return true;
   } catch {
     return false;
@@ -47,29 +74,29 @@ async function main() {
     return;
   }
 
-  const filePath = (input.tool_input && input.tool_input.file_path) || '';
+  const filePath = (input.tool_input && input.tool_input.file_path) || "";
   if (!filePath) return;
 
   const ext = path.extname(filePath).toLowerCase();
 
   if (PYTHON_EXTENSIONS.has(ext)) {
-    // Determine the Python app root for ruff config
-    const apiDir = path.join(PROJECT_DIR, 'apps', 'api');
-    const isApiFile = filePath.replace(/\\/g, '/').includes('apps/api');
-    const cwd = isApiFile ? apiDir : PROJECT_DIR;
-
+    const cwd = findNearestConfigDir(filePath, [
+      "pyproject.toml",
+      "ruff.toml",
+      ".ruff.toml",
+      "setup.cfg",
+    ]);
     tryExec(`ruff format "${filePath}"`, cwd);
     tryExec(`ruff check --fix --quiet "${filePath}"`, cwd);
   } else if (PRETTIER_EXTENSIONS.has(ext)) {
-    // Find the nearest prettier config
-    const normalizedPath = filePath.replace(/\\/g, '/');
-    let cwd = PROJECT_DIR;
-    if (normalizedPath.includes('apps/web-buyer')) {
-      cwd = path.join(PROJECT_DIR, 'apps', 'web-buyer');
-    } else if (normalizedPath.includes('apps/web-supplier')) {
-      cwd = path.join(PROJECT_DIR, 'apps', 'web-supplier');
-    }
-
+    const cwd = findNearestConfigDir(filePath, [
+      ".prettierrc",
+      ".prettierrc.json",
+      ".prettierrc.js",
+      "prettier.config.js",
+      ".prettierrc.yaml",
+      ".prettierrc.toml",
+    ]);
     tryExec(`npx prettier --write "${filePath}"`, cwd);
   }
 }
