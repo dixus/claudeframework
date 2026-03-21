@@ -1,3 +1,5 @@
+export type { GrowthEngineType } from "./growth-engines";
+
 export type DimensionKey =
   | "strategy"
   | "architecture"
@@ -39,6 +41,7 @@ export interface AssessmentInput {
   responses: Record<DimensionKey, number[]>;
   enablers?: EnablerInput;
   capabilityResponses?: Record<CapabilityKey, number>;
+  growthEngine?: import("./growth-engines").GrowthEngineType;
 }
 
 export interface DimensionResult {
@@ -91,6 +94,7 @@ export interface AssessmentResult {
   enablers?: EnablerInput;
   playbook?: CapabilityPlaybook;
   roadmap?: import("./roadmaps").StageRoadmap;
+  growthEngine?: import("./growth-engines").GrowthEngine;
 }
 
 export type ModelId = "model1" | "model2" | "model3";

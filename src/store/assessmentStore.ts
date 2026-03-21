@@ -11,6 +11,7 @@ import {
   getFollowUpQuestions,
 } from "../lib/scoring/question-tiers";
 import type { AdaptiveLevel } from "../lib/scoring/question-tiers";
+import type { GrowthEngineType } from "../lib/scoring/growth-engines";
 
 const DIMENSION_KEYS: DimensionKey[] = [
   "strategy",
@@ -45,8 +46,8 @@ const initialEnablers = (): EnablerInput => ({
   annualRevenue: 0,
 });
 
-// Steps: 0=Intro, 1=Company, 2=Enablers, 3=Capabilities, 4=Screening, 5=DeepDive, 6=Review, 7=Results
-const MAX_STEP = 7;
+// Steps: 0=Intro, 1=Company, 2=Enablers, 3=GrowthEngine, 4=Capabilities, 5=Screening, 6=DeepDive, 7=Review, 8=Results
+const MAX_STEP = 8;
 
 interface AssessmentState {
   step: number;
@@ -55,6 +56,7 @@ interface AssessmentState {
   enablers: EnablerInput;
   capabilityResponses: Record<CapabilityKey, number>;
   result: AssessmentResult | null;
+  growthEngine: GrowthEngineType | null;
   phase: "screening-intro" | "screening" | "deepdive-intro" | "deepdive" | null;
   screeningIndex: number;
   deepDiveQueue: Array<{ dimension: DimensionKey; questionIndex: number }>;
@@ -67,6 +69,7 @@ interface AssessmentActions {
   setCompanyName: (name: string) => void;
   setAnswer: (dimension: DimensionKey, index: number, value: number) => void;
   setEnablers: (enablers: EnablerInput) => void;
+  setGrowthEngine: (type: GrowthEngineType) => void;
   setCapabilityAnswer: (key: CapabilityKey, value: number) => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -102,6 +105,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
   enablers: initialEnablers(),
   capabilityResponses: initialCapabilityResponses(),
   result: null,
+  growthEngine: null,
   phase: null,
   screeningIndex: 0,
   deepDiveQueue: [],
@@ -112,6 +116,8 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
   setCompanyName: (name) => set({ companyName: name }),
 
   setEnablers: (enablers) => set({ enablers }),
+
+  setGrowthEngine: (type) => set({ growthEngine: type }),
 
   setCapabilityAnswer: (key, value) =>
     set((state) => ({
@@ -133,8 +139,8 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
   nextStep: () =>
     set((state) => {
       const next = Math.min(MAX_STEP, state.step + 1);
-      // Step 4 = screening phase
-      if (next === 4) {
+      // Step 5 = screening phase
+      if (next === 5) {
         return { step: next, phase: "screening-intro", screeningIndex: 0 };
       }
       return { step: next };
@@ -142,17 +148,17 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
 
   prevStep: () =>
     set((state) => {
-      if (state.step === 6) {
+      if (state.step === 7) {
         // From Review, go back to last deep-dive question
         return {
-          step: 5,
+          step: 6,
           phase: "deepdive",
           deepDivePosition: Math.max(0, state.deepDiveQueue.length - 1),
         };
       }
-      if (state.step === 4) {
+      if (state.step === 5) {
         // From screening intro, go back to Capabilities step
-        return { step: 3, phase: null };
+        return { step: 4, phase: null };
       }
       return { step: Math.max(0, state.step - 1) };
     }),
@@ -164,6 +170,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         responses: state.responses,
         enablers: state.enablers.fundingStage ? state.enablers : undefined,
         capabilityResponses: state.capabilityResponses,
+        growthEngine: state.growthEngine ?? undefined,
       }),
       step: MAX_STEP,
     })),
@@ -176,6 +183,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       enablers: initialEnablers(),
       capabilityResponses: initialCapabilityResponses(),
       result: null,
+      growthEngine: null,
       phase: null,
       screeningIndex: 0,
       deepDiveQueue: [],
@@ -212,7 +220,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         deepDiveQueue: queue,
         deepDivePosition: 0,
         phase: "deepdive-intro",
-        step: 5,
+        step: 6,
       };
     }),
 
@@ -258,7 +266,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         return { deepDivePosition: state.deepDivePosition + 1 };
       }
       // All deep-dive questions answered — go to Review
-      return { step: 6, phase: null };
+      return { step: 7, phase: null };
     }),
 
   goBackDeepDive: () =>

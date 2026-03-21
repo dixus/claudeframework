@@ -81,10 +81,10 @@ describe("nextStep", () => {
     expect(useAssessmentStore.getState().step).toBe(1);
   });
 
-  it("clamps at 7", () => {
-    useAssessmentStore.setState({ step: 7 });
+  it("clamps at 8", () => {
+    useAssessmentStore.setState({ step: 8 });
     useAssessmentStore.getState().nextStep();
-    expect(useAssessmentStore.getState().step).toBe(7);
+    expect(useAssessmentStore.getState().step).toBe(8);
   });
 });
 
@@ -104,11 +104,11 @@ describe("prevStep", () => {
 
 // Test 7: submit
 describe("submit", () => {
-  it("computes result, sets step=7, and result.companyName matches store", () => {
+  it("computes result, sets step=8, and result.companyName matches store", () => {
     useAssessmentStore.getState().setCompanyName("Test Corp");
     useAssessmentStore.getState().submit();
     const state = useAssessmentStore.getState();
-    expect(state.step).toBe(7);
+    expect(state.step).toBe(8);
     expect(state.result).not.toBeNull();
     expect(state.result!.companyName).toBe("Test Corp");
     expect(typeof state.result!.thetaScore).toBe("number");
@@ -393,7 +393,7 @@ describe("advanceScreening flow", () => {
     ] as const;
     for (const dim of dims) store.setScreeningAnswer(dim, 2);
     useAssessmentStore.setState({
-      step: 4,
+      step: 5,
       phase: "screening",
       screeningIndex: 0,
     });
@@ -401,9 +401,38 @@ describe("advanceScreening flow", () => {
       useAssessmentStore.getState().advanceScreening();
     }
     const state = useAssessmentStore.getState();
-    expect(state.step).toBe(5);
+    expect(state.step).toBe(6);
     expect(state.phase).toBe("deepdive-intro");
     expect(state.adaptiveLevels).not.toBeNull();
     expect(state.deepDiveQueue.length).toBeGreaterThan(0);
+  });
+});
+
+// Test 15: Growth engine state management
+describe("growth engine state", () => {
+  it("initializes with growthEngine=null", () => {
+    expect(useAssessmentStore.getState().growthEngine).toBeNull();
+  });
+
+  it("setGrowthEngine updates state", () => {
+    useAssessmentStore.getState().setGrowthEngine("plg");
+    expect(useAssessmentStore.getState().growthEngine).toBe("plg");
+  });
+
+  it("reset clears growthEngine", () => {
+    useAssessmentStore.getState().setGrowthEngine("slg");
+    useAssessmentStore.getState().reset();
+    expect(useAssessmentStore.getState().growthEngine).toBeNull();
+  });
+
+  it("submit passes growthEngine to result", () => {
+    useAssessmentStore.getState().setCompanyName("GE Corp");
+    useAssessmentStore.getState().setGrowthEngine("clg");
+    useAssessmentStore.getState().submit();
+    const result = useAssessmentStore.getState().result;
+    expect(result).not.toBeNull();
+    expect(result!.growthEngine).toBeDefined();
+    expect(result!.growthEngine!.type).toBe("clg");
+    expect(result!.growthEngine!.shortLabel).toBe("CLG");
   });
 });

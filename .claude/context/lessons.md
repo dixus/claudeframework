@@ -28,3 +28,19 @@ Each entry: what went wrong → rule that prevents it.
 **What went wrong**: When implementing a feature, the code change for the glossary back link (`href="/"`) was made correctly, but the corresponding spec test case (test case 7: "Glossary back link updated") was not added to the test file. The implementation was complete but the spec test coverage was incomplete.
 
 **Rule**: After implementing all code changes for a spec, cross-reference every numbered test case in the spec's "Test cases" section against the actual test file. For each test case, verify a corresponding test exists. If any test case is missing, add it before marking the task done. Server components that import static data (no React hooks, no API calls) can be rendered directly in jsdom tests without mocking.
+
+---
+
+## 2026-03-21 — GrowthEngineType not re-exported from types.ts
+
+**What went wrong**: The spec required `GrowthEngineType` to be added to `types.ts` exports, but the implementation used inline dynamic import syntax (`import("./growth-engines").GrowthEngineType`) in interface fields instead of a top-level re-export. Consumers of `types.ts` could not access `GrowthEngineType` without also importing directly from `growth-engines.ts`, fragmenting the API surface.
+
+**Rule**: When a spec says "add X to exports in file Y", always add a top-level `export type { X } from "./source"` re-export in file Y. Inline dynamic import references in interface fields are not equivalent to exporting the type — they satisfy TypeScript structurally but break the intended module API surface.
+
+---
+
+## 2026-03-21 — Review identified missing tests that already existed
+
+**What went wrong**: A review flagged "no direct test for `classifyGrowthEngine()` with each pure type" as a partial issue, but the test file already contained tests for PLG, SLG, and CLG pure types. The review was likely generated from a stale view of the codebase or the reviewer missed the existing coverage.
+
+**Rule**: Before acting on a review's "missing test" flag, always read the actual test file to confirm the tests are absent. If tests already exist and cover the requirement, document this in the fix report as "already resolved" rather than adding duplicate tests.

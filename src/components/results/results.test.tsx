@@ -121,7 +121,7 @@ describe("DimensionScorecard", () => {
 // Test 5: ResultsPage "Start Over"
 describe("ResultsPage", () => {
   it("clicking Start Over calls reset() and returns to step 0", async () => {
-    useAssessmentStore.setState({ result: baseResult, step: 7 });
+    useAssessmentStore.setState({ result: baseResult, step: 8 });
     render(<ResultsPage />);
     await userEvent.click(screen.getByRole("button", { name: /start over/i }));
     expect(useAssessmentStore.getState().step).toBe(0);

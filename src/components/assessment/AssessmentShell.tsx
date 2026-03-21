@@ -4,6 +4,7 @@ import { useAssessmentStore } from "@/store/assessmentStore";
 import { IntroStep } from "./IntroStep";
 import { CompanyStep } from "./CompanyStep";
 import { EnablerStep } from "./EnablerStep";
+import { GrowthEngineStep } from "./GrowthEngineStep";
 import { CapabilityStep } from "./CapabilityStep";
 import { PhaseIntro } from "./PhaseIntro";
 import { ScreeningPhase } from "./ScreeningPhase";
@@ -11,7 +12,7 @@ import { DeepDivePhase } from "./DeepDivePhase";
 import { ReviewStep } from "./ReviewStep";
 import { ResultsPage } from "@/components/results/ResultsPage";
 
-// Steps: 0=Intro, 1=Company, 2=Enablers, 3=Capabilities, 4=Screening, 5=DeepDive, 6=Review, 7=Results
+// Steps: 0=Intro, 1=Company, 2=Enablers, 3=GrowthEngine, 4=Capabilities, 5=Screening, 6=DeepDive, 7=Review, 8=Results
 
 export function AssessmentShell() {
   const step = useAssessmentStore((s) => s.step);
@@ -30,7 +31,7 @@ export function AssessmentShell() {
   function backFromDeepDiveIntro() {
     useAssessmentStore.setState({
       phase: "screening",
-      step: 4,
+      step: 5,
       screeningIndex: 5,
     });
   }
@@ -44,8 +45,10 @@ export function AssessmentShell() {
   } else if (step === 2) {
     content = <EnablerStep />;
   } else if (step === 3) {
+    content = <GrowthEngineStep />;
+  } else if (step === 4) {
     content = <CapabilityStep />;
-  } else if (step === 4 && phase === "screening-intro") {
+  } else if (step === 5 && phase === "screening-intro") {
     content = (
       <PhaseIntro
         phase="screening"
@@ -53,9 +56,9 @@ export function AssessmentShell() {
         onBack={prevStep}
       />
     );
-  } else if (step === 4 && phase === "screening") {
+  } else if (step === 5 && phase === "screening") {
     content = <ScreeningPhase />;
-  } else if (step === 5 && phase === "deepdive-intro") {
+  } else if (step === 6 && phase === "deepdive-intro") {
     content = (
       <PhaseIntro
         phase="deepdive"
@@ -64,11 +67,11 @@ export function AssessmentShell() {
         deepDiveCount={deepDiveQueue.length}
       />
     );
-  } else if (step === 5 && phase === "deepdive") {
+  } else if (step === 6 && phase === "deepdive") {
     content = <DeepDivePhase />;
-  } else if (step === 6) {
-    content = <ReviewStep />;
   } else if (step === 7) {
+    content = <ReviewStep />;
+  } else if (step === 8) {
     content = <ResultsPage />;
   }
 

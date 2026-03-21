@@ -9,6 +9,7 @@ import { InsightsPanel } from "./InsightsPanel";
 import { PlaybookPanel } from "./PlaybookPanel";
 import { CapabilityPanel } from "./CapabilityPanel";
 import { CapabilityPlaybookPanel } from "./CapabilityPlaybookPanel";
+import { GrowthEnginePanel } from "./GrowthEnginePanel";
 import { ScalingPanel } from "./ScalingPanel";
 import { RoadmapPanel } from "./RoadmapPanel";
 import { PdfExportButton } from "./PdfExportButton";
@@ -35,6 +36,13 @@ export function ResultsPage() {
         <ScoreCard result={result} />
         <RadarChartPanel dimensions={result.dimensions} />
       </div>
+
+      {result.growthEngine && (
+        <GrowthEnginePanel
+          engine={result.growthEngine}
+          dimensions={result.dimensions}
+        />
+      )}
 
       {result.meta && (
         <ScalingPanel meta={result.meta} thetaScore={result.thetaScore} />

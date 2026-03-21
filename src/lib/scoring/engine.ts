@@ -11,6 +11,7 @@ import type {
 import { RECOMMENDATIONS } from "./recommendations";
 import { CAPABILITY_PLAYBOOKS } from "./playbooks";
 import { getRoadmapForStage } from "./roadmaps";
+import { GROWTH_ENGINES } from "./growth-engines";
 
 // Weights per Architecture Document v4.5.3
 const DIMENSIONS = [
@@ -256,6 +257,10 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
     if (roadmap) {
       result.roadmap = roadmap;
     }
+  }
+
+  if (input.growthEngine) {
+    result.growthEngine = GROWTH_ENGINES[input.growthEngine];
   }
 
   return result;

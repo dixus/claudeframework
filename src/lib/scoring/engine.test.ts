@@ -400,3 +400,22 @@ describe("superlinear exponents", () => {
     expect(resultA.meta!.metaScore).toBeGreaterThan(resultB.meta!.metaScore);
   });
 });
+
+// Test 13: Growth engine attached to result
+describe("growth engine attachment", () => {
+  it("attaches growth engine when provided", () => {
+    const result = computeResult({
+      ...allEqual([3, 3, 3, 3, 3, 3, 3, 3]),
+      growthEngine: "plg",
+    });
+    expect(result.growthEngine).toBeDefined();
+    expect(result.growthEngine!.type).toBe("plg");
+    expect(result.growthEngine!.label).toBe("Product-Led Growth");
+    expect(result.growthEngine!.priorityDimensions).toContain("architecture");
+  });
+
+  it("does not attach growth engine when not provided", () => {
+    const result = computeResult(allEqual([3, 3, 3, 3, 3, 3, 3, 3]));
+    expect(result.growthEngine).toBeUndefined();
+  });
+});
