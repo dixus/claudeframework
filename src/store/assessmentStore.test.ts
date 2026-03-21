@@ -332,7 +332,7 @@ describe("advanceScreening flow", () => {
     }
     const state = useAssessmentStore.getState();
     expect(state.step).toBe(3);
-    expect(state.phase).toBe("deepdive");
+    expect(state.phase).toBe("deepdive-intro");
     expect(state.adaptiveLevels).not.toBeNull();
     expect(state.deepDiveQueue.length).toBeGreaterThan(0);
   });

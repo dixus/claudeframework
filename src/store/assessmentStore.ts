@@ -26,7 +26,7 @@ interface AssessmentState {
   companyName: string;
   responses: Record<DimensionKey, number[]>;
   result: AssessmentResult | null;
-  phase: "screening" | "deepdive" | null;
+  phase: "screening-intro" | "screening" | "deepdive-intro" | "deepdive" | null;
   screeningIndex: number;
   deepDiveQueue: Array<{ dimension: DimensionKey; questionIndex: number }>;
   deepDivePosition: number;
@@ -95,7 +95,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
     set((state) => {
       const next = Math.min(5, state.step + 1);
       if (next === 2) {
-        return { step: next, phase: "screening", screeningIndex: 0 };
+        return { step: next, phase: "screening-intro", screeningIndex: 0 };
       }
       return { step: next };
     }),
@@ -108,6 +108,10 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
           phase: "deepdive",
           deepDivePosition: Math.max(0, state.deepDiveQueue.length - 1),
         };
+      }
+      if (state.step === 2) {
+        // From screening intro, go back to Company step
+        return { step: 1, phase: null };
       }
       return { step: Math.max(0, state.step - 1) };
     }),
@@ -152,7 +156,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       if (state.screeningIndex < 5) {
         return { screeningIndex: state.screeningIndex + 1 };
       }
-      // All 6 screening questions answered — compute levels and transition
+      // All 6 screening questions answered — compute levels and show deep-dive intro
       const levels = {} as Record<DimensionKey, AdaptiveLevel>;
       for (const dim of DIMENSION_KEYS) {
         levels[dim] = determineAdaptiveLevel(state.responses[dim][0]);
@@ -162,7 +166,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         adaptiveLevels: levels,
         deepDiveQueue: queue,
         deepDivePosition: 0,
-        phase: "deepdive",
+        phase: "deepdive-intro",
         step: 3,
       };
     }),
@@ -218,8 +222,8 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       if (state.deepDivePosition > 0) {
         return { deepDivePosition: state.deepDivePosition - 1 };
       }
-      // At first deep-dive question — go back to last screening question
-      return { phase: "screening", step: 2, screeningIndex: 5 };
+      // At first deep-dive question — go back to deep-dive intro
+      return { phase: "deepdive-intro" };
     }),
 
   goBackScreening: () =>
@@ -227,7 +231,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       if (state.screeningIndex > 0) {
         return { screeningIndex: state.screeningIndex - 1 };
       }
-      // At first screening question — go back to Company step
-      return { step: 1, phase: null };
+      // At first screening question — go back to screening intro
+      return { phase: "screening-intro" };
     }),
 }));
