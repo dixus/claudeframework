@@ -13,6 +13,14 @@ Orchestrate the full spec-to-commit pipeline for the feature described in $ARGUM
 
 **Architecture:** The main session is a thin orchestrator only — it never reads code files or accumulates implementation context. Each phase runs in a dedicated subagent with a clean context. The spec file, review file, and git diff are the handoff mechanism between phases.
 
+**Progress updates:** After each subagent returns, print a one-line status update so the user can track progress. Use this format:
+
+```
+✓ Step N — <phase> complete. <key detail from subagent summary>
+```
+
+Examples: `✓ Step 2 — Spec complete. 7 files, 3 new.` · `✓ Step 3 — Implementation complete. All checks pass.` · `✓ Step 4 — Review: pass with fixes (2 major).` · `✓ Step 4 — Fix cycle 1 complete. 2/2 issues resolved.`
+
 ```
 Main session (orchestrator — reads summaries only)
   ├── Step 0: branch setup              →  creates feat/<spec-name>
@@ -20,7 +28,7 @@ Main session (orchestrator — reads summaries only)
   ├── Subagent A: spec          [opus]  →  writes .claude/specs/<name>.md (informed by patterns)
   ├── Subagent B: implement     [opus]  →  commits to branch, returns summary
   ├── Subagent C: review        [opus]  →  writes .claude/reviews/<name>-review.md
-  ├── Subagent D: fix           [sonnet]→  applies fixes  →  loop back to C
+  ├── Subagent D: fix  [opus if rework, sonnet if fixes]→  loop back to C
   ├── Step 4b: lesson graduation        →  graduates mature lessons → CLAUDE.md
   ├── Step 4c: integration check [opus] →  cross-phase glue review (phased only)
   ├── Step 5: final verify              →  typecheck → lint → tests → build
@@ -136,11 +144,16 @@ Read the returned assessment. Do not read the review file itself.
 Route:
 
 - **"pass"** → go to Step 5 (smoke test)
-- **"pass with fixes"** or **"needs rework"** → increment cycle counter. If counter ≥ 3, stop and escalate to the user with the recurring issues — do not attempt a fourth fix cycle. Otherwise proceed to Fix subagent.
+- **"pass with fixes"** or **"needs rework"** → increment cycle counter. If counter ≥ 3, stop and escalate to the user with the recurring issues — do not attempt a fourth fix cycle. Include in the escalation: "To roll back, run `git checkout feat/<spec-name> && git reset --hard checkpoint/<spec-name>`." Otherwise proceed to Fix subagent. Note the verdict for model selection below.
 
 ### Fix subagent
 
-Launch a subagent (model: **sonnet**) with:
+Select the model based on the review verdict:
+
+- **"needs rework"** (critical issues — architectural, security, missing requirements) → use **opus**
+- **"pass with fixes"** (major-only issues — straightforward fixes) → use **sonnet**
+
+Launch a subagent (model: **opus** or **sonnet** per above) with:
 
 > "Read `.claude/skills/3_fix/SKILL.md` and follow all steps exactly for spec: <spec-name>. You are running as a subagent. Return: (1) list of issues fixed, (2) any issues skipped and why, (3) verify suite status, (4) any lessons written to `.claude/context/lessons.md`."
 
@@ -203,7 +216,7 @@ Route:
 Run the project's full verify suite (typecheck → lint → tests → build) one last time. Late-stage changes from the fix cycle may have introduced regressions.
 
 - If all checks pass → proceed to Step 6
-- If any check fails → launch a fix subagent to resolve, then re-run. If it fails after two attempts, stop and escalate to the user — do not commit broken code.
+- If any check fails → launch a fix subagent to resolve, then re-run. If it fails after two attempts, stop and escalate to the user — do not commit broken code. Include in the escalation: "To roll back, run `git checkout feat/<spec-name> && git reset --hard checkpoint/<spec-name>`."
 
 Note: Smoke testing against Docker (`/smoke <spec-name>`) is a separate manual step the user can run before or after `/ship`. It is not part of the automated pipeline because Docker infrastructure issues should not block the ship flow.
 

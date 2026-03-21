@@ -80,6 +80,8 @@ Steps:
   b. If the file genuinely belongs in a later phase, move it in the phase manifest and document why
 - This check is **mandatory** — do not skip it. It catches silent scope loss where entire subsystems (e.g. frontend UI) pass validation criteria (all APIs work) while being completely unimplemented.
 
+  14c. **Spec requirements checklist** — walk every bullet in the spec's "Requirements" section. For each requirement, confirm it is implemented in the current code. Mark each as ✅ done or ❌ missing. If any requirement is ❌, treat it as a scope gap and resolve before proceeding (return to step 9). This is the same check `/2_review` performs in its spec completeness lens — running it here catches drift one hop earlier and reduces review/fix cycles.
+
 15. Pre-flight self-review: before handing off, review your own changes against the lenses that `/2_review` will use. This step catches issues early and reduces review/fix loops from 3-5 down to 0-1.
     a. Re-read the full diff (`git diff` or `git diff --cached`)
     b. Check each lens — stop and fix any critical or major finding before proceeding:
