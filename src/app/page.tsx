@@ -1,11 +1,9 @@
-'use client'
-
-import { AssessmentShell } from '@/components/assessment/AssessmentShell'
+import { LandingPage } from "@/components/landing/LandingPage";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <AssessmentShell />
+    <main className="min-h-screen bg-gray-50">
+      <LandingPage />
     </main>
-  )
+  );
 }
