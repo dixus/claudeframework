@@ -9,7 +9,7 @@ export function IntroStep() {
     <div className="space-y-6 text-center">
       <h1 className="text-3xl font-bold text-gray-900">Ready to Begin?</h1>
       <p className="text-gray-600 max-w-md mx-auto">
-        The assessment takes about 5 minutes. You&apos;ll answer questions
+        The assessment takes about 2 minutes. You&apos;ll answer questions
         across six dimensions and receive a personalised maturity score with
         actionable recommendations.
       </p>

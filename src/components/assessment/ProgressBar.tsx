@@ -1,18 +1,24 @@
-'use client'
+"use client";
 
 interface ProgressBarProps {
-  currentStep: number
+  progress: number;
 }
 
-export function ProgressBar({ currentStep }: ProgressBarProps) {
+export function ProgressBar({ progress }: ProgressBarProps) {
+  const percent = Math.min(100, Math.max(0, Math.round(progress * 100)));
+
   return (
-    <div className="flex gap-1 w-full">
-      {Array.from({ length: 6 }, (_, i) => (
-        <div
-          key={i}
-          className={`h-1.5 flex-1 rounded-full ${currentStep >= i + 2 ? 'bg-blue-600' : 'bg-gray-200'}`}
-        />
-      ))}
+    <div
+      className="w-full bg-gray-200 rounded-full h-2"
+      role="progressbar"
+      aria-valuenow={percent}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div
+        className="bg-blue-600 h-2 rounded-full transition-[width] duration-300 ease-in-out"
+        style={{ width: `${percent}%` }}
+      />
     </div>
-  )
+  );
 }

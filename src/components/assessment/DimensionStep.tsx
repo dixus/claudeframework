@@ -1,39 +1,47 @@
-'use client'
+"use client";
 
-import { useAssessmentStore } from '@/store/assessmentStore'
-import { QUESTIONS } from '@/lib/scoring/questions'
-import type { DimensionKey } from '@/lib/scoring/types'
-import { LikertCard } from './LikertCard'
-import { ProgressBar } from './ProgressBar'
+import { useAssessmentStore } from "@/store/assessmentStore";
+import { QUESTIONS } from "@/lib/scoring/questions";
+import type { DimensionKey } from "@/lib/scoring/types";
+import { LikertCard } from "./LikertCard";
+import { ProgressBar } from "./ProgressBar";
 
-const DIMENSION_META: Record<DimensionKey, { label: string; weight: number }> = {
-  strategy:     { label: 'Strategy',     weight: 0.20 },
-  architecture: { label: 'Architecture', weight: 0.15 },
-  workflow:     { label: 'Workflow',      weight: 0.25 },
-  data:         { label: 'Data',          weight: 0.15 },
-  talent:       { label: 'Talent',        weight: 0.15 },
-  adoption:     { label: 'Adoption',      weight: 0.10 },
-}
+const DIMENSION_META: Record<DimensionKey, { label: string; weight: number }> =
+  {
+    strategy: { label: "Strategy", weight: 0.2 },
+    architecture: { label: "Architecture", weight: 0.15 },
+    workflow: { label: "Workflow", weight: 0.25 },
+    data: { label: "Data", weight: 0.15 },
+    talent: { label: "Talent", weight: 0.15 },
+    adoption: { label: "Adoption", weight: 0.1 },
+  };
 
-const DIMENSION_ORDER: DimensionKey[] = ['strategy', 'architecture', 'workflow', 'data', 'talent', 'adoption']
+const DIMENSION_ORDER: DimensionKey[] = [
+  "strategy",
+  "architecture",
+  "workflow",
+  "data",
+  "talent",
+  "adoption",
+];
 
 interface DimensionStepProps {
-  dimension: DimensionKey
+  dimension: DimensionKey;
 }
 
 export function DimensionStep({ dimension }: DimensionStepProps) {
-  const responses = useAssessmentStore(s => s.responses)
-  const setAnswer = useAssessmentStore(s => s.setAnswer)
-  const nextStep = useAssessmentStore(s => s.nextStep)
-  const prevStep = useAssessmentStore(s => s.prevStep)
-  const step = useAssessmentStore(s => s.step)
+  const responses = useAssessmentStore((s) => s.responses);
+  const setAnswer = useAssessmentStore((s) => s.setAnswer);
+  const nextStep = useAssessmentStore((s) => s.nextStep);
+  const prevStep = useAssessmentStore((s) => s.prevStep);
+  const step = useAssessmentStore((s) => s.step);
 
-  const meta = DIMENSION_META[dimension]
-  const dimIndex = DIMENSION_ORDER.indexOf(dimension) + 1
+  const meta = DIMENSION_META[dimension];
+  const dimIndex = DIMENSION_ORDER.indexOf(dimension) + 1;
 
   return (
     <div className="space-y-5">
-      <ProgressBar currentStep={step} />
+      <ProgressBar progress={dimIndex / 6} />
       <div className="flex items-baseline justify-between">
         <h2 className="text-2xl font-bold text-gray-900">{meta.label}</h2>
         <span className="text-sm text-gray-500">
@@ -46,7 +54,7 @@ export function DimensionStep({ dimension }: DimensionStepProps) {
             key={index}
             question={question}
             value={responses[dimension][index]}
-            onChange={value => setAnswer(dimension, index, value)}
+            onChange={(value) => setAnswer(dimension, index, value)}
           />
         ))}
       </div>
@@ -65,5 +73,5 @@ export function DimensionStep({ dimension }: DimensionStepProps) {
         </button>
       </div>
     </div>
-  )
+  );
 }
