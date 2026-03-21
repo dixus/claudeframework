@@ -44,3 +44,11 @@ Each entry: what went wrong → rule that prevents it.
 **What went wrong**: A review flagged "no direct test for `classifyGrowthEngine()` with each pure type" as a partial issue, but the test file already contained tests for PLG, SLG, and CLG pure types. The review was likely generated from a stale view of the codebase or the reviewer missed the existing coverage.
 
 **Rule**: Before acting on a review's "missing test" flag, always read the actual test file to confirm the tests are absent. If tests already exist and cover the requirement, document this in the fix report as "already resolved" rather than adding duplicate tests.
+
+---
+
+## 2026-03-21 — What-if scenario hard assignment lowers an already-high score
+
+**What went wrong**: In `computeScalingVelocity()`, the `fixBottleneck` what-if scenario used a hard assignment `{ ...capScores, [bottleneckCapability]: 85 }`. The `fixAll` scenario correctly used `Math.max`, but `fixBottleneck` did not, meaning if the bottleneck capability was already above 85, it would be lowered to 85 — producing a `fixBottleneckS` value less than `currentS`, which is logically wrong.
+
+**Rule**: When implementing a "raise X to at least Y" what-if scenario, always use `Math.max(currentValue, targetValue)` — never a bare assignment. A "floor" operation (`Math.max`) is semantically different from a "set" operation. If one scenario in a set uses `Math.max`, review all sibling scenarios for consistency before completing the implementation.

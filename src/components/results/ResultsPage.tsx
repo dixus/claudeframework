@@ -11,6 +11,7 @@ import { CapabilityPanel } from "./CapabilityPanel";
 import { CapabilityPlaybookPanel } from "./CapabilityPlaybookPanel";
 import { GrowthEnginePanel } from "./GrowthEnginePanel";
 import { ScalingPanel } from "./ScalingPanel";
+import { VelocityPanel } from "./VelocityPanel";
 import { RoadmapPanel } from "./RoadmapPanel";
 import { PdfExportButton } from "./PdfExportButton";
 
@@ -46,6 +47,10 @@ export function ResultsPage() {
 
       {result.meta && (
         <ScalingPanel meta={result.meta} thetaScore={result.thetaScore} />
+      )}
+
+      {result.scalingVelocity && (
+        <VelocityPanel velocity={result.scalingVelocity} />
       )}
 
       {result.roadmap && (

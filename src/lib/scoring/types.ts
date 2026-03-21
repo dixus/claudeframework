@@ -93,6 +93,7 @@ export interface AssessmentResult {
   meta?: MetaResult;
   enablers?: EnablerInput;
   playbook?: CapabilityPlaybook;
+  scalingVelocity?: ScalingVelocity;
   roadmap?: import("./roadmaps").StageRoadmap;
   growthEngine?: import("./growth-engines").GrowthEngine;
 }
@@ -132,6 +133,24 @@ export interface CapabilityPlaybook {
     primaryMetric: string;
     secondaryMetric: string;
   };
+}
+
+export interface ScalingVelocity {
+  s: number;
+  band: "struggling" | "linear" | "superlinear" | "exponential";
+  bandLabel: string;
+  components: {
+    enabler: number;
+    capabilityProduct: number;
+    theta: number;
+  };
+  scenarios: {
+    current: number;
+    fixBottleneck: number;
+    fixAll: number;
+    addAI: number;
+  };
+  bottleneckCapability: CapabilityKey;
 }
 
 export interface GlossaryTerm {

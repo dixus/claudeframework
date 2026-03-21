@@ -7,6 +7,7 @@ import type {
   CapabilityKey,
   CapabilityResult,
   MetaResult,
+  ScalingVelocity,
 } from "./types";
 import { RECOMMENDATIONS } from "./recommendations";
 import { CAPABILITY_PLAYBOOKS } from "./playbooks";
@@ -149,6 +150,99 @@ function computeMeta(
   };
 }
 
+function computeCapabilityProduct(
+  capScores: Record<CapabilityKey, number>,
+): number {
+  const c1 = capScores.c1_strategy / 100;
+  const c2 = capScores.c2_setup / 100;
+  const c3 = capScores.c3_execution / 100;
+  const c4 = capScores.c4_operationalization / 100;
+  return (
+    Math.pow(c1, CAPABILITY_EXPONENTS.c1_strategy) *
+    Math.pow(c2, CAPABILITY_EXPONENTS.c2_setup) *
+    Math.pow(c3, CAPABILITY_EXPONENTS.c3_execution) *
+    Math.pow(c4, CAPABILITY_EXPONENTS.c4_operationalization)
+  );
+}
+
+function computeRawS(
+  thetaNorm: number,
+  capScores: Record<CapabilityKey, number>,
+  enablerScore: number,
+): number {
+  const e = enablerScore / 100;
+  const theta = thetaNorm / 100;
+  const capProduct = computeCapabilityProduct(capScores);
+  return e * capProduct * theta;
+}
+
+function classifyBand(s: number): {
+  band: ScalingVelocity["band"];
+  bandLabel: string;
+} {
+  if (s < 0.05) return { band: "struggling", bandLabel: "Struggling" };
+  if (s < 0.2) return { band: "linear", bandLabel: "Linear scaling" };
+  if (s < 0.5) return { band: "superlinear", bandLabel: "Superlinear scaling" };
+  return { band: "exponential", bandLabel: "Exponential scaling" };
+}
+
+export function computeScalingVelocity(
+  thetaNorm: number,
+  capScores: Record<CapabilityKey, number>,
+  enablerScore: number,
+): ScalingVelocity {
+  const s = computeRawS(thetaNorm, capScores, enablerScore);
+  const { band, bandLabel } = classifyBand(s);
+
+  const capKeys: CapabilityKey[] = [
+    "c1_strategy",
+    "c2_setup",
+    "c3_execution",
+    "c4_operationalization",
+  ];
+  const bottleneckCapability = capKeys.reduce((min, k) =>
+    capScores[k] < capScores[min] ? k : min,
+  );
+
+  // What-if scenarios
+  const fixBottleneckCaps = {
+    ...capScores,
+    [bottleneckCapability]: Math.max(capScores[bottleneckCapability], 85),
+  };
+  const fixAllCaps: Record<CapabilityKey, number> = {
+    c1_strategy: Math.max(capScores.c1_strategy, 85),
+    c2_setup: Math.max(capScores.c2_setup, 85),
+    c3_execution: Math.max(capScores.c3_execution, 85),
+    c4_operationalization: Math.max(capScores.c4_operationalization, 85),
+  };
+  const addAITheta = Math.max(thetaNorm, 90);
+
+  return {
+    s: Math.round(s * 10000) / 10000,
+    band,
+    bandLabel,
+    components: {
+      enabler: enablerScore / 100,
+      capabilityProduct: computeCapabilityProduct(capScores),
+      theta: thetaNorm / 100,
+    },
+    scenarios: {
+      current: Math.round(s * 10000) / 10000,
+      fixBottleneck:
+        Math.round(
+          computeRawS(thetaNorm, fixBottleneckCaps, enablerScore) * 10000,
+        ) / 10000,
+      fixAll:
+        Math.round(computeRawS(thetaNorm, fixAllCaps, enablerScore) * 10000) /
+        10000,
+      addAI:
+        Math.round(computeRawS(addAITheta, fixAllCaps, enablerScore) * 10000) /
+        10000,
+    },
+    bottleneckCapability,
+  };
+}
+
 // Derive enabler score from enabler inputs
 export function computeEnablerScore(
   teamSize: number,
@@ -251,6 +345,11 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
       input.enablers.fundingStage,
     );
     result.meta = computeMeta(thetaScore, capScores, enablerScore);
+    result.scalingVelocity = computeScalingVelocity(
+      thetaScore,
+      capScores,
+      enablerScore,
+    );
     result.enablers = input.enablers;
 
     const roadmap = getRoadmapForStage(input.enablers.fundingStage);
