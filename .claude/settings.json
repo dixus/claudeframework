@@ -1,6 +1,19 @@
 {
   "permissions": {
-    "allow": ["Edit(*)", "Write(*)", "Read(*)", "Bash(*)"]
+    "allow": [
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "Bash(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "TodoWrite(*)",
+      "NotebookEdit(*)",
+      "Agent(*)",
+      "Skill(*)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
