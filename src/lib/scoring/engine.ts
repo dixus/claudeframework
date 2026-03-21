@@ -9,6 +9,7 @@ import type {
   MetaResult,
 } from "./types";
 import { RECOMMENDATIONS } from "./recommendations";
+import { CAPABILITY_PLAYBOOKS } from "./playbooks";
 
 // Weights per Architecture Document v4.5.3
 const DIMENSIONS = [
@@ -229,6 +230,7 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
     result.capabilityBottleneck = capabilities.reduce((min, c) =>
       c.score < min.score ? c : min,
     );
+    result.playbook = CAPABILITY_PLAYBOOKS[result.capabilityBottleneck.key];
   }
 
   // META formula if enablers provided

@@ -89,6 +89,7 @@ export interface AssessmentResult {
   capabilityBottleneck?: CapabilityResult;
   meta?: MetaResult;
   enablers?: EnablerInput;
+  playbook?: CapabilityPlaybook;
 }
 
 export type ModelId = "model1" | "model2" | "model3";
@@ -106,6 +107,26 @@ export interface PlaybookContent {
   description: string;
   steps: string[];
   expectedOutcome: string;
+}
+
+export interface PlaybookPhase {
+  name: string;
+  weeks: string;
+  actions: string[];
+}
+
+export interface CapabilityPlaybook {
+  capability: CapabilityKey;
+  label: string;
+  duration: string;
+  symptoms: string[];
+  rootCauses: string[];
+  phases: PlaybookPhase[];
+  expectedImpact: {
+    sImprovement: string;
+    primaryMetric: string;
+    secondaryMetric: string;
+  };
 }
 
 export interface GlossaryTerm {
