@@ -7,6 +7,22 @@ Each entry: what went wrong → rule that prevents it.
 
 <!-- Add entries below this line as: "## YYYY-MM-DD — <topic>" -->
 
+## 2026-03-21 — Falsy-zero bug in Likert selection state
+
+**What went wrong**: Using `value || null` to determine if a Likert button should show as selected fails when the valid selected value is `0` (e.g., "Not started"). The expression `0 || null` evaluates to `null`, so the "Not started" option never highlights after being selected, even though it was clicked.
+
+**Rule**: Never use `|| null` (or any falsy check) to determine if a user-controlled value has been explicitly set. Instead, track "has this been answered" separately (e.g., a `Set<string>` of answered question IDs). Use `isAnswered ? currentValue : null` pattern. This applies to all Likert, rating, and numeric-zero scenarios.
+
+---
+
+## 2026-03-21 — Store tests placed in component test file
+
+**What went wrong**: When implementing a feature, store/pure-function tests (testing Zustand actions, adaptive level computation, queue counts, back-nav recompute, scoring engine compatibility) were placed in the component test file (`assessment.test.tsx`) instead of the store test file (`assessmentStore.test.ts`). This violates separation of concerns and means the store test file is not the canonical location for store behavior.
+
+**Rule**: Tests that only interact with `useAssessmentStore.getState()` or pure library functions (no `render`, no `screen`, no `userEvent`) belong in the store/library test file. Only tests that call `render()` belong in component test files. When writing tests during implementation, place each test in the file that matches its subject (store logic → store test, component behavior → component test).
+
+---
+
 ## 2026-03-21 — Test coverage for all spec test cases
 
 **What went wrong**: When implementing a feature, the code change for the glossary back link (`href="/"`) was made correctly, but the corresponding spec test case (test case 7: "Glossary back link updated") was not added to the test file. The implementation was complete but the spec test coverage was incomplete.
