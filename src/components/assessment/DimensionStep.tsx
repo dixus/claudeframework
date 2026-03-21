@@ -41,7 +41,7 @@ export function DimensionStep({ dimension }: DimensionStepProps) {
 
   return (
     <div className="space-y-5">
-      <ProgressBar progress={dimIndex / 6} />
+      <ProgressBar activeDimension={dimension} progress={dimIndex / 6} />
       <div className="flex items-baseline justify-between">
         <h2 className="text-2xl font-bold text-gray-900">{meta.label}</h2>
         <span className="text-sm text-gray-500">

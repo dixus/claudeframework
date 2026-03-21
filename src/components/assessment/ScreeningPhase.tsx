@@ -27,11 +27,25 @@ export function ScreeningPhase() {
   const questionText = QUESTIONS[current.key][0];
   const currentValue = responses[current.key][0];
   const isAnswered = answeredQuestions.has(`${current.key}:0`);
-  const progress = screeningIndex / 6;
+
+  // During screening, we estimate ~24 total questions (6 screening + ~18 deep-dive average)
+  // This gives a smooth global progress that doesn't jump
+  const estimatedTotal = 24;
+  const progress = screeningIndex / estimatedTotal;
+
+  const completedDimensions = new Set<DimensionKey>();
+  for (let i = 0; i < screeningIndex; i++) {
+    // During screening, no dimension is "fully completed" yet — they only have screening done
+    // We don't mark them as completed until deep-dive is done for that dimension
+  }
 
   return (
     <div className="space-y-5">
-      <ProgressBar progress={progress} />
+      <ProgressBar
+        activeDimension={current.key}
+        completedDimensions={completedDimensions}
+        progress={progress}
+      />
       <WizardQuestion
         questionText={questionText}
         dimensionLabel={current.label}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useAssessmentStore } from "@/store/assessmentStore";
 import { QUESTIONS } from "@/lib/scoring/questions";
 import type { DimensionKey } from "@/lib/scoring/types";
@@ -25,6 +26,27 @@ export function DeepDivePhase() {
   const goBackDeepDive = useAssessmentStore((s) => s.goBackDeepDive);
 
   const current = deepDiveQueue[deepDivePosition];
+
+  // Calculate which dimensions are fully completed (all their deep-dive questions answered)
+  const completedDimensions = useMemo(() => {
+    const completed = new Set<DimensionKey>();
+    if (deepDiveQueue.length === 0) return completed;
+
+    // Find the last queue index for each dimension
+    const lastIndex: Partial<Record<DimensionKey, number>> = {};
+    for (let i = 0; i < deepDiveQueue.length; i++) {
+      lastIndex[deepDiveQueue[i].dimension] = i;
+    }
+
+    // A dimension is completed if its last question is before current position
+    for (const dim of Object.keys(lastIndex) as DimensionKey[]) {
+      if (lastIndex[dim]! < deepDivePosition) {
+        completed.add(dim);
+      }
+    }
+    return completed;
+  }, [deepDiveQueue, deepDivePosition]);
+
   if (!current) return null;
 
   const questionText = QUESTIONS[current.dimension][current.questionIndex];
@@ -32,12 +54,19 @@ export function DeepDivePhase() {
   const isAnswered = answeredQuestions.has(
     `${current.dimension}:${current.questionIndex}`,
   );
+
+  // Global progress: 6 screening + deepDivePosition out of 6 screening + total deep-dive
   const totalQuestions = 6 + deepDiveQueue.length;
-  const progress = (6 + deepDivePosition) / totalQuestions;
+  const answeredSoFar = 6 + deepDivePosition;
+  const progress = answeredSoFar / totalQuestions;
 
   return (
     <div className="space-y-5">
-      <ProgressBar progress={progress} />
+      <ProgressBar
+        activeDimension={current.dimension}
+        completedDimensions={completedDimensions}
+        progress={progress}
+      />
       <WizardQuestion
         questionText={questionText}
         dimensionLabel={DIMENSION_LABELS[current.dimension]}
