@@ -301,6 +301,57 @@ describe("capabilities and META", () => {
   });
 });
 
+// Test: Attaches correct playbook for capability bottleneck
+describe("capability playbook attachment", () => {
+  it("attaches correct playbook for capability bottleneck", () => {
+    const input: AssessmentInput = {
+      companyName: "Test Co",
+      responses: Object.fromEntries(
+        KEYS.map((k) => [k, [3, 3, 3, 3, 3, 3, 3, 3]]),
+      ) as Record<DimensionKey, number[]>,
+      capabilityResponses: {
+        c1_strategy: 3,
+        c2_setup: 1, // lowest → bottleneck
+        c3_execution: 3,
+        c4_operationalization: 2,
+      },
+    };
+    const result = computeResult(input);
+    expect(result.capabilityBottleneck!.key).toBe("c2_setup");
+    expect(result.playbook).toBeDefined();
+    expect(result.playbook!.capability).toBe("c2_setup");
+    expect(result.playbook!.label).toBe("C\u2082 Setup");
+    expect(result.playbook!.duration).toBe("12 weeks");
+    expect(result.playbook!.symptoms).toHaveLength(4);
+    expect(result.playbook!.phases).toHaveLength(4);
+    expect(result.playbook!.expectedImpact.sImprovement).toBe("3x");
+  });
+
+  it("does not attach playbook when no capability responses", () => {
+    const result = computeResult(allEqual([3, 3, 3, 3, 3, 3, 3, 3]));
+    expect(result.playbook).toBeUndefined();
+  });
+
+  it("attaches C3 playbook when execution is the bottleneck", () => {
+    const input: AssessmentInput = {
+      companyName: "Test Co",
+      responses: Object.fromEntries(
+        KEYS.map((k) => [k, [3, 3, 3, 3, 3, 3, 3, 3]]),
+      ) as Record<DimensionKey, number[]>,
+      capabilityResponses: {
+        c1_strategy: 4,
+        c2_setup: 3,
+        c3_execution: 1, // lowest → bottleneck
+        c4_operationalization: 3,
+      },
+    };
+    const result = computeResult(input);
+    expect(result.playbook!.capability).toBe("c3_execution");
+    expect(result.playbook!.duration).toBe("6 weeks");
+    expect(result.playbook!.phases).toHaveLength(3);
+  });
+});
+
 // Test 12: Superlinear exponents amplify Strategy and Execution
 describe("superlinear exponents", () => {
   it("amplifies Strategy and Execution over Setup and Operationalization", () => {
