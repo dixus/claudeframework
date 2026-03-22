@@ -124,3 +124,11 @@ Each entry: what went wrong → rule that prevents it.
 **What went wrong**: The `handleExport` async function in `PdfExportButton.tsx` used `try/finally` with no `catch`. If the dynamic `import("jspdf")` failed (network error) or `generatePdfContent` threw, the error was silently swallowed. The button returned to its default state with no feedback to the user.
 
 **Rule**: Any async handler that triggers a user-visible action (download, submit, upload) must have a `catch` block that surfaces the failure. At minimum: `console.error` + set a visible error state. A `try/finally` with no `catch` is only appropriate for cleanup logic where failure is expected and irrelevant to the user.
+
+---
+
+## 2026-03-22 — Zustand persist middleware re-writes state after reset, defeating localStorage cleanup
+
+**What went wrong**: The Zustand `persist` middleware subscribes to all state changes. When `reset()` sets state back to initial values, the middleware immediately writes those initial values to localStorage. The key still exists (with `step: 0`), so any check for key existence (`localStorage.getItem(key) !== null`) would find saved state even after reset. The ResumeBanner appeared on every page load because the key was never actually removed.
+
+**Rule**: When using Zustand `persist` middleware and the intent is to fully clear saved state (on submit, reset, or logout), always call `localStorage.removeItem(key)` explicitly after the `set()` call. The persist middleware's automatic write-on-change behavior means resetting state to initial values is NOT equivalent to clearing localStorage. Additionally, any "should we show a resume prompt?" check must verify meaningful progress (e.g., `step > 0`) rather than just checking key existence, as a defense-in-depth measure.
