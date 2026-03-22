@@ -3,37 +3,43 @@ const DIMENSIONS = [
     label: "Strategy",
     weight: "25%",
     emoji: "\uD83C\uDFAF",
-    description: "AI vision, roadmap, and executive commitment",
+    description:
+      "Measures AI vision clarity, executive commitment, and strategic roadmap maturity. Carries the highest weight (25%) because strategic alignment has a superlinear impact on scaling velocity. Good looks like: a board-approved AI-first strategy with quarterly OKRs tied to AI adoption metrics.",
   },
   {
     label: "Architecture",
     weight: "20%",
     emoji: "\uD83C\uDFD7\uFE0F",
-    description: "Technical infrastructure and AI platform readiness",
+    description:
+      "Evaluates technical infrastructure, AI platform readiness, and system integration depth. Weighted at 20% because architecture determines the ceiling for all other capabilities. Good looks like: modular AI-ready infrastructure with real-time data pipelines and automated deployment.",
   },
   {
     label: "Workflow",
     weight: "15%",
     emoji: "\u2699\uFE0F",
-    description: "Process redesign and AI-human task allocation",
+    description:
+      "Assesses process redesign around AI capabilities and human-AI task allocation. At 15%, it captures how effectively the organisation translates AI tools into operational leverage. Good looks like: end-to-end workflows where AI handles routine decisions and humans focus on exceptions.",
   },
   {
     label: "Data",
     weight: "15%",
     emoji: "\uD83D\uDCCA",
-    description: "Data quality, pipelines, and governance",
+    description:
+      "Examines data quality, pipeline reliability, and governance frameworks. Weighted equally with Workflow at 15% because clean, accessible data is the fuel for every AI capability. Good looks like: unified data platform with automated quality checks, lineage tracking, and access controls.",
   },
   {
     label: "Talent",
     weight: "15%",
     emoji: "\uD83C\uDF93",
-    description: "AI skills, hiring, and upskilling programs",
+    description:
+      "Measures AI skills density, hiring strategy, and upskilling programmes across the organisation. At 15%, it reflects that people are the bottleneck in most AI transformations. Good looks like: AI literacy across all roles, dedicated ML engineering team, and continuous learning budget.",
   },
   {
     label: "Adoption",
     weight: "10%",
     emoji: "\uD83D\uDE80",
-    description: "Organizational change management and AI usage",
+    description:
+      "Tracks organisational change management, AI tool usage rates, and cultural readiness. Weighted at 10% because adoption follows naturally when Strategy, Architecture, and Talent are strong. Good looks like: 80%+ active usage of AI tools with bottom-up experimentation culture.",
   },
 ] as const;
 

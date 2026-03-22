@@ -25,9 +25,12 @@ export function HeroSection() {
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
           AI Maturity Score
         </h1>
-        <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-8">
+        <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-4">
           AI-native companies reach €100M ARR 2–3x faster with 50–70% fewer
           people. Find out where you stand — and what to fix first.
+        </p>
+        <p className="text-blue-200 text-sm mb-8">
+          Free · 5 minutes · No login required · Results stay on your device
         </p>
 
         <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-8">
