@@ -18,7 +18,9 @@ dist/
 CLAUDE.local.md
 .claude/settings.local.json
 .claude/handoffs/
+.claude/input
 
 # OS
 .DS_Store
 Thumbs.db
+
