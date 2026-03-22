@@ -101,6 +101,10 @@ export interface AssessmentResult {
     insight: string;
     savings: number;
   };
+  interventionModel?: {
+    model: import("./intervention").InterventionModel;
+    rationale: string;
+  };
 }
 
 export type ModelId = "model1" | "model2" | "model3";

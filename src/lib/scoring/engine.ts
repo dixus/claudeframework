@@ -17,6 +17,7 @@ import {
   computeCoordinationCurves,
   getCoordinationInsight,
 } from "./coordination";
+import { selectInterventionModel } from "./intervention";
 
 // Weights per Architecture Document v4.5.3
 const DIMENSIONS = [
@@ -154,19 +155,21 @@ function computeMeta(
   };
 }
 
-function computeCapabilityProduct(
+// Normalized capability score: (C₁^1.5 × C₂ × C₃^1.5 × C₄)^(1/5)
+// Same normalization as META to keep values in 0-1 range
+function computeCapabilityGeoMean(
   capScores: Record<CapabilityKey, number>,
 ): number {
   const c1 = capScores.c1_strategy / 100;
   const c2 = capScores.c2_setup / 100;
   const c3 = capScores.c3_execution / 100;
   const c4 = capScores.c4_operationalization / 100;
-  return (
+  const product =
     Math.pow(c1, CAPABILITY_EXPONENTS.c1_strategy) *
     Math.pow(c2, CAPABILITY_EXPONENTS.c2_setup) *
     Math.pow(c3, CAPABILITY_EXPONENTS.c3_execution) *
-    Math.pow(c4, CAPABILITY_EXPONENTS.c4_operationalization)
-  );
+    Math.pow(c4, CAPABILITY_EXPONENTS.c4_operationalization);
+  return Math.pow(product, 1 / EXPONENT_SUM);
 }
 
 function computeRawS(
@@ -176,8 +179,8 @@ function computeRawS(
 ): number {
   const e = enablerScore / 100;
   const theta = thetaNorm / 100;
-  const capProduct = computeCapabilityProduct(capScores);
-  return e * capProduct * theta;
+  const capGeoMean = computeCapabilityGeoMean(capScores);
+  return e * capGeoMean * theta;
 }
 
 function classifyBand(s: number): {
@@ -227,7 +230,7 @@ export function computeScalingVelocity(
     bandLabel,
     components: {
       enabler: enablerScore / 100,
-      capabilityProduct: computeCapabilityProduct(capScores),
+      capabilityProduct: computeCapabilityGeoMean(capScores),
       theta: thetaNorm / 100,
     },
     scenarios: {
@@ -374,6 +377,16 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
 
   if (input.growthEngine) {
     result.growthEngine = GROWTH_ENGINES[input.growthEngine];
+  }
+
+  if (result.capabilities) {
+    result.interventionModel = selectInterventionModel(
+      thetaScore,
+      result.capabilityBottleneck,
+      result.capabilities,
+      input.enablers?.fundingStage,
+      gatedLevel,
+    );
   }
 
   return result;
