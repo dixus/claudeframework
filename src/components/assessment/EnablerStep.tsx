@@ -13,12 +13,17 @@ const STAGES: Array<{ value: FundingStage; label: string }> = [
 ];
 
 export function EnablerStep() {
+  const companyName = useAssessmentStore((s) => s.companyName);
+  const setCompanyName = useAssessmentStore((s) => s.setCompanyName);
   const enablers = useAssessmentStore((s) => s.enablers);
   const setEnablers = useAssessmentStore((s) => s.setEnablers);
   const nextStep = useAssessmentStore((s) => s.nextStep);
   const prevStep = useAssessmentStore((s) => s.prevStep);
 
-  const canContinue = enablers.fundingStage !== "" && enablers.teamSize > 0;
+  const canContinue =
+    companyName.trim() !== "" &&
+    enablers.fundingStage !== "" &&
+    enablers.teamSize > 0;
 
   return (
     <div className="space-y-6">
@@ -29,6 +34,19 @@ export function EnablerStep() {
       </p>
 
       <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Company Name
+          </label>
+          <input
+            type="text"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value.trim())}
+            placeholder="Enter company name"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Funding Stage

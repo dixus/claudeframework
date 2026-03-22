@@ -393,7 +393,7 @@ describe("advanceScreening flow", () => {
     ] as const;
     for (const dim of dims) store.setScreeningAnswer(dim, 2);
     useAssessmentStore.setState({
-      step: 5,
+      step: 4,
       phase: "screening",
       screeningIndex: 0,
     });
@@ -401,7 +401,7 @@ describe("advanceScreening flow", () => {
       useAssessmentStore.getState().advanceScreening();
     }
     const state = useAssessmentStore.getState();
-    expect(state.step).toBe(6);
+    expect(state.step).toBe(5);
     expect(state.phase).toBe("deepdive-intro");
     expect(state.adaptiveLevels).not.toBeNull();
     expect(state.deepDiveQueue.length).toBeGreaterThan(0);

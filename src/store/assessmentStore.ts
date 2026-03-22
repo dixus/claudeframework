@@ -46,8 +46,8 @@ const initialEnablers = (): EnablerInput => ({
   annualRevenue: 0,
 });
 
-// Steps: 0=Intro, 1=Company, 2=Enablers, 3=GrowthEngine, 4=Capabilities, 5=Screening, 6=DeepDive, 7=Review, 8=Results
-const MAX_STEP = 8;
+// Steps: 0=Intro, 1=CompanyContext, 2=GrowthEngine, 3=Capabilities, 4=Screening, 5=DeepDive, 6=Review, 7=Results
+const MAX_STEP = 7;
 
 interface AssessmentState {
   step: number;
@@ -139,8 +139,8 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
   nextStep: () =>
     set((state) => {
       const next = Math.min(MAX_STEP, state.step + 1);
-      // Step 5 = screening phase
-      if (next === 5) {
+      // Step 4 = screening phase
+      if (next === 4) {
         return { step: next, phase: "screening-intro", screeningIndex: 0 };
       }
       return { step: next };
@@ -148,17 +148,17 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
 
   prevStep: () =>
     set((state) => {
-      if (state.step === 7) {
+      if (state.step === 6) {
         // From Review, go back to last deep-dive question
         return {
-          step: 6,
+          step: 5,
           phase: "deepdive",
           deepDivePosition: Math.max(0, state.deepDiveQueue.length - 1),
         };
       }
-      if (state.step === 5) {
+      if (state.step === 4) {
         // From screening intro, go back to Capabilities step
-        return { step: 4, phase: null };
+        return { step: 3, phase: null };
       }
       return { step: Math.max(0, state.step - 1) };
     }),
@@ -220,7 +220,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         deepDiveQueue: queue,
         deepDivePosition: 0,
         phase: "deepdive-intro",
-        step: 6,
+        step: 5,
       };
     }),
 
@@ -266,7 +266,7 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         return { deepDivePosition: state.deepDivePosition + 1 };
       }
       // All deep-dive questions answered — go to Review
-      return { step: 7, phase: null };
+      return { step: 6, phase: null };
     }),
 
   goBackDeepDive: () =>
