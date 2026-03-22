@@ -1,10 +1,10 @@
 "use client";
 
 import type { ScalingVelocity, CapabilityKey } from "@/lib/scoring/types";
-import { getValidationStat } from "@/lib/scoring/validation";
 import { Card, CardContent } from "@/components/ui/card";
 import { HelpSection } from "@/components/ui/help-section";
 import { HelpTerm } from "@/components/ui/help-term";
+import { ValidationBadge } from "@/components/ui/validation-badge";
 import {
   BarChart,
   Bar,
@@ -42,8 +42,6 @@ interface VelocityPanelProps {
   velocity: ScalingVelocity;
 }
 
-const anstValidation = getValidationStat("ANST");
-
 export function VelocityPanel({ velocity }: VelocityPanelProps) {
   const { s, band, bandLabel, components, scenarios, bottleneckCapability } =
     velocity;
@@ -76,11 +74,7 @@ export function VelocityPanel({ velocity }: VelocityPanelProps) {
             Scaling Velocity (ANST{" "}
             <HelpTerm term="s_formula">S-Formula</HelpTerm>)
           </p>
-          {anstValidation && (
-            <span className="px-2 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded-full">
-              ✓ R²={anstValidation.value}, n={anstValidation.sampleSize}
-            </span>
-          )}
+          <ValidationBadge formula="ANST" />
         </div>
         <HelpSection panelId="velocity-panel" />
 

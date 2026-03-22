@@ -1,11 +1,9 @@
 "use client";
 
 import type { MetaResult } from "@/lib/scoring/types";
-import { getValidationStat } from "@/lib/scoring/validation";
 import { HelpSection } from "@/components/ui/help-section";
 import { HelpTerm } from "@/components/ui/help-term";
-
-const metaValidation = getValidationStat("META");
+import { ValidationBadge } from "@/components/ui/validation-badge";
 
 interface ScalingPanelProps {
   meta: MetaResult;
@@ -42,13 +40,9 @@ export function ScalingPanel({ meta, thetaScore }: ScalingPanelProps) {
           <p className="text-2xl font-bold text-indigo-600">
             {metaScore.toFixed(1)}
           </p>
-          {metaValidation && (
-            <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded-full">
-              ✓ Validated (<HelpTerm term="r_squared">R²</HelpTerm>=
-              {metaValidation.value}, n=
-              {metaValidation.sampleSize})
-            </span>
-          )}
+          <div className="mt-1">
+            <ValidationBadge formula="META" />
+          </div>
         </div>
         <div>
           <p className="text-xs text-gray-500 mb-1">Predicted Time to €100M</p>
@@ -114,12 +108,9 @@ export function ScalingPanel({ meta, thetaScore }: ScalingPanelProps) {
               ? "You are approaching superlinear scaling. Focus on your capability bottleneck to break through."
               : "Traditional linear scaling. AI maturity and capability improvements will unlock superlinear growth."}
         </p>
-        {metaValidation && (
-          <p className="text-[10px] text-indigo-400 mt-2">
-            Based on empirical validation across {metaValidation.sampleSize}{" "}
-            AI-native companies
-          </p>
-        )}
+        <p className="text-[10px] text-indigo-400 mt-2">
+          Based on empirical validation across 22 AI-native companies
+        </p>
       </div>
     </div>
   );

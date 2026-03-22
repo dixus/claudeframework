@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { HelpSection } from "@/components/ui/help-section";
 import { HelpTerm } from "@/components/ui/help-term";
+import { ValidationBadge } from "@/components/ui/validation-badge";
 import {
   LineChart,
   Line,
@@ -35,9 +36,12 @@ export function CoordinationPanel({
   return (
     <Card className="border-orange-200">
       <CardContent>
-        <p className="text-sm font-medium text-orange-600 uppercase tracking-wide mb-4">
+        <p className="text-sm font-medium text-orange-600 uppercase tracking-wide mb-2">
           <HelpTerm term="coordination_cost">Coordination Cost</HelpTerm> Model
         </p>
+        <div className="mb-4">
+          <ValidationBadge formula="Coordination Cost" />
+        </div>
         <HelpSection panelId="coordination-panel" />
 
         <div className="h-72 mb-4">

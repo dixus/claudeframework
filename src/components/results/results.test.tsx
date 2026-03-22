@@ -9,6 +9,7 @@ import { ScoreCard } from "./ScoreCard";
 import { BottleneckPanel } from "./BottleneckPanel";
 import { DimensionScorecard } from "./DimensionScorecard";
 import { ResultsPage } from "./ResultsPage";
+import { ValidationBadge } from "@/components/ui/validation-badge";
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -164,5 +165,39 @@ describe("ResultsPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /start over/i }));
     expect(useAssessmentStore.getState().step).toBe(0);
     expect(useAssessmentStore.getState().result).toBeNull();
+  });
+});
+
+// Test 6: ValidationBadge renders for known formula
+describe("ValidationBadge", () => {
+  it("renders for a known formula", () => {
+    render(<ValidationBadge formula="META" />, { wrapper: Wrapper });
+    expect(screen.getByText(/✓/)).toBeInTheDocument();
+    expect(screen.getByText(/R²=0.91/)).toBeInTheDocument();
+  });
+
+  it("renders nothing for an unknown formula", () => {
+    const { container } = render(<ValidationBadge formula="NONEXISTENT" />, {
+      wrapper: Wrapper,
+    });
+    expect(container.innerHTML).toBe("");
+  });
+
+  it("shows tooltip content on hover", async () => {
+    render(<ValidationBadge formula="META" />, { wrapper: Wrapper });
+    const trigger = screen.getByText(/✓/);
+    await userEvent.hover(trigger);
+    const matches = await screen.findAllByText(
+      /22 AI-native B2B SaaS companies/,
+    );
+    expect(matches.length).toBeGreaterThan(0);
+  });
+});
+
+// Test 7: ScoreCard shows validation badge
+describe("ScoreCard validation badge", () => {
+  it("renders a validation badge with r=0.88", () => {
+    render(<ScoreCard result={baseResult} />, { wrapper: Wrapper });
+    expect(screen.getByText(/r=0.88/)).toBeInTheDocument();
   });
 });
