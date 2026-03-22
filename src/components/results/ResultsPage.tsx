@@ -17,6 +17,7 @@ import { CoordinationPanel } from "./CoordinationPanel";
 import { RoadmapPanel } from "./RoadmapPanel";
 import { CaseStudyPanel } from "./CaseStudyPanel";
 import { PdfExportButton } from "./PdfExportButton";
+import { SaveResultsCard } from "./SaveResultsCard";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 type ResultsTab = "overview" | "scaling" | "diagnosis" | "roadmap";
@@ -151,6 +152,9 @@ export function ResultsPage() {
             </>
           )}
         </div>
+
+        {/* Save Results */}
+        <SaveResultsCard result={result} />
 
         {/* Footer */}
         <div className="flex justify-center pt-2">
