@@ -26,10 +26,9 @@ describe("computeScalingVelocity", () => {
   it("known manual calculation matches", () => {
     // E=60, C1=80, C2=70, C3=60, C4=50, θ=75
     // e=0.6, c1=0.8, c2=0.7, c3=0.6, c4=0.5, θ=0.75
-    // capProduct = 0.8^1.5 × 0.7 × 0.6^1.5 × 0.5
-    //            = 0.7155 × 0.7 × 0.4648 × 0.5
-    //            = 0.11637...
-    // S = 0.6 × 0.11637 × 0.75 = 0.05236...
+    // capProduct = 0.8^1.5 × 0.7 × 0.6^1.5 × 0.5 = 0.11637...
+    // capGeoMean = 0.11637^(1/5) ≈ 0.6504
+    // S = 0.6 × 0.6504 × 0.75 ≈ 0.2927
     const result = computeScalingVelocity(
       75,
       {
@@ -40,8 +39,8 @@ describe("computeScalingVelocity", () => {
       },
       60,
     );
-    expect(result.s).toBeCloseTo(0.0524, 3);
-    expect(result.band).toBe("linear");
+    expect(result.s).toBeCloseTo(0.2927, 3);
+    expect(result.band).toBe("superlinear");
   });
 
   it("scenario calculations are correct", () => {
@@ -75,8 +74,8 @@ describe("computeScalingVelocity", () => {
     const result = computeScalingVelocity(75, allCaps(80), 60);
     expect(result.components.enabler).toBeCloseTo(0.6, 5);
     expect(result.components.theta).toBeCloseTo(0.75, 5);
-    // capProduct = 0.8^1.5 × 0.8 × 0.8^1.5 × 0.8 = 0.8^5 = 0.32768
-    expect(result.components.capabilityProduct).toBeCloseTo(0.32768, 4);
+    // capGeoMean = (0.8^1.5 × 0.8 × 0.8^1.5 × 0.8)^(1/5) = (0.8^5)^(1/5) = 0.8
+    expect(result.components.capabilityProduct).toBeCloseTo(0.8, 4);
   });
 });
 
@@ -89,21 +88,10 @@ describe("band assignment", () => {
   });
 
   it("S = 0.05 → linear", () => {
-    // We need to find inputs that produce S ≈ 0.05
-    // Using all=50, e=50: S = 0.5 × (0.5^5) × 0.5 = 0.5 × 0.03125 × 0.5 = 0.0078 → too low
-    // Try all=80, e=80, θ=80: S = 0.8 × 0.8^5 × 0.8 = 0.8 × 0.32768 × 0.8 = 0.2097 → too high
-    // Just test the band for a known value
-    const result = computeScalingVelocity(
-      75,
-      {
-        c1_strategy: 80,
-        c2_setup: 70,
-        c3_execution: 60,
-        c4_operationalization: 50,
-      },
-      60,
-    );
-    // S ≈ 0.0524 → linear
+    // allCaps(40), E=50, θ=50:
+    // capGeoMean = (0.4^1.5 × 0.4 × 0.4^1.5 × 0.4)^(1/5) = (0.4^5)^(1/5) = 0.4
+    // S = 0.5 × 0.4 × 0.5 = 0.1 → linear
+    const result = computeScalingVelocity(50, allCaps(40), 50);
     expect(result.s).toBeGreaterThanOrEqual(0.05);
     expect(result.s).toBeLessThan(0.2);
     expect(result.band).toBe("linear");
@@ -111,8 +99,10 @@ describe("band assignment", () => {
   });
 
   it("S in superlinear range → superlinear", () => {
-    // all=85, e=85, θ=85: S = 0.85 × 0.85^5 × 0.85 = 0.85^7 ≈ 0.3206
-    const result = computeScalingVelocity(85, allCaps(85), 85);
+    // allCaps(60), E=80, θ=80:
+    // capGeoMean = (0.6^5)^(1/5) = 0.6
+    // S = 0.8 × 0.6 × 0.8 = 0.384 → superlinear
+    const result = computeScalingVelocity(80, allCaps(60), 80);
     expect(result.s).toBeGreaterThanOrEqual(0.2);
     expect(result.s).toBeLessThan(0.5);
     expect(result.band).toBe("superlinear");
