@@ -1,19 +1,70 @@
 "use client";
 
 import type { CapabilityPlaybook } from "@/lib/scoring/types";
+import type {
+  InterventionModel,
+  InterventionModelType,
+} from "@/lib/scoring/intervention";
+import { INTERVENTION_MODELS } from "@/lib/scoring/intervention";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface CapabilityPlaybookPanelProps {
   playbook: CapabilityPlaybook;
+  interventionModel?: { model: InterventionModel; rationale: string };
 }
+
+const MODEL_KEYS: InterventionModelType[] = ["bottleneck", "stage", "level"];
 
 export function CapabilityPlaybookPanel({
   playbook,
+  interventionModel,
 }: CapabilityPlaybookPanelProps) {
   return (
     <Card className="border-amber-200">
       <CardContent>
+        {interventionModel && (
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <Badge variant="amber" className="text-sm">
+                Recommended: {interventionModel.model.label} (
+                {interventionModel.model.duration})
+              </Badge>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              {interventionModel.rationale}
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {MODEL_KEYS.map((key) => {
+                const m = INTERVENTION_MODELS[key];
+                const isRecommended = key === interventionModel.model.type;
+                return (
+                  <div
+                    key={key}
+                    className={`rounded-lg border p-3 ${
+                      isRecommended
+                        ? "border-amber-400 bg-amber-50"
+                        : "border-gray-200 bg-gray-50"
+                    }`}
+                  >
+                    <p
+                      className={`text-sm font-semibold ${
+                        isRecommended ? "text-amber-800" : "text-gray-700"
+                      }`}
+                    >
+                      {m.label}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">{m.duration}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {m.sImprovement} S improvement
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-medium text-amber-600 uppercase tracking-wide">
             Intervention Playbook
