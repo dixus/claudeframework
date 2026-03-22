@@ -1,6 +1,7 @@
 "use client";
 
 import type { ScalingVelocity, CapabilityKey } from "@/lib/scoring/types";
+import { getValidationStat } from "@/lib/scoring/validation";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   BarChart,
@@ -39,6 +40,8 @@ interface VelocityPanelProps {
   velocity: ScalingVelocity;
 }
 
+const anstValidation = getValidationStat("ANST");
+
 export function VelocityPanel({ velocity }: VelocityPanelProps) {
   const { s, band, bandLabel, components, scenarios, bottleneckCapability } =
     velocity;
@@ -66,9 +69,16 @@ export function VelocityPanel({ velocity }: VelocityPanelProps) {
   return (
     <Card className="border-indigo-200">
       <CardContent>
-        <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-4">
-          Scaling Velocity (ANST S-Formula)
-        </p>
+        <div className="flex items-center gap-2 mb-4">
+          <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide">
+            Scaling Velocity (ANST S-Formula)
+          </p>
+          {anstValidation && (
+            <span className="px-2 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded-full">
+              ✓ R²={anstValidation.value}, n={anstValidation.sampleSize}
+            </span>
+          )}
+        </div>
 
         {/* Velocity gauge */}
         <div className="flex justify-center mb-6">

@@ -1,6 +1,7 @@
 "use client";
 
 import type { AssessmentResult } from "@/lib/scoring/types";
+import { VALIDATION_STATS } from "@/lib/scoring/validation";
 
 interface ScoreCardProps {
   result: AssessmentResult;
@@ -28,6 +29,9 @@ export function ScoreCard({ result }: ScoreCardProps) {
         </p>
         <p className="text-2xl font-semibold text-gray-900 mt-1">
           {level.label}
+        </p>
+        <p className="text-[10px] text-gray-400 mt-1">
+          Validated framework (n={VALIDATION_STATS[0].sampleSize} companies)
         </p>
       </div>
       <div className="border-t border-gray-100 pt-4 space-y-2">
