@@ -81,10 +81,10 @@ describe("nextStep", () => {
     expect(useAssessmentStore.getState().step).toBe(1);
   });
 
-  it("clamps at 8", () => {
-    useAssessmentStore.setState({ step: 8 });
+  it("clamps at max step", () => {
+    useAssessmentStore.setState({ step: 7 });
     useAssessmentStore.getState().nextStep();
-    expect(useAssessmentStore.getState().step).toBe(8);
+    expect(useAssessmentStore.getState().step).toBe(7);
   });
 });
 
@@ -104,11 +104,11 @@ describe("prevStep", () => {
 
 // Test 7: submit
 describe("submit", () => {
-  it("computes result, sets step=8, and result.companyName matches store", () => {
+  it("computes result, sets step to max, and result.companyName matches store", () => {
     useAssessmentStore.getState().setCompanyName("Test Corp");
     useAssessmentStore.getState().submit();
     const state = useAssessmentStore.getState();
-    expect(state.step).toBe(8);
+    expect(state.step).toBe(7);
     expect(state.result).not.toBeNull();
     expect(state.result!.companyName).toBe("Test Corp");
     expect(typeof state.result!.thetaScore).toBe("number");
