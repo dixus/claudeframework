@@ -4,10 +4,19 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { useAssessmentStore } from "@/store/assessmentStore";
 import type { AssessmentResult } from "@/lib/scoring/types";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { ScoreCard } from "./ScoreCard";
 import { BottleneckPanel } from "./BottleneckPanel";
 import { DimensionScorecard } from "./DimensionScorecard";
 import { ResultsPage } from "./ResultsPage";
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <TooltipPrimitive.Provider delayDuration={0}>
+      {children}
+    </TooltipPrimitive.Provider>
+  );
+}
 
 // ResizeObserver is not available in jsdom; mock it for Recharts ResponsiveContainer
 globalThis.ResizeObserver = class ResizeObserver {
@@ -54,7 +63,7 @@ beforeEach(() => {
 // Test 1: ScoreCard renders score, level, benchmarks
 describe("ScoreCard", () => {
   it("renders the θ score, level label, and benchmark values", () => {
-    render(<ScoreCard result={baseResult} />);
+    render(<ScoreCard result={baseResult} />, { wrapper: Wrapper });
     expect(screen.getByText("67.4")).toBeInTheDocument();
     expect(screen.getByText("AI-Enabled")).toBeInTheDocument();
     expect(screen.getByText("30")).toBeInTheDocument();
@@ -65,14 +74,21 @@ describe("ScoreCard", () => {
 // Test 2: ScoreCard gating notice
 describe("ScoreCard gating", () => {
   it("renders a gating notice when gated=true", () => {
-    render(<ScoreCard result={{ ...baseResult, gated: true }} />);
-    expect(
-      screen.getByText(/gating conditions were not met/i),
-    ).toBeInTheDocument();
+    render(<ScoreCard result={{ ...baseResult, gated: true }} />, {
+      wrapper: Wrapper,
+    });
+    const gatingNotice = screen.getAllByText((_, element) => {
+      return (
+        element?.tagName === "DIV" &&
+        element?.className.includes("bg-amber-50") &&
+        (element?.textContent?.includes("gating conditions") ?? false)
+      );
+    });
+    expect(gatingNotice.length).toBeGreaterThan(0);
   });
 
   it("does not render a gating notice when gated=false", () => {
-    render(<ScoreCard result={baseResult} />);
+    render(<ScoreCard result={baseResult} />, { wrapper: Wrapper });
     expect(
       screen.queryByText(/gating conditions were not met/i),
     ).not.toBeInTheDocument();
