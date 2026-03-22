@@ -16,7 +16,7 @@ export function DimensionScorecard({ dimensions }: DimensionScorecardProps) {
       <HelpSection panelId="dimension-scorecard" />
       <div className="space-y-3">
         {dimensions.map((d) => (
-          <div key={d.key}>
+          <div key={d.key} id={`dim-${d.key}`} className="scroll-mt-16">
             <div className="flex justify-between text-sm mb-1">
               <span className="font-medium text-gray-700">{d.label}</span>
               <span className="text-gray-500">{d.score.toFixed(1)}</span>

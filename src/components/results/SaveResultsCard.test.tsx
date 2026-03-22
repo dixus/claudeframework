@@ -10,6 +10,7 @@ const baseResult: AssessmentResult = {
   thetaScore: 67.4,
   rawLevel: 2,
   gated: false,
+  gatingDetails: [],
   level: {
     level: 2,
     label: "AI-Enabled",

@@ -420,6 +420,70 @@ describe("growth engine attachment", () => {
   });
 });
 
+// Test: Gating details — Level 3 blocked
+describe("gating details", () => {
+  it("Level 3 blocked by workflow — gatingDetails contains workflow gate", () => {
+    // workflow sum=20 → score=62.5; all others sum=32 → score=100
+    const input = dimInput(
+      { workflow: [4, 3, 3, 3, 2, 2, 2, 1] },
+      [4, 4, 4, 4, 4, 4, 4, 4],
+    );
+    const result = computeResult(input);
+    expect(result.gated).toBe(true);
+    expect(result.gatingDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          dimension: "workflow",
+          score: 62.5,
+          threshold: 70,
+          targetLevel: 3,
+        }),
+      ]),
+    );
+  });
+
+  it("Level 2 blocked by workflow — gatingDetails contains workflow gate for level 2", () => {
+    // workflow sum=15 → score=46.9; all others sum=17 → score=53.1
+    const input = dimInput(
+      { workflow: [1, 2, 2, 2, 2, 2, 2, 2] },
+      [2, 2, 2, 2, 2, 2, 2, 3],
+    );
+    const result = computeResult(input);
+    expect(result.gated).toBe(true);
+    expect(result.gatingDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          dimension: "workflow",
+          threshold: 50,
+          targetLevel: 2,
+        }),
+      ]),
+    );
+  });
+
+  it("multiple gates — workflow and data both fail for Level 3", () => {
+    // workflow sum=20 → 62.5 (<70), data sum=18 → 56.3 (<60), others=100
+    const input = dimInput(
+      {
+        workflow: [4, 3, 3, 3, 2, 2, 2, 1],
+        data: [3, 3, 3, 2, 2, 2, 2, 1],
+      },
+      [4, 4, 4, 4, 4, 4, 4, 4],
+    );
+    const result = computeResult(input);
+    expect(result.gated).toBe(true);
+    expect(result.gatingDetails).toHaveLength(2);
+    expect(result.gatingDetails.map((g) => g.dimension)).toContain("workflow");
+    expect(result.gatingDetails.map((g) => g.dimension)).toContain("data");
+  });
+
+  it("no gating — gatingDetails is empty array when gated=false", () => {
+    const result = computeResult(allEqual([4, 4, 4, 4, 4, 4, 4, 4]));
+    expect(result.gated).toBe(false);
+    expect(result.gatingDetails).toEqual([]);
+  });
+});
+
 // Test 14: Case studies attached to result
 describe("case studies attachment", () => {
   it("attaches case studies to result", () => {

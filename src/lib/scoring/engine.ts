@@ -3,6 +3,7 @@ import type {
   AssessmentResult,
   DimensionKey,
   DimensionResult,
+  GatingDetail,
   LevelInfo,
   CapabilityKey,
   CapabilityResult,
@@ -80,24 +81,71 @@ function getRawLevel(theta: number): number {
   return 3;
 }
 
+const DIMENSION_LABELS: Record<DimensionKey, string> = {
+  strategy: "Strategy",
+  architecture: "Architecture",
+  workflow: "Workflow",
+  data: "Data",
+  talent: "Talent",
+  adoption: "Adoption",
+};
+
 function applyGating(
   rawLevel: number,
   scores: Record<DimensionKey, number>,
-): { level: number; gated: boolean } {
+): { level: number; gated: boolean; gatingDetails: GatingDetail[] } {
   let level = rawLevel;
   let gated = false;
-  if (
-    level === 3 &&
-    (scores.workflow < 70 || scores.data < 60 || scores.adoption < 50)
-  ) {
-    level = 2;
-    gated = true;
+  const gatingDetails: GatingDetail[] = [];
+
+  if (level === 3) {
+    const level3Gates: Array<{ dim: DimensionKey; threshold: number }> = [
+      { dim: "workflow", threshold: 70 },
+      { dim: "data", threshold: 60 },
+      { dim: "adoption", threshold: 50 },
+    ];
+    for (const gate of level3Gates) {
+      if (scores[gate.dim] < gate.threshold) {
+        gatingDetails.push({
+          dimension: gate.dim,
+          dimensionLabel: DIMENSION_LABELS[gate.dim],
+          score: scores[gate.dim],
+          threshold: gate.threshold,
+          targetLevel: 3,
+        });
+      }
+    }
+    if (gatingDetails.length > 0) {
+      level = 2;
+      gated = true;
+    }
   }
-  if (level === 2 && (scores.workflow < 50 || scores.data < 40)) {
-    level = 1;
-    gated = true;
+
+  if (level === 2) {
+    const level2Gates: Array<{ dim: DimensionKey; threshold: number }> = [
+      { dim: "workflow", threshold: 50 },
+      { dim: "data", threshold: 40 },
+    ];
+    const level2Details: GatingDetail[] = [];
+    for (const gate of level2Gates) {
+      if (scores[gate.dim] < gate.threshold) {
+        level2Details.push({
+          dimension: gate.dim,
+          dimensionLabel: DIMENSION_LABELS[gate.dim],
+          score: scores[gate.dim],
+          threshold: gate.threshold,
+          targetLevel: 2,
+        });
+      }
+    }
+    if (level2Details.length > 0) {
+      level = 1;
+      gated = true;
+      gatingDetails.push(...level2Details);
+    }
   }
-  return { level, gated };
+
+  return { level, gated, gatingDetails };
 }
 
 // ANST formula: S = E × (C₁^1.5 × C₂ × C₃^1.5 × C₄) × θ_index
@@ -295,7 +343,11 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
   );
 
   const rawLevel = getRawLevel(thetaScore);
-  const { level: gatedLevel, gated } = applyGating(rawLevel, scoreMap);
+  const {
+    level: gatedLevel,
+    gated,
+    gatingDetails,
+  } = applyGating(rawLevel, scoreMap);
 
   const bottleneckDim = dimensions.reduce((min, d) =>
     d.score < min.score ? d : min,
@@ -309,6 +361,7 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
     rawLevel,
     level: LEVELS[gatedLevel],
     gated,
+    gatingDetails,
     bottleneck: {
       dimension: bottleneckDim.key,
       score: bottleneckDim.score,

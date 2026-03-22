@@ -43,6 +43,7 @@ const minimalResult: AssessmentResult = {
   thetaScore: 45.2,
   rawLevel: 1,
   gated: false,
+  gatingDetails: [],
   level: {
     level: 1,
     label: "AI-Aware",

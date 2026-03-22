@@ -9,8 +9,15 @@ interface ScoreCardProps {
   result: AssessmentResult;
 }
 
+const LEVEL_LABELS: Record<number, string> = {
+  0: "Traditional",
+  1: "AI-Powered",
+  2: "AI-Enabled",
+  3: "AI-Native",
+};
+
 export function ScoreCard({ result }: ScoreCardProps) {
-  const { thetaScore, level, gated, meta } = result;
+  const { thetaScore, level, gated, gatingDetails, meta } = result;
 
   const monthsDisplay = meta ? meta.predictedMonthsTo100M : level.monthsTo100M;
   const monthsLabel = meta ? "Predicted (META)" : "Level benchmark";
@@ -60,10 +67,24 @@ export function ScoreCard({ result }: ScoreCardProps) {
           </div>
         )}
       </div>
-      {gated && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-          Your {"\u03B8"} score qualified for a higher level, but one or more{" "}
-          <HelpTerm term="gating">gating conditions</HelpTerm> were not met.
+      {gated && gatingDetails.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 space-y-2">
+          {gatingDetails.map((gate) => (
+            <p key={`${gate.dimension}-${gate.targetLevel}`}>
+              Your {"\u03B8"} score qualifies for Level {gate.targetLevel} (
+              {LEVEL_LABELS[gate.targetLevel]}), but{" "}
+              <a
+                href={`#dim-${gate.dimension}`}
+                className="font-medium underline hover:text-amber-900"
+              >
+                {gate.dimensionLabel}
+              </a>{" "}
+              at {gate.score.toFixed(1)} is below the {gate.threshold} minimum
+              required. Improving {gate.dimensionLabel} to {gate.threshold}{" "}
+              would unlock Level {gate.targetLevel} (
+              {LEVEL_LABELS[gate.targetLevel]}).
+            </p>
+          ))}
         </div>
       )}
     </div>

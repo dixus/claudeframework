@@ -30,6 +30,7 @@ const baseResult: AssessmentResult = {
   thetaScore: 67.4,
   rawLevel: 2,
   gated: false,
+  gatingDetails: [],
   level: {
     level: 2,
     label: "AI-Enabled",
@@ -73,25 +74,46 @@ describe("ScoreCard", () => {
 
 // Test 2: ScoreCard gating notice
 describe("ScoreCard gating", () => {
-  it("renders a gating notice when gated=true", () => {
-    render(<ScoreCard result={{ ...baseResult, gated: true }} />, {
-      wrapper: Wrapper,
-    });
+  it("renders a gating notice when gated=true with gatingDetails", () => {
+    render(
+      <ScoreCard
+        result={{
+          ...baseResult,
+          gated: true,
+          gatingDetails: [
+            {
+              dimension: "workflow",
+              dimensionLabel: "Workflow",
+              score: 62.5,
+              threshold: 70,
+              targetLevel: 3,
+            },
+          ],
+        }}
+      />,
+      { wrapper: Wrapper },
+    );
     const gatingNotice = screen.getAllByText((_, element) => {
       return (
         element?.tagName === "DIV" &&
         element?.className.includes("bg-amber-50") &&
-        (element?.textContent?.includes("gating conditions") ?? false)
+        (element?.textContent?.includes("Workflow") ?? false)
       );
     });
     expect(gatingNotice.length).toBeGreaterThan(0);
+    expect(screen.getByText("Workflow")).toBeInTheDocument();
   });
 
   it("does not render a gating notice when gated=false", () => {
     render(<ScoreCard result={baseResult} />, { wrapper: Wrapper });
-    expect(
-      screen.queryByText(/gating conditions were not met/i),
-    ).not.toBeInTheDocument();
+    const amberBoxes = screen.queryAllByText((_, element) => {
+      return (
+        (element?.tagName === "DIV" &&
+          element?.className.includes("bg-amber-50")) ??
+        false
+      );
+    });
+    expect(amberBoxes).toHaveLength(0);
   });
 });
 

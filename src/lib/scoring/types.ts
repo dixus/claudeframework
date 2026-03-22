@@ -81,6 +81,14 @@ export interface MetaResult {
   capabilityExponents: Record<CapabilityKey, number>;
 }
 
+export interface GatingDetail {
+  dimension: DimensionKey;
+  dimensionLabel: string;
+  score: number;
+  threshold: number;
+  targetLevel: number;
+}
+
 export interface AssessmentResult {
   companyName: string;
   dimensions: DimensionResult[];
@@ -88,6 +96,7 @@ export interface AssessmentResult {
   rawLevel: number;
   level: LevelInfo;
   gated: boolean;
+  gatingDetails: GatingDetail[];
   bottleneck: BottleneckInfo;
   capabilities?: CapabilityResult[];
   capabilityBottleneck?: CapabilityResult;
