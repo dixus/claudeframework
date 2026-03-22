@@ -30,7 +30,7 @@ export function HeroSection() {
           people. Find out where you stand — and what to fix first.
         </p>
         <p className="text-blue-200 text-sm mb-8">
-          Free · 5 minutes · No login required · Results stay on your device
+          Free · 5 minutes · No login required · Save & share your results
         </p>
 
         <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-8">

@@ -7,7 +7,7 @@ const FAQ_ITEMS = [
   {
     question: "Do I need to create an account?",
     answer:
-      "No. The assessment is completely free with no login required. Your results are calculated in the browser and stay on your device.",
+      "No. The assessment is completely free with no login required. After completing it, you can optionally save your results and get a shareable link — no account needed.",
   },
   {
     question: "What is the θ (theta) index?",
@@ -32,7 +32,7 @@ const FAQ_ITEMS = [
   {
     question: "Is my data stored anywhere?",
     answer:
-      "No. All scoring calculations happen entirely in your browser. No data is sent to any server. Your answers and results never leave your device.",
+      "Scoring happens entirely in your browser. If you choose to save your results, they are stored securely so you can revisit them via your unique link. We only store your scores and results — email and company name are optional. We never share your data with third parties.",
   },
   {
     question: "Who is this assessment for?",

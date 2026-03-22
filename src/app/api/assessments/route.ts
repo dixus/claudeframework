@@ -21,8 +21,8 @@ function validateBody(body: Record<string, unknown>): string | null {
 
   const ds = body.dimensionScores as Record<string, unknown>;
   for (const key of DIMENSION_KEYS) {
-    if (typeof ds[key] !== "number" || ds[key] < 0 || ds[key] > 5) {
-      return `dimensionScores.${key} must be a number between 0 and 5`;
+    if (typeof ds[key] !== "number" || ds[key] < 0 || ds[key] > 100) {
+      return `dimensionScores.${key} must be a number between 0 and 100`;
     }
   }
 

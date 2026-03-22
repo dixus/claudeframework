@@ -53,6 +53,7 @@ describe("HeroSection", () => {
   it("shows trust line", () => {
     render(<HeroSection />);
     expect(screen.getByText(/No login required/)).toBeDefined();
+    expect(screen.getByText(/Save & share your results/)).toBeDefined();
   });
 });
 
