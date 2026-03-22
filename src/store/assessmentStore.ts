@@ -81,6 +81,7 @@ interface AssessmentActions {
   advanceDeepDive: () => void;
   goBackDeepDive: () => void;
   goBackScreening: () => void;
+  randomizeDeepDive: () => void;
 }
 
 type AssessmentStore = AssessmentState & AssessmentActions;
@@ -283,5 +284,25 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
         return { screeningIndex: state.screeningIndex - 1 };
       }
       return { phase: "screening-intro" };
+    }),
+
+  randomizeDeepDive: () =>
+    set((state) => {
+      const newResponses = { ...state.responses };
+      for (const item of state.deepDiveQueue) {
+        const updated = [...newResponses[item.dimension]];
+        updated[item.questionIndex] = Math.floor(Math.random() * 5) + 1;
+        newResponses[item.dimension] = updated;
+      }
+      const answeredQuestions = new Set(state.answeredQuestions);
+      for (const item of state.deepDiveQueue) {
+        answeredQuestions.add(`${item.dimension}:${item.questionIndex}`);
+      }
+      return {
+        responses: newResponses,
+        answeredQuestions,
+        step: 6,
+        phase: null,
+      };
     }),
 }));

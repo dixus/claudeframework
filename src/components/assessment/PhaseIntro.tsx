@@ -1,5 +1,7 @@
 "use client";
 
+import { useAssessmentStore } from "@/store/assessmentStore";
+
 interface PhaseIntroProps {
   phase: "screening" | "deepdive";
   onContinue: () => void;
@@ -84,6 +86,14 @@ export function PhaseIntro({
           Start Deep Dive
         </button>
       </div>
+      {process.env.NODE_ENV === "development" && (
+        <button
+          onClick={() => useAssessmentStore.getState().randomizeDeepDive()}
+          className="mt-4 px-4 py-2 text-xs border border-dashed border-gray-300 rounded-lg text-gray-400 hover:text-gray-600 hover:border-gray-400"
+        >
+          🎲 Randomize &amp; skip to results (dev only)
+        </button>
+      )}
     </div>
   );
 }
