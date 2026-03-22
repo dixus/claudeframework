@@ -6,12 +6,47 @@ import type { AssessmentResult } from "@/lib/scoring/types";
 import { ResultsPageClient } from "./ResultsPageClient";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  robots: "noindex",
-};
-
 interface Props {
   params: { hash: string };
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { hash } = params;
+  try {
+    const rows = await db
+      .select()
+      .from(assessments)
+      .where(eq(assessments.hash, hash))
+      .limit(1);
+
+    if (rows.length === 0) {
+      return { robots: "noindex" };
+    }
+
+    const result = rows[0].resultSnapshot as unknown as AssessmentResult;
+    const levelLabel = result.level?.label ?? "Unknown";
+    const levelNum = result.level?.level ?? 0;
+    const theta = result.thetaScore?.toFixed(0) ?? "0";
+    const company = result.companyName || "Company";
+
+    return {
+      robots: "noindex",
+      openGraph: {
+        title: `AI Maturity Score: Level ${levelNum} — ${levelLabel}`,
+        description: `\u03B8 ${theta}/100 — ${company} assessed across 6 dimensions of AI maturity`,
+        type: "website",
+        images: [{ url: "/og-default.png", width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `AI Maturity Score: Level ${levelNum} — ${levelLabel}`,
+        description: `\u03B8 ${theta}/100 — ${company} assessed across 6 dimensions of AI maturity`,
+        images: ["/og-default.png"],
+      },
+    };
+  } catch {
+    return { robots: "noindex" };
+  }
 }
 
 export default async function SavedResultsPage({ params }: Props) {
