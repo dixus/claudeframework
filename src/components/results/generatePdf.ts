@@ -1,5 +1,18 @@
 import type { AssessmentResult } from "@/lib/scoring/types";
 
+/** Replace Unicode characters unsupported by jsPDF's built-in Helvetica (WinAnsi). */
+function sanitize(text: string): string {
+  return text
+    .replace(/θ/g, "theta")
+    .replace(/₁/g, "1")
+    .replace(/₂/g, "2")
+    .replace(/₃/g, "3")
+    .replace(/₄/g, "4")
+    .replace(/€/g, "EUR ")
+    .replace(/—/g, "--")
+    .replace(/–/g, "-");
+}
+
 export function slugify(name: string): string {
   return name
     .toLowerCase()
@@ -430,7 +443,22 @@ export function buildFilename(companyName: string): string {
   return `${slugify(companyName)}-ai-maturity-report-${date}.pdf`;
 }
 
-export function generatePdfContent(pdf: PdfDoc, result: AssessmentResult) {
+/** Wrap a PdfDoc so all text() and splitTextToSize() calls go through sanitize(). */
+function withSanitizedText(pdf: PdfDoc): PdfDoc {
+  return {
+    ...pdf,
+    text(text: string | string[], x: number, y: number) {
+      const clean = Array.isArray(text) ? text.map(sanitize) : sanitize(text);
+      pdf.text(clean, x, y);
+    },
+    splitTextToSize(text: string, maxWidth: number) {
+      return pdf.splitTextToSize(sanitize(text), maxWidth);
+    },
+  };
+}
+
+export function generatePdfContent(raw: PdfDoc, result: AssessmentResult) {
+  const pdf = withSanitizedText(raw);
   const hasPage3 = !!(result.capabilities || result.scalingVelocity);
   const hasPage4 = !!(result.roadmap || result.playbook);
 

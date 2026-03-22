@@ -281,7 +281,7 @@ describe("generatePdfContent", () => {
 
     const footerCalls = pdf.text.mock.calls.filter(
       (call: unknown[]) =>
-        call[0] === "AI Maturity Score — Powered by AI-Native Scaling Theory",
+        call[0] === "AI Maturity Score -- Powered by AI-Native Scaling Theory",
     );
     // 4 pages = 4 footer lines
     expect(footerCalls).toHaveLength(4);
