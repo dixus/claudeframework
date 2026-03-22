@@ -15,6 +15,7 @@ import { ScalingPanel } from "./ScalingPanel";
 import { VelocityPanel } from "./VelocityPanel";
 import { CoordinationPanel } from "./CoordinationPanel";
 import { RoadmapPanel } from "./RoadmapPanel";
+import { CaseStudyPanel } from "./CaseStudyPanel";
 import { PdfExportButton } from "./PdfExportButton";
 
 type ResultsTab = "overview" | "scaling" | "diagnosis" | "roadmap";
@@ -120,6 +121,12 @@ export function ResultsPage() {
               <CapabilityPlaybookPanel
                 playbook={result.playbook}
                 interventionModel={result.interventionModel}
+              />
+            )}
+            {result.caseStudies && result.caseStudies.length > 0 && (
+              <CaseStudyPanel
+                caseStudies={result.caseStudies}
+                capabilityBottleneck={result.capabilityBottleneck}
               />
             )}
             <BottleneckPanel bottleneck={result.bottleneck} />
