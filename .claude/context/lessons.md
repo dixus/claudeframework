@@ -103,6 +103,22 @@ Each entry: what went wrong → rule that prevents it.
 
 ---
 
+## 2026-03-22 — Eager DB initialization throws at build time without env vars
+
+**What went wrong**: `export const db = getDb()` at module level runs the DB initialization function immediately when the module is imported. Since Next.js server components import DB modules at the top level, `next build` throws at build time if `POSTGRES_URL` is not set in the build environment. The intent was to initialize once (singleton), but eager initialization is wrong for environment-dependent resources.
+
+**Rule**: Never initialize environment-dependent resources (DB connections, API clients, etc.) at module evaluation time. Use lazy initialization: declare a module-level `let _instance = null`, initialize in a getter function called on first access, and export either the getter function or a Proxy that calls the getter. The pattern is `let _db: T | null = null; export function getDb(): T { if (_db) return _db; /* init */ return _db; }`. For consumer code that expects a direct `db` export, wrap with a `Proxy` that calls the getter on first property access.
+
+---
+
+## 2026-03-22 — Test file inside Next.js dynamic route directory breaks vitest glob collection
+
+**What went wrong**: A test file placed inside `src/app/results/[hash]/` could not be collected by vitest because the square brackets in the directory name are treated as glob character classes. Vitest's file discovery uses glob patterns to find test files, and `[hash]` in a path matches any single character from the set `{h, a, s}` rather than the literal directory name.
+
+**Rule**: Never place test files inside Next.js dynamic route directories (`[param]/`). Place co-located tests for dynamic-route page components in the nearest parent directory without brackets (e.g., `src/app/results/savedResults.test.tsx` tests `src/app/results/[hash]/page.tsx`). Use a descriptive filename like `savedResults.test.tsx` or `hashPage.test.tsx` to indicate what is being tested.
+
+---
+
 ## 2026-03-22 — Missing catch block leaves PDF export failures silent
 
 **What went wrong**: The `handleExport` async function in `PdfExportButton.tsx` used `try/finally` with no `catch`. If the dynamic `import("jspdf")` failed (network error) or `generatePdfContent` threw, the error was silently swallowed. The button returned to its default state with no feedback to the user.
