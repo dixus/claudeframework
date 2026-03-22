@@ -3,8 +3,11 @@ import { useAssessmentStore } from "./assessmentStore";
 import { getFollowUpQuestions } from "../lib/scoring/question-tiers";
 import { computeResult } from "../lib/scoring/engine";
 
+const STORAGE_KEY = "ai-maturity-assessment-progress";
+
 beforeEach(() => {
   useAssessmentStore.getState().reset();
+  localStorage.removeItem(STORAGE_KEY);
 });
 
 // Test 1: Initial state
@@ -434,5 +437,62 @@ describe("growth engine state", () => {
     expect(result!.growthEngine).toBeDefined();
     expect(result!.growthEngine!.type).toBe("clg");
     expect(result!.growthEngine!.shortLabel).toBe("CLG");
+  });
+});
+
+// Test 16: Persistence — round-trip
+describe("persist middleware", () => {
+  it("persists state to localStorage on change", () => {
+    useAssessmentStore.getState().setCompanyName("Persist Co");
+    useAssessmentStore.getState().setAnswer("strategy", 0, 3);
+    useAssessmentStore.getState().setAnswer("data", 2, 4);
+    const stored = localStorage.getItem(STORAGE_KEY);
+    expect(stored).not.toBeNull();
+    const parsed = JSON.parse(stored!);
+    expect(parsed.state.companyName).toBe("Persist Co");
+    expect(parsed.state.responses.strategy[0]).toBe(3);
+    expect(parsed.state.responses.data[2]).toBe(4);
+  });
+
+  it("serializes answeredQuestions Set as array and round-trips", () => {
+    useAssessmentStore.getState().setAnswer("strategy", 0, 3);
+    useAssessmentStore.getState().setAnswer("workflow", 1, 2);
+    useAssessmentStore.getState().setAnswer("data", 3, 4);
+    useAssessmentStore.getState().setAnswer("talent", 5, 1);
+    useAssessmentStore.getState().setAnswer("adoption", 7, 2);
+    const stored = localStorage.getItem(STORAGE_KEY);
+    expect(stored).not.toBeNull();
+    // Check that Set is serialized with __type marker
+    expect(stored).toContain("__type");
+    expect(stored).toContain("Set");
+    // Deserialize and verify
+    const parsed = JSON.parse(stored!, (_key, value) => {
+      if (value && typeof value === "object" && value.__type === "Set") {
+        return new Set(value.values);
+      }
+      return value;
+    });
+    const aq = parsed.state.answeredQuestions;
+    expect(aq).toBeInstanceOf(Set);
+    expect(aq.size).toBe(5);
+    expect(aq.has("strategy:0")).toBe(true);
+    expect(aq.has("workflow:1")).toBe(true);
+    expect(aq.has("data:3")).toBe(true);
+  });
+
+  it("clears localStorage on submit", () => {
+    useAssessmentStore.getState().setCompanyName("Submit Co");
+    useAssessmentStore.getState().setAnswer("strategy", 0, 3);
+    expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+    useAssessmentStore.getState().submit();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it("clears localStorage on reset", () => {
+    useAssessmentStore.getState().setCompanyName("Reset Co");
+    useAssessmentStore.getState().setAnswer("strategy", 0, 3);
+    expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+    useAssessmentStore.getState().reset();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
   });
 });

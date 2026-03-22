@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type {
   DimensionKey,
   AssessmentResult,
@@ -99,85 +100,9 @@ function buildDeepDiveQueue(
   return queue;
 }
 
-export const useAssessmentStore = create<AssessmentStore>()((set) => ({
-  step: 0,
-  companyName: "",
-  responses: initialResponses(),
-  enablers: initialEnablers(),
-  capabilityResponses: initialCapabilityResponses(),
-  result: null,
-  growthEngine: null,
-  phase: null,
-  screeningIndex: 0,
-  deepDiveQueue: [],
-  deepDivePosition: 0,
-  adaptiveLevels: null,
-  answeredQuestions: new Set<string>(),
-
-  setCompanyName: (name) => set({ companyName: name }),
-
-  setEnablers: (enablers) => set({ enablers }),
-
-  setGrowthEngine: (type) => set({ growthEngine: type }),
-
-  setCapabilityAnswer: (key, value) =>
-    set((state) => ({
-      capabilityResponses: { ...state.capabilityResponses, [key]: value },
-    })),
-
-  setAnswer: (dimension, index, value) =>
-    set((state) => {
-      const updated = [...state.responses[dimension]];
-      updated[index] = value;
-      const answeredQuestions = new Set(state.answeredQuestions);
-      answeredQuestions.add(`${dimension}:${index}`);
-      return {
-        responses: { ...state.responses, [dimension]: updated },
-        answeredQuestions,
-      };
-    }),
-
-  nextStep: () =>
-    set((state) => {
-      const next = Math.min(MAX_STEP, state.step + 1);
-      // Step 4 = screening phase
-      if (next === 4) {
-        return { step: next, phase: "screening-intro", screeningIndex: 0 };
-      }
-      return { step: next };
-    }),
-
-  prevStep: () =>
-    set((state) => {
-      if (state.step === 6) {
-        // From Review, go back to last deep-dive question
-        return {
-          step: 5,
-          phase: "deepdive",
-          deepDivePosition: Math.max(0, state.deepDiveQueue.length - 1),
-        };
-      }
-      if (state.step === 4) {
-        // From screening intro, go back to Capabilities step
-        return { step: 3, phase: null };
-      }
-      return { step: Math.max(0, state.step - 1) };
-    }),
-
-  submit: () =>
-    set((state) => ({
-      result: computeResult({
-        companyName: state.companyName,
-        responses: state.responses,
-        enablers: state.enablers.fundingStage ? state.enablers : undefined,
-        capabilityResponses: state.capabilityResponses,
-        growthEngine: state.growthEngine ?? undefined,
-      }),
-      step: MAX_STEP,
-    })),
-
-  reset: () =>
-    set({
+export const useAssessmentStore = create<AssessmentStore>()(
+  persist(
+    (set) => ({
       step: 0,
       companyName: "",
       responses: initialResponses(),
@@ -191,118 +116,255 @@ export const useAssessmentStore = create<AssessmentStore>()((set) => ({
       deepDivePosition: 0,
       adaptiveLevels: null,
       answeredQuestions: new Set<string>(),
-    }),
 
-  setScreeningAnswer: (dimension, value) =>
-    set((state) => {
-      const updated = [...state.responses[dimension]];
-      updated[0] = value;
-      const answeredQuestions = new Set(state.answeredQuestions);
-      answeredQuestions.add(`${dimension}:0`);
-      return {
-        responses: { ...state.responses, [dimension]: updated },
-        answeredQuestions,
-      };
-    }),
+      setCompanyName: (name) => set({ companyName: name }),
 
-  advanceScreening: () =>
-    set((state) => {
-      if (state.screeningIndex < 5) {
-        return { screeningIndex: state.screeningIndex + 1 };
-      }
-      // All 6 screening questions answered — compute levels and show deep-dive intro
-      const levels = {} as Record<DimensionKey, AdaptiveLevel>;
-      for (const dim of DIMENSION_KEYS) {
-        levels[dim] = determineAdaptiveLevel(state.responses[dim][0]);
-      }
-      const queue = buildDeepDiveQueue(levels);
-      return {
-        adaptiveLevels: levels,
-        deepDiveQueue: queue,
-        deepDivePosition: 0,
-        phase: "deepdive-intro",
-        step: 5,
-      };
-    }),
+      setEnablers: (enablers) => set({ enablers }),
 
-  computeAdaptiveLevels: () =>
-    set((state) => {
-      const levels = {} as Record<DimensionKey, AdaptiveLevel>;
-      for (const dim of DIMENSION_KEYS) {
-        levels[dim] = determineAdaptiveLevel(state.responses[dim][0]);
-      }
-      const queue = buildDeepDiveQueue(levels);
-      const newResponses = { ...state.responses };
-      for (const dim of DIMENSION_KEYS) {
-        const followUps = getFollowUpQuestions(dim, levels[dim]);
-        const updated = [...newResponses[dim]];
-        for (let i = 1; i <= 7; i++) {
-          if (!followUps.includes(i)) {
-            updated[i] = 0;
+      setGrowthEngine: (type) => set({ growthEngine: type }),
+
+      setCapabilityAnswer: (key, value) =>
+        set((state) => ({
+          capabilityResponses: { ...state.capabilityResponses, [key]: value },
+        })),
+
+      setAnswer: (dimension, index, value) =>
+        set((state) => {
+          const updated = [...state.responses[dimension]];
+          updated[index] = value;
+          const answeredQuestions = new Set(state.answeredQuestions);
+          answeredQuestions.add(`${dimension}:${index}`);
+          return {
+            responses: { ...state.responses, [dimension]: updated },
+            answeredQuestions,
+          };
+        }),
+
+      nextStep: () =>
+        set((state) => {
+          const next = Math.min(MAX_STEP, state.step + 1);
+          // Step 4 = screening phase
+          if (next === 4) {
+            return { step: next, phase: "screening-intro", screeningIndex: 0 };
           }
-        }
-        newResponses[dim] = updated;
-      }
-      const answeredQuestions = new Set(state.answeredQuestions);
-      for (const dim of DIMENSION_KEYS) {
-        const followUps = getFollowUpQuestions(dim, levels[dim]);
-        for (let i = 1; i <= 7; i++) {
-          if (!followUps.includes(i)) {
-            answeredQuestions.delete(`${dim}:${i}`);
+          return { step: next };
+        }),
+
+      prevStep: () =>
+        set((state) => {
+          if (state.step === 6) {
+            // From Review, go back to last deep-dive question
+            return {
+              step: 5,
+              phase: "deepdive",
+              deepDivePosition: Math.max(0, state.deepDiveQueue.length - 1),
+            };
           }
+          if (state.step === 4) {
+            // From screening intro, go back to Capabilities step
+            return { step: 3, phase: null };
+          }
+          return { step: Math.max(0, state.step - 1) };
+        }),
+
+      submit: () => {
+        set((state) => ({
+          result: computeResult({
+            companyName: state.companyName,
+            responses: state.responses,
+            enablers: state.enablers.fundingStage ? state.enablers : undefined,
+            capabilityResponses: state.capabilityResponses,
+            growthEngine: state.growthEngine ?? undefined,
+          }),
+          step: MAX_STEP,
+        }));
+        try {
+          localStorage.removeItem("ai-maturity-assessment-progress");
+        } catch {
+          // localStorage unavailable — ignore
         }
-      }
-      return {
-        adaptiveLevels: levels,
-        deepDiveQueue: queue,
-        deepDivePosition: 0,
-        responses: newResponses,
-        answeredQuestions,
-      };
-    }),
+      },
 
-  advanceDeepDive: () =>
-    set((state) => {
-      if (state.deepDivePosition < state.deepDiveQueue.length - 1) {
-        return { deepDivePosition: state.deepDivePosition + 1 };
-      }
-      // All deep-dive questions answered — go to Review
-      return { step: 6, phase: null };
-    }),
+      reset: () => {
+        set({
+          step: 0,
+          companyName: "",
+          responses: initialResponses(),
+          enablers: initialEnablers(),
+          capabilityResponses: initialCapabilityResponses(),
+          result: null,
+          growthEngine: null,
+          phase: null,
+          screeningIndex: 0,
+          deepDiveQueue: [],
+          deepDivePosition: 0,
+          adaptiveLevels: null,
+          answeredQuestions: new Set<string>(),
+        });
+        try {
+          localStorage.removeItem("ai-maturity-assessment-progress");
+        } catch {
+          // localStorage unavailable — ignore
+        }
+      },
 
-  goBackDeepDive: () =>
-    set((state) => {
-      if (state.deepDivePosition > 0) {
-        return { deepDivePosition: state.deepDivePosition - 1 };
-      }
-      return { phase: "deepdive-intro" };
-    }),
+      setScreeningAnswer: (dimension, value) =>
+        set((state) => {
+          const updated = [...state.responses[dimension]];
+          updated[0] = value;
+          const answeredQuestions = new Set(state.answeredQuestions);
+          answeredQuestions.add(`${dimension}:0`);
+          return {
+            responses: { ...state.responses, [dimension]: updated },
+            answeredQuestions,
+          };
+        }),
 
-  goBackScreening: () =>
-    set((state) => {
-      if (state.screeningIndex > 0) {
-        return { screeningIndex: state.screeningIndex - 1 };
-      }
-      return { phase: "screening-intro" };
-    }),
+      advanceScreening: () =>
+        set((state) => {
+          if (state.screeningIndex < 5) {
+            return { screeningIndex: state.screeningIndex + 1 };
+          }
+          // All 6 screening questions answered — compute levels and show deep-dive intro
+          const levels = {} as Record<DimensionKey, AdaptiveLevel>;
+          for (const dim of DIMENSION_KEYS) {
+            levels[dim] = determineAdaptiveLevel(state.responses[dim][0]);
+          }
+          const queue = buildDeepDiveQueue(levels);
+          return {
+            adaptiveLevels: levels,
+            deepDiveQueue: queue,
+            deepDivePosition: 0,
+            phase: "deepdive-intro",
+            step: 5,
+          };
+        }),
 
-  randomizeDeepDive: () =>
-    set((state) => {
-      const newResponses = { ...state.responses };
-      for (const item of state.deepDiveQueue) {
-        const updated = [...newResponses[item.dimension]];
-        updated[item.questionIndex] = Math.floor(Math.random() * 5) + 1;
-        newResponses[item.dimension] = updated;
-      }
-      const answeredQuestions = new Set(state.answeredQuestions);
-      for (const item of state.deepDiveQueue) {
-        answeredQuestions.add(`${item.dimension}:${item.questionIndex}`);
-      }
-      return {
-        responses: newResponses,
-        answeredQuestions,
-        step: 6,
-        phase: null,
-      };
+      computeAdaptiveLevels: () =>
+        set((state) => {
+          const levels = {} as Record<DimensionKey, AdaptiveLevel>;
+          for (const dim of DIMENSION_KEYS) {
+            levels[dim] = determineAdaptiveLevel(state.responses[dim][0]);
+          }
+          const queue = buildDeepDiveQueue(levels);
+          const newResponses = { ...state.responses };
+          for (const dim of DIMENSION_KEYS) {
+            const followUps = getFollowUpQuestions(dim, levels[dim]);
+            const updated = [...newResponses[dim]];
+            for (let i = 1; i <= 7; i++) {
+              if (!followUps.includes(i)) {
+                updated[i] = 0;
+              }
+            }
+            newResponses[dim] = updated;
+          }
+          const answeredQuestions = new Set(state.answeredQuestions);
+          for (const dim of DIMENSION_KEYS) {
+            const followUps = getFollowUpQuestions(dim, levels[dim]);
+            for (let i = 1; i <= 7; i++) {
+              if (!followUps.includes(i)) {
+                answeredQuestions.delete(`${dim}:${i}`);
+              }
+            }
+          }
+          return {
+            adaptiveLevels: levels,
+            deepDiveQueue: queue,
+            deepDivePosition: 0,
+            responses: newResponses,
+            answeredQuestions,
+          };
+        }),
+
+      advanceDeepDive: () =>
+        set((state) => {
+          if (state.deepDivePosition < state.deepDiveQueue.length - 1) {
+            return { deepDivePosition: state.deepDivePosition + 1 };
+          }
+          // All deep-dive questions answered — go to Review
+          return { step: 6, phase: null };
+        }),
+
+      goBackDeepDive: () =>
+        set((state) => {
+          if (state.deepDivePosition > 0) {
+            return { deepDivePosition: state.deepDivePosition - 1 };
+          }
+          return { phase: "deepdive-intro" };
+        }),
+
+      goBackScreening: () =>
+        set((state) => {
+          if (state.screeningIndex > 0) {
+            return { screeningIndex: state.screeningIndex - 1 };
+          }
+          return { phase: "screening-intro" };
+        }),
+
+      randomizeDeepDive: () =>
+        set((state) => {
+          const newResponses = { ...state.responses };
+          for (const item of state.deepDiveQueue) {
+            const updated = [...newResponses[item.dimension]];
+            updated[item.questionIndex] = Math.floor(Math.random() * 5) + 1;
+            newResponses[item.dimension] = updated;
+          }
+          const answeredQuestions = new Set(state.answeredQuestions);
+          for (const item of state.deepDiveQueue) {
+            answeredQuestions.add(`${item.dimension}:${item.questionIndex}`);
+          }
+          return {
+            responses: newResponses,
+            answeredQuestions,
+            step: 6,
+            phase: null,
+          };
+        }),
     }),
-}));
+    {
+      name: "ai-maturity-assessment-progress",
+      storage: createJSONStorage(
+        () => {
+          try {
+            return localStorage;
+          } catch {
+            return {
+              getItem: () => null,
+              setItem: () => {},
+              removeItem: () => {},
+            };
+          }
+        },
+        {
+          replacer: (_key, value) => {
+            if (value instanceof Set) {
+              return { __type: "Set", values: Array.from(value) };
+            }
+            return value;
+          },
+          reviver: (_key, value) => {
+            const v = value as Record<string, unknown>;
+            if (v && typeof v === "object" && v.__type === "Set") {
+              return new Set(v.values as string[]);
+            }
+            return value;
+          },
+        },
+      ),
+      partialize: (state) => ({
+        step: state.step,
+        companyName: state.companyName,
+        responses: state.responses,
+        enablers: state.enablers,
+        capabilityResponses: state.capabilityResponses,
+        growthEngine: state.growthEngine,
+        phase: state.phase,
+        screeningIndex: state.screeningIndex,
+        deepDiveQueue: state.deepDiveQueue,
+        deepDivePosition: state.deepDivePosition,
+        adaptiveLevels: state.adaptiveLevels,
+        answeredQuestions: state.answeredQuestions,
+      }),
+    },
+  ),
+);
