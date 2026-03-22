@@ -1,38 +1,50 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAssessmentStore } from "@/store/assessmentStore";
 
 const STORAGE_KEY = "ai-maturity-assessment-progress";
 
 export function ResumeBanner() {
-  const [visible, setVisible] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-  const step = useAssessmentStore((s) => s.step);
+  const [show, setShow] = useState(false);
+  const dismissed = useRef(false);
   const reset = useAssessmentStore((s) => s.reset);
 
-  // Wait for Zustand persist to hydrate before checking step
   useEffect(() => {
-    const unsub = useAssessmentStore.persist.onFinishHydration(() => {
-      setHydrated(true);
-    });
-    // If already hydrated (synchronous localStorage), mark immediately
-    if (useAssessmentStore.persist.hasHydrated()) {
-      setHydrated(true);
+    // Only check once on mount — never re-show after dismissal
+    if (dismissed.current) return;
+
+    function check() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        // Only show if there's real progress (step > 0)
+        if (parsed?.state?.step > 0) {
+          setShow(true);
+        }
+      } catch {
+        // localStorage unavailable or corrupt — ignore
+      }
     }
-    return unsub;
+
+    // Check after hydration
+    if (useAssessmentStore.persist.hasHydrated()) {
+      check();
+    } else {
+      useAssessmentStore.persist.onFinishHydration(check);
+    }
   }, []);
 
-  useEffect(() => {
-    if (hydrated && step > 0) {
-      setVisible(true);
-    }
-  }, [hydrated, step]);
+  if (!show) return null;
 
-  if (!visible) return null;
+  function dismiss() {
+    dismissed.current = true;
+    setShow(false);
+  }
 
   function handleResume() {
-    setVisible(false);
+    dismiss();
   }
 
   function handleStartFresh() {
@@ -42,7 +54,7 @@ export function ResumeBanner() {
     } catch {
       // localStorage unavailable — ignore
     }
-    setVisible(false);
+    dismiss();
   }
 
   return (
