@@ -2,6 +2,8 @@
 
 import type { AssessmentResult } from "@/lib/scoring/types";
 import { VALIDATION_STATS } from "@/lib/scoring/validation";
+import { HelpSection } from "@/components/ui/help-section";
+import { HelpTerm } from "@/components/ui/help-term";
 
 interface ScoreCardProps {
   result: AssessmentResult;
@@ -17,12 +19,13 @@ export function ScoreCard({ result }: ScoreCardProps) {
     <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
       <div>
         <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-          {"\u03B8"} Score
+          <HelpTerm term="theta_index">{"\u03B8"} Score</HelpTerm>
         </p>
         <p className="text-5xl font-bold text-blue-600 mt-1">
           {thetaScore.toFixed(1)}
         </p>
       </div>
+      <HelpSection panelId="score-card" />
       <div>
         <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
           Maturity Level
@@ -59,8 +62,8 @@ export function ScoreCard({ result }: ScoreCardProps) {
       </div>
       {gated && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-          Your {"\u03B8"} score qualified for a higher level, but one or more
-          gating conditions were not met.
+          Your {"\u03B8"} score qualified for a higher level, but one or more{" "}
+          <HelpTerm term="gating">gating conditions</HelpTerm> were not met.
         </div>
       )}
     </div>

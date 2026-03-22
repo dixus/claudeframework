@@ -1,6 +1,8 @@
 "use client";
 
 import type { CapabilityResult } from "@/lib/scoring/types";
+import { HelpSection } from "@/components/ui/help-section";
+import { HelpTerm } from "@/components/ui/help-term";
 
 interface CapabilityPanelProps {
   capabilities: CapabilityResult[];
@@ -23,6 +25,7 @@ export function CapabilityPanel({
       <p className="text-sm font-medium text-purple-600 uppercase tracking-wide mb-4">
         Scaling Capabilities (SST)
       </p>
+      <HelpSection panelId="capability-panel" />
 
       <div className="space-y-3 mb-4">
         {capabilities.map((c) => (
@@ -30,7 +33,11 @@ export function CapabilityPanel({
             <span
               className={`text-sm w-40 ${c.key === bottleneck.key ? "font-semibold text-purple-700" : "text-gray-600"}`}
             >
-              {c.label}
+              {c.key === "c1_strategy" ? (
+                <HelpTerm term="c1_strategy">{c.label}</HelpTerm>
+              ) : (
+                c.label
+              )}
             </span>
             <div className="flex-1 bg-gray-100 rounded h-3">
               <div
@@ -49,7 +56,7 @@ export function CapabilityPanel({
 
       <div className="bg-purple-50 rounded-lg p-3">
         <p className="text-xs font-medium text-purple-700 mb-1">
-          Capability Bottleneck
+          Capability <HelpTerm term="bottleneck">Bottleneck</HelpTerm>
         </p>
         <p className="text-sm text-purple-800">
           <span className="font-semibold">{bottleneck.label}</span> (score:{" "}

@@ -2,6 +2,8 @@
 
 import type { GrowthEngine } from "@/lib/scoring/growth-engines";
 import type { DimensionResult } from "@/lib/scoring/types";
+import { HelpSection } from "@/components/ui/help-section";
+import { HelpTerm } from "@/components/ui/help-term";
 
 interface GrowthEnginePanelProps {
   engine: GrowthEngine;
@@ -24,9 +26,10 @@ export function GrowthEnginePanel({
           Growth Engine
         </span>
         <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full">
-          {engine.shortLabel}
+          <HelpTerm term="plg_slg_clg">{engine.shortLabel}</HelpTerm>
         </span>
       </div>
+      <HelpSection panelId="growth-engine" />
 
       <div className="mb-4">
         <p className="text-lg font-bold text-gray-900">{engine.label}</p>

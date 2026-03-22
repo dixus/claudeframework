@@ -3,6 +3,8 @@
 import type { ScalingVelocity, CapabilityKey } from "@/lib/scoring/types";
 import { getValidationStat } from "@/lib/scoring/validation";
 import { Card, CardContent } from "@/components/ui/card";
+import { HelpSection } from "@/components/ui/help-section";
+import { HelpTerm } from "@/components/ui/help-term";
 import {
   BarChart,
   Bar,
@@ -71,7 +73,8 @@ export function VelocityPanel({ velocity }: VelocityPanelProps) {
       <CardContent>
         <div className="flex items-center gap-2 mb-4">
           <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide">
-            Scaling Velocity (ANST S-Formula)
+            Scaling Velocity (ANST{" "}
+            <HelpTerm term="s_formula">S-Formula</HelpTerm>)
           </p>
           {anstValidation && (
             <span className="px-2 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded-full">
@@ -79,6 +82,7 @@ export function VelocityPanel({ velocity }: VelocityPanelProps) {
             </span>
           )}
         </div>
+        <HelpSection panelId="velocity-panel" />
 
         {/* Velocity gauge */}
         <div className="flex justify-center mb-6">
@@ -148,7 +152,13 @@ export function VelocityPanel({ velocity }: VelocityPanelProps) {
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: BAND_COLORS[b.band] }}
               />
-              <span className="text-gray-600">{b.label}</span>
+              <span className="text-gray-600">
+                {b.band === "superlinear" ? (
+                  <HelpTerm term="superlinear">{b.label}</HelpTerm>
+                ) : (
+                  b.label
+                )}
+              </span>
             </div>
           ))}
         </div>

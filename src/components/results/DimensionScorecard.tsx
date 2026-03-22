@@ -1,17 +1,21 @@
-'use client'
+"use client";
 
-import type { DimensionResult } from '@/lib/scoring/types'
+import type { DimensionResult } from "@/lib/scoring/types";
+import { HelpSection } from "@/components/ui/help-section";
 
 interface DimensionScorecardProps {
-  dimensions: DimensionResult[]
+  dimensions: DimensionResult[];
 }
 
 export function DimensionScorecard({ dimensions }: DimensionScorecardProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">Dimension Scores</p>
+      <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">
+        Dimension Scores
+      </p>
+      <HelpSection panelId="dimension-scorecard" />
       <div className="space-y-3">
-        {dimensions.map(d => (
+        {dimensions.map((d) => (
           <div key={d.key}>
             <div className="flex justify-between text-sm mb-1">
               <span className="font-medium text-gray-700">{d.label}</span>
@@ -27,5 +31,5 @@ export function DimensionScorecard({ dimensions }: DimensionScorecardProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }

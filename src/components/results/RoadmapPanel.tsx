@@ -1,6 +1,8 @@
 "use client";
 
 import type { StageRoadmap } from "@/lib/scoring/roadmaps";
+import { HelpSection } from "@/components/ui/help-section";
+import { HelpTerm } from "@/components/ui/help-term";
 
 interface RoadmapPanelProps {
   roadmap: StageRoadmap;
@@ -45,6 +47,7 @@ export function RoadmapPanel({ roadmap, currentTheta }: RoadmapPanelProps) {
         <p className="text-sm font-medium text-emerald-600 uppercase tracking-wide">
           Stage Roadmap
         </p>
+        <HelpSection panelId="roadmap-panel" />
         <h2 className="text-xl font-bold text-gray-900 mt-1">
           {roadmap.stage} — {roadmap.tagline}
         </h2>
@@ -102,7 +105,8 @@ export function RoadmapPanel({ roadmap, currentTheta }: RoadmapPanelProps) {
             {roadmap.aiMaturityTarget.levelTarget}
           </p>
           <p className="text-xs text-emerald-600 mt-1">
-            Target \u03b8 range: {roadmap.aiMaturityTarget.thetaRange}
+            Target <HelpTerm term="theta_index">{"\u03B8"} range</HelpTerm>:{" "}
+            {roadmap.aiMaturityTarget.thetaRange}
           </p>
 
           {/* Progress indicator: current theta vs target range */}

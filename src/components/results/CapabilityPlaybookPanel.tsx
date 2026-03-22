@@ -8,6 +8,7 @@ import type {
 import { INTERVENTION_MODELS } from "@/lib/scoring/intervention";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HelpSection } from "@/components/ui/help-section";
 
 interface CapabilityPlaybookPanelProps {
   playbook: CapabilityPlaybook;
@@ -71,6 +72,7 @@ export function CapabilityPlaybookPanel({
           </p>
           <Badge variant="amber">{playbook.duration}</Badge>
         </div>
+        <HelpSection panelId="playbook-panel" />
 
         <h3 className="text-xl font-semibold text-gray-900 mb-4">
           {playbook.label}

@@ -4,6 +4,7 @@ import type { CaseStudy } from "@/lib/scoring/types";
 import type { CapabilityResult } from "@/lib/scoring/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HelpSection } from "@/components/ui/help-section";
 
 interface CaseStudyPanelProps {
   caseStudies: CaseStudy[];
@@ -46,6 +47,7 @@ export function CaseStudyPanel({
               : `${caseStudies.length} matches`}
           </Badge>
         </div>
+        <HelpSection panelId="case-study-panel" />
 
         <div className="space-y-6">
           {caseStudies.map((study) => (

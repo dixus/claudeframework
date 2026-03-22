@@ -2,6 +2,8 @@
 
 import type { MetaResult } from "@/lib/scoring/types";
 import { getValidationStat } from "@/lib/scoring/validation";
+import { HelpSection } from "@/components/ui/help-section";
+import { HelpTerm } from "@/components/ui/help-term";
 
 const metaValidation = getValidationStat("META");
 
@@ -30,16 +32,20 @@ export function ScalingPanel({ meta, thetaScore }: ScalingPanelProps) {
       <p className="text-sm font-medium text-indigo-600 uppercase tracking-wide mb-4">
         Superlinear Scaling Analysis
       </p>
+      <HelpSection panelId="scaling-panel" />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div>
-          <p className="text-xs text-gray-500 mb-1">META Score</p>
+          <p className="text-xs text-gray-500 mb-1">
+            <HelpTerm term="meta_score">META Score</HelpTerm>
+          </p>
           <p className="text-2xl font-bold text-indigo-600">
             {metaScore.toFixed(1)}
           </p>
           {metaValidation && (
             <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium text-gray-600 bg-gray-100 rounded-full">
-              ✓ Validated (R²={metaValidation.value}, n=
+              ✓ Validated (<HelpTerm term="r_squared">R²</HelpTerm>=
+              {metaValidation.value}, n=
               {metaValidation.sampleSize})
             </span>
           )}
@@ -51,7 +57,9 @@ export function ScalingPanel({ meta, thetaScore }: ScalingPanelProps) {
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 mb-1">Scaling Coefficient</p>
+          <p className="text-xs text-gray-500 mb-1">
+            <HelpTerm term="scaling_coefficient">Scaling Coefficient</HelpTerm>
+          </p>
           <p className="text-2xl font-bold text-gray-900">
             {scalingCoefficient.toFixed(1)}
           </p>

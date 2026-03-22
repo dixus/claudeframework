@@ -3,6 +3,8 @@
 import type { CoordinationModel } from "@/lib/scoring/coordination";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HelpSection } from "@/components/ui/help-section";
+import { HelpTerm } from "@/components/ui/help-term";
 import {
   LineChart,
   Line,
@@ -34,8 +36,9 @@ export function CoordinationPanel({
     <Card className="border-orange-200">
       <CardContent>
         <p className="text-sm font-medium text-orange-600 uppercase tracking-wide mb-4">
-          Coordination Cost Model
+          <HelpTerm term="coordination_cost">Coordination Cost</HelpTerm> Model
         </p>
+        <HelpSection panelId="coordination-panel" />
 
         <div className="h-72 mb-4">
           <ResponsiveContainer width="100%" height="100%">
@@ -70,7 +73,22 @@ export function CoordinationPanel({
                 ]}
                 labelFormatter={(label) => `Team size: ${label}`}
               />
-              <Legend verticalAlign="top" height={36} />
+              <Legend
+                verticalAlign="top"
+                height={36}
+                formatter={(value: string) => {
+                  if (
+                    value === "Traditional O(n²)" ||
+                    value === "AI-Enabled O(n log n)" ||
+                    value === "AI-Native O(n)"
+                  ) {
+                    return (
+                      <HelpTerm term="coordination_o_n2">{value}</HelpTerm>
+                    );
+                  }
+                  return value;
+                }}
+              />
               <ReferenceLine
                 x={teamSize}
                 stroke="#f97316"
