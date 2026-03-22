@@ -1,4 +1,5 @@
 export type { GrowthEngineType } from "./growth-engines";
+export type { CaseStudy } from "./case-studies";
 
 export type DimensionKey =
   | "strategy"
@@ -105,6 +106,7 @@ export interface AssessmentResult {
     model: import("./intervention").InterventionModel;
     rationale: string;
   };
+  caseStudies?: import("./case-studies").CaseStudy[];
 }
 
 export type ModelId = "model1" | "model2" | "model3";

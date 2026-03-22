@@ -419,3 +419,33 @@ describe("growth engine attachment", () => {
     expect(result.growthEngine).toBeUndefined();
   });
 });
+
+// Test 14: Case studies attached to result
+describe("case studies attachment", () => {
+  it("attaches case studies to result", () => {
+    const result = computeResult(allEqual([3, 3, 3, 3, 3, 3, 3, 3]));
+    expect(result.caseStudies).toBeDefined();
+    expect(result.caseStudies!.length).toBeGreaterThanOrEqual(1);
+    expect(result.caseStudies!.length).toBeLessThanOrEqual(2);
+  });
+
+  it("attaches relevant case studies based on capability bottleneck", () => {
+    const input: AssessmentInput = {
+      companyName: "Test Co",
+      responses: Object.fromEntries(
+        KEYS.map((k) => [k, [3, 3, 3, 3, 3, 3, 3, 3]]),
+      ) as Record<DimensionKey, number[]>,
+      capabilityResponses: {
+        c1_strategy: 3,
+        c2_setup: 1, // lowest → bottleneck
+        c3_execution: 3,
+        c4_operationalization: 2,
+      },
+    };
+    const result = computeResult(input);
+    expect(result.caseStudies).toBeDefined();
+    expect(
+      result.caseStudies!.some((cs) => cs.id === "c2-setup-bottleneck"),
+    ).toBe(true);
+  });
+});

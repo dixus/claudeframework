@@ -18,6 +18,7 @@ import {
   getCoordinationInsight,
 } from "./coordination";
 import { selectInterventionModel } from "./intervention";
+import { getRelevantCaseStudies } from "./case-studies";
 
 // Weights per Architecture Document v4.5.3
 const DIMENSIONS = [
@@ -387,6 +388,15 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
       input.enablers?.fundingStage,
       gatedLevel,
     );
+  }
+
+  const caseStudies = getRelevantCaseStudies(
+    result.capabilityBottleneck,
+    gatedLevel,
+    input.enablers?.fundingStage,
+  );
+  if (caseStudies.length > 0) {
+    result.caseStudies = caseStudies;
   }
 
   return result;
