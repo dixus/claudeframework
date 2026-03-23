@@ -8,8 +8,11 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { ScoreCard } from "./ScoreCard";
 import { BottleneckPanel } from "./BottleneckPanel";
 import { DimensionScorecard } from "./DimensionScorecard";
+import { RadarChartPanel } from "./RadarChartPanel";
+import { ScalingPanel } from "./ScalingPanel";
 import { ResultsPage } from "./ResultsPage";
 import { ValidationBadge } from "@/components/ui/validation-badge";
+import type { MetaResult, EnablerInput } from "@/lib/scoring/types";
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -199,5 +202,169 @@ describe("ScoreCard validation badge", () => {
   it("renders a validation badge with r=0.88", () => {
     render(<ScoreCard result={baseResult} />, { wrapper: Wrapper });
     expect(screen.getByText(/r=0.88/)).toBeInTheDocument();
+  });
+});
+
+// TC4 (spec test case 4): RadarChartPanel with level=1 renders benchmark overlay label
+describe("RadarChartPanel benchmark overlay", () => {
+  it("renders 'Level 2 threshold' legend text when level=1", () => {
+    render(<RadarChartPanel dimensions={baseResult.dimensions} level={1} />);
+    expect(screen.getByText("Level 2 threshold")).toBeInTheDocument();
+    expect(screen.getByText("Your scores")).toBeInTheDocument();
+  });
+
+  it("renders 'AI-Native benchmark' legend text when level=3", () => {
+    render(<RadarChartPanel dimensions={baseResult.dimensions} level={3} />);
+    expect(screen.getByText("AI-Native benchmark")).toBeInTheDocument();
+  });
+
+  it("does not render benchmark legend when level is not provided", () => {
+    render(<RadarChartPanel dimensions={baseResult.dimensions} />);
+    expect(screen.queryByText("Level 2 threshold")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your scores")).not.toBeInTheDocument();
+  });
+});
+
+// TC5 (spec test case 5): DimensionScorecard with level=1 renders tick markers at correct positions
+describe("DimensionScorecard tick markers", () => {
+  it("renders gating tick at 50% on Workflow and 40% on Data when level=1", () => {
+    const { container } = render(
+      <DimensionScorecard dimensions={baseResult.dimensions} level={1} />,
+    );
+    // Workflow row: gating threshold at 50%
+    const workflowRow = container.querySelector("#dim-workflow");
+    const workflowGateTick = workflowRow?.querySelector('[style*="left: 50%"]');
+    expect(workflowGateTick).toBeTruthy();
+
+    // Data row: gating threshold at 40%
+    const dataRow = container.querySelector("#dim-data");
+    const dataGateTick = dataRow?.querySelector('[style*="left: 40%"]');
+    expect(dataGateTick).toBeTruthy();
+  });
+
+  it("renders 'good' benchmark tick at 70% on every dimension bar when level=1", () => {
+    const { container } = render(
+      <DimensionScorecard dimensions={baseResult.dimensions} level={1} />,
+    );
+    const dimKeys = [
+      "strategy",
+      "architecture",
+      "workflow",
+      "data",
+      "talent",
+      "adoption",
+    ];
+    for (const key of dimKeys) {
+      const row = container.querySelector(`#dim-${key}`);
+      const goodTick = row?.querySelector('[style*="left: 70%"]');
+      expect(goodTick).toBeTruthy();
+    }
+  });
+});
+
+// TC6 (spec test case 6): ScoreCard with theta=35, level=1 shows 50% progress and "15.0 points to Level 2"
+describe("ScoreCard progress bar and distance (TC6)", () => {
+  it("shows 50% progress and distance to next level when theta=35, level=1", () => {
+    const level1Result = {
+      ...baseResult,
+      thetaScore: 35,
+      level: {
+        level: 1,
+        label: "AI-Powered",
+        monthsTo100M: 48,
+        arrPerEmployee: "€200–600K",
+      },
+    };
+    render(<ScoreCard result={level1Result} />, { wrapper: Wrapper });
+    // Progress bar: (35 - 20) / (50 - 20) = 15/30 = 50%
+    const meter = document.querySelector('[role="meter"]') as HTMLElement;
+    expect(meter).toBeTruthy();
+    const bar = meter?.querySelector('div[style*="width: 50%"]');
+    expect(bar).toBeTruthy();
+    // Distance text
+    expect(screen.getByText("15.0 points to Level 2")).toBeInTheDocument();
+  });
+});
+
+// TC7 (spec test case 7): ScoreCard with level=3 shows "Highest level achieved"
+describe("ScoreCard level 3 (TC7)", () => {
+  it("shows 'Highest level achieved' when level=3", () => {
+    const level3Result = {
+      ...baseResult,
+      thetaScore: 90,
+      level: {
+        level: 3,
+        label: "AI-Native",
+        monthsTo100M: 20,
+        arrPerEmployee: "€700K–6M",
+      },
+    };
+    render(<ScoreCard result={level3Result} />, { wrapper: Wrapper });
+    expect(screen.getByText("Highest level achieved")).toBeInTheDocument();
+  });
+});
+
+// TC8 (spec test case 8): ScalingPanel with level=1 and enablers shows ARR context for Level 2
+describe("ScalingPanel ARR/employee context (TC8)", () => {
+  const mockMeta: MetaResult = {
+    metaScore: 55.0,
+    predictedMonthsTo100M: 36,
+    scalingCoefficient: 1.2,
+    enablerScore: 60.0,
+    capabilityGeoMean: 65.0,
+    capabilityExponents: {
+      c1_strategy: 1.5,
+      c2_setup: 1.0,
+      c3_execution: 1.5,
+      c4_operationalization: 1.0,
+    },
+  };
+
+  const mockEnablers: EnablerInput = {
+    fundingStage: "series-a",
+    teamSize: 50,
+    annualRevenue: 5000, // €5M in thousands
+  };
+
+  it("shows Level 2 ARR/employee context when level=1 with enablers", () => {
+    render(
+      <ScalingPanel
+        meta={mockMeta}
+        thetaScore={35}
+        level={1}
+        enablers={mockEnablers}
+      />,
+      { wrapper: Wrapper },
+    );
+    // Should show Level 2 companies' ARR/employee (€400K–2M)
+    expect(
+      screen.getByText(/Level 2 companies typically achieve/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/€400K–2M ARR\/employee/i)).toBeInTheDocument();
+  });
+
+  it("shows implied ARR/employee comparison when enablers are provided", () => {
+    render(
+      <ScalingPanel
+        meta={mockMeta}
+        thetaScore={35}
+        level={1}
+        enablers={mockEnablers}
+      />,
+      { wrapper: Wrapper },
+    );
+    // annualRevenue=5000 (€5M), teamSize=50 → implied ARR/employee = €100K
+    expect(
+      screen.getByText(/Your current implied ARR\/employee/i),
+    ).toBeInTheDocument();
+  });
+
+  it("does not show ARR context when enablers are not provided", () => {
+    render(<ScalingPanel meta={mockMeta} thetaScore={35} level={1} />, {
+      wrapper: Wrapper,
+    });
+    expect(
+      screen.queryByText(/companies typically achieve/i),
+    ).not.toBeInTheDocument();
   });
 });
