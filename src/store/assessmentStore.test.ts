@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from "vitest";
 import { useAssessmentStore } from "./assessmentStore";
 import { getFollowUpQuestions } from "../lib/scoring/question-tiers";
