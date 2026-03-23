@@ -1,16 +1,24 @@
 "use client";
 
-import type { MetaResult } from "@/lib/scoring/types";
+import type { MetaResult, EnablerInput } from "@/lib/scoring/types";
 import { HelpSection } from "@/components/ui/help-section";
 import { HelpTerm } from "@/components/ui/help-term";
 import { ValidationBadge } from "@/components/ui/validation-badge";
+import { getBenchmark } from "@/lib/scoring/benchmarks";
 
 interface ScalingPanelProps {
   meta: MetaResult;
   thetaScore: number;
+  level?: number;
+  enablers?: EnablerInput;
 }
 
-export function ScalingPanel({ meta, thetaScore }: ScalingPanelProps) {
+export function ScalingPanel({
+  meta,
+  thetaScore,
+  level,
+  enablers,
+}: ScalingPanelProps) {
   const {
     metaScore,
     predictedMonthsTo100M,
@@ -112,6 +120,35 @@ export function ScalingPanel({ meta, thetaScore }: ScalingPanelProps) {
           Based on empirical validation across 22 AI-native companies
         </p>
       </div>
+
+      {level !== undefined && enablers && (
+        <div className="bg-gray-50 rounded p-2 mt-4 text-sm text-gray-600">
+          {(() => {
+            const referenceLevel = level >= 3 ? level : level + 1;
+            const benchmark = getBenchmark(referenceLevel);
+            const impliedArr =
+              enablers.teamSize > 0
+                ? (enablers.annualRevenue * 1000) / enablers.teamSize
+                : null;
+            return (
+              <>
+                <p>
+                  Level {referenceLevel} companies typically achieve{" "}
+                  {benchmark.arrPerEmployee} ARR/employee
+                </p>
+                {impliedArr !== null && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Your current implied ARR/employee: {"\u20AC"}
+                    {impliedArr >= 1000000
+                      ? `${(impliedArr / 1000000).toFixed(1)}M`
+                      : `${Math.round(impliedArr / 1000)}K`}
+                  </p>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 }

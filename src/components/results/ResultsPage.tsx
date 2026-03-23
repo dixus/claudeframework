@@ -53,7 +53,10 @@ export function ResultsPage() {
         {/* Hero: ScoreCard + Radar — always visible */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ScoreCard result={result} />
-          <RadarChartPanel dimensions={result.dimensions} />
+          <RadarChartPanel
+            dimensions={result.dimensions}
+            level={result.level.level}
+          />
         </div>
 
         {/* Tab Navigation */}
@@ -89,7 +92,10 @@ export function ResultsPage() {
                 />
               )}
               <InsightsPanel result={result} />
-              <DimensionScorecard dimensions={result.dimensions} />
+              <DimensionScorecard
+                dimensions={result.dimensions}
+                level={result.level.level}
+              />
             </>
           )}
 
@@ -99,6 +105,8 @@ export function ResultsPage() {
                 <ScalingPanel
                   meta={result.meta}
                   thetaScore={result.thetaScore}
+                  level={result.level.level}
+                  enablers={result.enablers}
                 />
               )}
               {result.scalingVelocity && (

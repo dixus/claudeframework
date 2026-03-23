@@ -4,6 +4,7 @@ import type { AssessmentResult } from "@/lib/scoring/types";
 import { HelpSection } from "@/components/ui/help-section";
 import { HelpTerm } from "@/components/ui/help-term";
 import { ValidationBadge } from "@/components/ui/validation-badge";
+import { getLevelThetaRange } from "@/lib/scoring/benchmarks";
 
 interface ScoreCardProps {
   result: AssessmentResult;
@@ -21,6 +22,19 @@ export function ScoreCard({ result }: ScoreCardProps) {
 
   const monthsDisplay = meta ? meta.predictedMonthsTo100M : level.monthsTo100M;
   const monthsLabel = meta ? "Predicted (META)" : "Level benchmark";
+
+  const currentLevel = level.level;
+  const thetaRange = getLevelThetaRange(currentLevel);
+  const rangeSpan = thetaRange.max - thetaRange.min;
+  const progressPct =
+    rangeSpan > 0
+      ? Math.min(
+          100,
+          Math.max(0, ((thetaScore - thetaRange.min) / rangeSpan) * 100),
+        )
+      : 100;
+  const distanceToNext =
+    currentLevel < 3 ? Math.max(0, thetaRange.max - thetaScore) : null;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
@@ -43,6 +57,30 @@ export function ScoreCard({ result }: ScoreCardProps) {
         <div className="mt-1">
           <ValidationBadge formula="θ_index" />
         </div>
+      </div>
+      <div className="text-sm text-gray-600">
+        <p>
+          Level {currentLevel}: {LEVEL_LABELS[currentLevel]} ({"\u03B8"}{" "}
+          {thetaRange.min}–{thetaRange.max})
+        </p>
+        <div
+          className="w-full bg-gray-100 rounded h-2 mt-1"
+          role="meter"
+          aria-valuenow={thetaScore}
+          aria-valuemin={thetaRange.min}
+          aria-valuemax={thetaRange.max}
+          aria-label={`${progressPct.toFixed(0)}% through Level ${currentLevel}`}
+        >
+          <div
+            className="bg-blue-500 h-2 rounded"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <p className="text-xs text-gray-400 mt-1">
+          {distanceToNext !== null
+            ? `${distanceToNext.toFixed(1)} points to Level ${currentLevel + 1}`
+            : "Highest level achieved"}
+        </p>
       </div>
       <div className="border-t border-gray-100 pt-4 space-y-2">
         <div className="flex justify-between text-sm">
