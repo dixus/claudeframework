@@ -38,7 +38,7 @@ Processed state is tracked on the filesystem — do NOT rely on the index table 
 
 1. Read the full content. For PDF files, use the `pages` parameter to read in chunks of 20 pages (e.g. `pages: "1-20"`, then `pages: "21-40"`) — do not attempt to read an entire large PDF at once.
 2. Identify which context file(s) it belongs to:
-   - Claude Code workflow, prompting, session management → `.claude/context/claude-code-workflow.md`
+   - Claude Code workflow, prompting, session management → `.claude/context/claude-code-knowledge.md`
    - SaaS architecture, auth, billing, infra, multi-tenancy → `.claude/context/saas-architecture-patterns.md`
    - Other topics → `.claude/context/` (create a new clearly-named file if needed)
 3. Extract only actionable, durable insights — skip opinions, anecdotes, and anything already captured in the target context file

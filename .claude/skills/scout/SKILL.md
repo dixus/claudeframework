@@ -16,7 +16,7 @@ $ARGUMENTS is optional. Pass `--quick` to search only (no page fetching) — ret
 1. Read CLAUDE.md for current framework context
 2. Read all skill files in `.claude/skills/` to understand current capabilities
 3. Read `.claude/context/instincts.md` and `.claude/context/lessons.md` if they exist
-4. Find the most recent previous scout report: glob `.claude/reviews/scout-*.md` and read the latest one. This is used in the diff phase later. If none exists, skip diffing.
+4. Find the most recent previous scout report: glob `.claude/references/blogs/scout-*.md` and read the latest one. This is used in the diff phase later. If none exists, skip diffing.
 
 ## Release notes phase (always runs first)
 
@@ -78,7 +78,7 @@ c. For each insight, assess: does our framework already handle this? (yes / part
 
 ## Report
 
-Write the report to `.claude/reviews/scout-<YYYY-MM-DD>.md` with this structure:
+Write the report to `.claude/references/blogs/scout-<YYYY-MM-DD>.md` with this structure (this ensures `/learn` automatically picks it up for processing):
 
 ```markdown
 # Scout Report — <YYYY-MM-DD>
@@ -177,7 +177,7 @@ Run `/scout` (without --quick) to fetch and analyze the top results.
 
 ## After reporting
 
-Ask: "Scout report written to `.claude/reviews/scout-<date>.md`. Want me to:
-A) Ingest promising links — run `/learn <url>` for each "Worth investigating" URL to fetch, save, and process them
+Ask: "Scout report written to `.claude/references/blogs/scout-<date>.md`. Run `/learn` to process it into context and generate skill improvement proposals. Or:
+A) Run `/learn` now to process the scout report and all "Worth investigating" URLs
 B) Implement a specific suggestion now
 C) Done — I'll review manually"

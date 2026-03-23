@@ -1,7 +1,7 @@
-# Claude Code Workflow — Distilled Best Practices
+# Claude Code Knowledge Base — Distilled from External Sources
 
-Maintained by `/learn`. Last updated: 2026-03-02.
-Source material: `.claude/references/blogs/claude-code-best-practices-2026.md`
+Maintained by `/learn`. Insights extracted from blog posts, scout reports, and community repos.
+Used by `/learn` during skill review to propose improvements. Not a workflow definition.
 
 ---
 
@@ -21,12 +21,12 @@ Context window fills fast and performance degrades as it fills. Every practice b
 
 ## Session discipline
 
-| Signal | Action |
-|---|---|
-| Starting a new unrelated task | `/clear` |
+| Signal                              | Action                                         |
+| ----------------------------------- | ---------------------------------------------- |
+| Starting a new unrelated task       | `/clear`                                       |
 | Claude wrong 2+ times on same issue | `/clear` + rewrite prompt with lessons learned |
-| Exploring a large codebase | Use a subagent — keeps main context clean |
-| Resuming previous work | `claude --continue` or `claude --resume` |
+| Exploring a large codebase          | Use a subagent — keeps main context clean      |
+| Resuming previous work              | `claude --continue` or `claude --resume`       |
 
 ## Prompting patterns that work
 
@@ -62,6 +62,7 @@ Never skip typecheck — it catches errors that tests and lint miss.
 ## Hooks (deterministic guardrails)
 
 Use hooks for things that MUST happen on every action, not advisory instructions:
+
 - Auto-lint after file edit
 - Block writes to protected directories (migrations, generated files)
 - Run tests after commit
@@ -110,13 +111,13 @@ Practical benefit: go from one large CLAUDE.md to a slim root file plus per-doma
 
 ### CLAUDE.md pruning rule
 
-For each line in CLAUDE.md, ask: *"Would removing this cause Claude to make mistakes?"* If not, cut it. Prune monthly. An overloaded CLAUDE.md is almost as bad as none — important rules get lost in noise. Target: under ~80 lines for the root file.
+For each line in CLAUDE.md, ask: _"Would removing this cause Claude to make mistakes?"_ If not, cut it. Prune monthly. An overloaded CLAUDE.md is almost as bad as none — important rules get lost in noise. Target: under ~80 lines for the root file.
 
 Run `/init` to auto-generate a starter CLAUDE.md from the codebase, then refine.
 
 ### Task decomposition threshold
 
-Before starting a task: *"Could a senior engineer complete this in one focused session?"* If not, decompose it. Accuracy drops noticeably beyond ~15 file modifications in a single context. One task → one session → verify independently → move on.
+Before starting a task: _"Could a senior engineer complete this in one focused session?"_ If not, decompose it. Accuracy drops noticeably beyond ~15 file modifications in a single context. One task → one session → verify independently → move on.
 
 ### Verification loop (include tests in every task)
 
@@ -133,7 +134,8 @@ Three levels, in increasing commitment to the spec as source of truth:
 Target: **spec-anchored** for this project. At each course-correction, update the spec before continuing. This keeps the original intent visible and prevents context drift across sessions.
 
 Standard prompt pattern to kick off spec creation:
-> *"Start by creating a specification document and allow for iteration before starting implementation. Ask clarifying questions, as needed, using selectable inputs to make clarifying responses simpler. Write the specification as SPECIFICATIONS.md at the root of the project."*
+
+> _"Start by creating a specification document and allow for iteration before starting implementation. Ask clarifying questions, as needed, using selectable inputs to make clarifying responses simpler. Write the specification as SPECIFICATIONS.md at the root of the project."_
 
 ## Added 2026-03-02 (batch 2)
 
@@ -145,12 +147,12 @@ Subagents = hub-and-spoke (parent orchestrates; contractors work independently, 
 
 **Decision matrix:**
 
-| Use Agent Teams when | Use Subagents when | Use Single Session when |
-|---|---|---|
-| Parallel exploration (same problem, multiple approaches tested simultaneously) | Focused, isolated tasks (code review on one file) | Same-file edits (multiple agents → merge conflicts) |
-| Cross-domain coordination (security + perf + tests — findings affect each other) | Token-conscious work (subagents are lighter) | Simple tasks (if one agent needs 10 min, don't spawn five) |
-| Research-heavy tasks (synthesize multiple perspectives before building) | Well-defined scope (no exploration needed) | Debugging (iterative back-and-forth) |
-| Competing hypotheses (let agents argue it out) | Sequential dependencies (Step 2 truly can't start until Step 1 finishes) | Context-heavy work (full picture matters more than speed) |
+| Use Agent Teams when                                                             | Use Subagents when                                                       | Use Single Session when                                    |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| Parallel exploration (same problem, multiple approaches tested simultaneously)   | Focused, isolated tasks (code review on one file)                        | Same-file edits (multiple agents → merge conflicts)        |
+| Cross-domain coordination (security + perf + tests — findings affect each other) | Token-conscious work (subagents are lighter)                             | Simple tasks (if one agent needs 10 min, don't spawn five) |
+| Research-heavy tasks (synthesize multiple perspectives before building)          | Well-defined scope (no exploration needed)                               | Debugging (iterative back-and-forth)                       |
+| Competing hypotheses (let agents argue it out)                                   | Sequential dependencies (Step 2 truly can't start until Step 1 finishes) | Context-heavy work (full picture matters more than speed)  |
 
 **Rule of thumb:** if you can describe the task in one sentence, use one agent. If 3+ distinct workstreams benefit from different perspectives, consider a team.
 
@@ -193,6 +195,7 @@ Wire it into `settings.json`: `{"hooks": {"PermissionRequest": [{"matcher": "*",
 ### Agentic TDD loop (Habib Mrad, Dec 2025)
 
 The closed feedback loop for implementation quality:
+
 1. Write tests first (from spec test cases)
 2. Run them — confirm they **fail** (red)
 3. Implement until they **pass** (green)
@@ -202,6 +205,7 @@ Claude sees its own failure output and self-corrects within the same session. Th
 ### Visual iteration loops
 
 When working on UI or data visualization:
+
 1. Provide mocks, wireframes, or screenshots in `.claude/input/` alongside requirements
 2. Let Claude generate the initial output
 3. Take a screenshot and share it back as feedback
@@ -212,6 +216,7 @@ Claude's performance on visual tasks improves significantly with perceptual feed
 ### Autonomy isolation (blast radius principle)
 
 Two distinct operating modes:
+
 - **Exploratory mode** (high supervision): unfamiliar codebase, high-stakes changes — keep permissions tight, approve each action
 - **Execution mode** (high autonomy): well-understood, reversible tasks — can use `--dangerously-skip-permissions` safely
 
@@ -220,6 +225,7 @@ Two distinct operating modes:
 ### Headless mode (Claude as infrastructure)
 
 Claude Code can run as a headless programmable component, not just an interactive assistant:
+
 - CI pipelines — automated code review on every PR
 - Issue triage bots — classify, label, suggest fixes
 - Data processing pipelines — transform, validate, summarize
@@ -229,6 +235,7 @@ Entry point: `claude -p "<task>"` or `claude --headless`. At this level, Claude 
 ### Custom tool documentation in CLAUDE.md
 
 For non-standard scripts and tools, add to CLAUDE.md:
+
 - What the script does
 - Example invocation
 - When to use it
@@ -242,12 +249,14 @@ Prompt Claude to run `--help` on unfamiliar tools before using them. Tools Claud
 From the `create-hook` slash command pattern (hesreallyhim/awesome-claude-code):
 
 **Input/Output — the most common failure point:**
+
 - Input: always read JSON from `stdin` — never `argv`. Pattern: `JSON.parse(process.stdin.read())`
 - Success response: `{continue: true, suppressOutput: true}` — keeps context clean
 - Error response: `{continue: true, additionalContext: "error details"}` — lets Claude auto-fix
 - Block operation (PreToolUse only): `exit(2)`
 
 **Hook event types:**
+
 - `PreToolUse`: runs before a tool call; can block (exit 2). Use for security/validation gates
 - `PostToolUse`: runs after; provides feedback/auto-fixes. Use for quality enforcement
 - `UserPromptSubmit`: runs before Claude processes a user message
@@ -306,3 +315,41 @@ From the Design-Review-Workflow resource (hesreallyhim/awesome-claude-code):
 - Store design principles and brand guidelines in CLAUDE.md so they're always loaded
 - Review phases: interaction flows → responsiveness → visual polish → accessibility → robustness → code health
 - Trigger automatically via GitHub Actions on PRs, or on-demand via slash command
+
+## Added 2026-03-23
+
+### New CLI flags and frontmatter (v2.1.78–v2.1.81)
+
+- **`--bare` flag** (v2.1.81): For scripted `-p` calls — skips hooks, LSP, and plugin sync. Use in CI pipelines for faster headless execution. Entry point: `claude --bare -p "<task>"`.
+- **`maxTurns` frontmatter** (v2.1.78): Caps the number of turns a subagent or skill can take. Use as a circuit breaker complement (e.g., `maxTurns: 15` in `/3_fix` prevents infinite fix loops).
+- **`disallowedTools` frontmatter** (v2.1.78): Restrict which tools a skill or agent can use. Example: `/2_review` should use `disallowedTools: [Edit, Write, Bash]` to enforce read-only review.
+- **`${CLAUDE_SKILL_DIR}` variable** (v2.1.71): Skills can reference co-located scripts, templates, and data files in their own directory. Useful for `/smoke`, `/create-hook`, `/learn`.
+- **`allowRead` sandbox setting** (v2.1.77): Re-allow reads within `denyRead` regions for fine-grained filesystem sandbox control.
+- **Agent `resume` parameter removed** (v2.1.78): Use `SendMessage({to: agentId})` instead of the deprecated `resume` pattern.
+
+### Agent Skills specification (agentskills.io)
+
+The official Agent Skills spec defines canonical fields our skills don't yet use:
+
+- **`license`** (optional): License name or reference. Low priority unless publishing as a plugin.
+- **`compatibility`** (optional, max 500 chars): Environment requirements (e.g., "Requires Claude Code v2.1.71+"). Medium priority — helps users know minimum version.
+- **`metadata`** (optional): Arbitrary key-value for `author`, `version`, etc. Low priority.
+- **Progressive disclosure recommendation**: Metadata ~100 tokens, instructions <5000 tokens, resources loaded on-demand via `references/` directory. Some of our skills may exceed the 5000-token recommendation — consider splitting large skills into SKILL.md + `references/`.
+
+### Plugin and distribution patterns
+
+- **`CLAUDE_CODE_PLUGIN_SEED_DIR`** (v2.1.79): Supports multiple directories. Framework could ship as a plugin seed for zero-config onboarding.
+- **`source: 'settings'`** (v2.1.80): Plugin marketplace source. Framework could be declared as a settings-source plugin for one-command install.
+- **Custom subagents** (`.claude/agents/`): Framework could ship pre-built agents (security-reviewer, test-writer) alongside skills.
+
+### Orchestrator-Worker hierarchy pattern (levnikolaevich/claude-code-skills)
+
+Community framework uses a 4-level hierarchy (L0 orchestrator → L1 coordinator → L2 specialist → L3 worker) with multi-model AI review (Codex/Gemini in parallel) and debate protocol to filter low-confidence findings. Our `/ship` uses a 2-level hierarchy (orchestrator → subagent). Consider expanding for complex features where parallel specialist agents (security, quality, architecture) would add value.
+
+### Pre-approve permissions before spawning agent teams
+
+When using Agent Teams, pre-approve all expected permissions before spawning teammates. This eliminates prompt delays that serialize parallel work. Pattern: approve all tool permissions in the orchestrator session, then spawn teammates that inherit those approvals.
+
+### `/btw` for side questions
+
+Official best practices recommend `/btw` for side questions that shouldn't enter context history. The question is answered but doesn't consume permanent context window space. Document as a workflow tip.
