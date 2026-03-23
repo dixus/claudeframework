@@ -99,9 +99,9 @@ export function WhatIfPanel({ result }: WhatIfPanelProps) {
   }, [sliderValues, initialScores]);
 
   const formatDelta = (original: number, current: number, precision = 1) => {
-    const diff = current - original;
+    const diff = Number((current - original).toFixed(precision));
     const sign = diff >= 0 ? "+" : "";
-    return `${original.toFixed(precision)} → ${current.toFixed(precision)} (${sign}${diff.toFixed(precision)})`;
+    return `${Number(original.toFixed(precision))} → ${Number(current.toFixed(precision))} (${sign}${diff})`;
   };
 
   const handleSliderChange = (key: DimensionKey, value: number) => {
@@ -138,14 +138,14 @@ export function WhatIfPanel({ result }: WhatIfPanelProps) {
                 <span className="text-gray-500" aria-hidden="true">
                   {changed ? (
                     <>
-                      {original} → {value}{" "}
+                      {Math.round(original)} → {value}{" "}
                       <span
                         className={
                           value > original ? "text-green-600" : "text-red-600"
                         }
                       >
                         ({value > original ? "+" : ""}
-                        {value - original})
+                        {Math.round(value - original)})
                       </span>
                     </>
                   ) : (
@@ -154,10 +154,10 @@ export function WhatIfPanel({ result }: WhatIfPanelProps) {
                 </span>
                 {changed && (
                   <span className="sr-only">
-                    {d.label} changed from {original} to {value},{" "}
+                    {d.label} changed from {Math.round(original)} to {value},{" "}
                     {value > original
-                      ? `increase of ${value - original}`
-                      : `decrease of ${original - value}`}
+                      ? `increase of ${Math.round(value - original)}`
+                      : `decrease of ${Math.round(original - value)}`}
                   </span>
                 )}
               </div>

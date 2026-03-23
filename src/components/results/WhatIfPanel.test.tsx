@@ -221,7 +221,7 @@ describe("WhatIfPanel", () => {
     // These values appear in both visual and sr-only elements
     expect(screen.getAllByText(/63\.3/)[0]).toBeInTheDocument();
     expect(screen.getAllByText(/73\.3/)[0]).toBeInTheDocument();
-    expect(screen.getAllByText(/\+10\.0/)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/\+10/)[0]).toBeInTheDocument();
   });
 
   // TC8: META and S-velocity hidden when not available
