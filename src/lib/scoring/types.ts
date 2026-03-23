@@ -173,6 +173,15 @@ export interface ScalingVelocity {
   bottleneckCapability: CapabilityKey;
 }
 
+export interface WhatIfResult {
+  thetaScore: number;
+  level: LevelInfo;
+  gated: boolean;
+  gatingDetails: GatingDetail[];
+  meta?: MetaResult;
+  scalingVelocity?: ScalingVelocity;
+}
+
 export interface GlossaryTerm {
   term: string;
   definition: string;

@@ -16,6 +16,7 @@ import { VelocityPanel } from "./VelocityPanel";
 import { CoordinationPanel } from "./CoordinationPanel";
 import { RoadmapPanel } from "./RoadmapPanel";
 import { CaseStudyPanel } from "./CaseStudyPanel";
+import { WhatIfPanel } from "./WhatIfPanel";
 import { PdfExportButton } from "./PdfExportButton";
 import { SaveResultsCard } from "./SaveResultsCard";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
@@ -96,6 +97,7 @@ export function ResultsPage() {
                 dimensions={result.dimensions}
                 level={result.level.level}
               />
+              <WhatIfPanel result={result} />
             </>
           )}
 

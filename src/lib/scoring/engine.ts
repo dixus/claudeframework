@@ -9,6 +9,8 @@ import type {
   CapabilityResult,
   MetaResult,
   ScalingVelocity,
+  WhatIfResult,
+  EnablerInput,
 } from "./types";
 import { RECOMMENDATIONS } from "./recommendations";
 import { CAPABILITY_PLAYBOOKS } from "./playbooks";
@@ -22,7 +24,7 @@ import { selectInterventionModel } from "./intervention";
 import { getRelevantCaseStudies } from "./case-studies";
 
 // Weights per Architecture Document v4.5.3
-const DIMENSIONS = [
+export const DIMENSIONS = [
   { key: "strategy" as const, label: "Strategy", weight: 0.25 },
   { key: "architecture" as const, label: "Architecture", weight: 0.2 },
   { key: "workflow" as const, label: "Workflow", weight: 0.15 },
@@ -90,7 +92,7 @@ const DIMENSION_LABELS: Record<DimensionKey, string> = {
   adoption: "Adoption",
 };
 
-function applyGating(
+export function applyGating(
   rawLevel: number,
   scores: Record<DimensionKey, number>,
 ): { level: number; gated: boolean; gatingDetails: GatingDetail[] } {
@@ -324,6 +326,56 @@ export function computeEnablerScore(
   const culture = Math.min(100, arrPerEmp / 10000); // €1M/emp = 100
 
   return round1(capital * 0.4 + talent * 0.3 + culture * 0.3);
+}
+
+export function computeWhatIf(
+  dimensionScores: Record<DimensionKey, number>,
+  capabilityResponses?: Record<CapabilityKey, number>,
+  enablers?: EnablerInput,
+): WhatIfResult {
+  const thetaScore = round1(
+    DIMENSIONS.reduce(
+      (acc, d) => acc + (dimensionScores[d.key] ?? 0) * d.weight,
+      0,
+    ),
+  );
+
+  const rawLevel = getRawLevel(thetaScore);
+  const { level, gated, gatingDetails } = applyGating(
+    rawLevel,
+    dimensionScores,
+  );
+
+  const result: WhatIfResult = {
+    thetaScore,
+    level: LEVELS[level],
+    gated,
+    gatingDetails,
+  };
+
+  if (capabilityResponses && enablers) {
+    const capScores = {
+      c1_strategy: round1((capabilityResponses.c1_strategy / 4) * 100),
+      c2_setup: round1((capabilityResponses.c2_setup / 4) * 100),
+      c3_execution: round1((capabilityResponses.c3_execution / 4) * 100),
+      c4_operationalization: round1(
+        (capabilityResponses.c4_operationalization / 4) * 100,
+      ),
+    };
+    const enablerScore = computeEnablerScore(
+      enablers.teamSize,
+      enablers.annualRevenue,
+      enablers.fundingStage,
+    );
+    result.meta = computeMeta(thetaScore, capScores, enablerScore);
+    result.scalingVelocity = computeScalingVelocity(
+      thetaScore,
+      capScores,
+      enablerScore,
+    );
+  }
+
+  return result;
 }
 
 export function computeResult(input: AssessmentInput): AssessmentResult {
