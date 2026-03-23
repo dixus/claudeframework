@@ -37,8 +37,8 @@ Steps:
    - **Correctness**: does it match the spec requirements? Are there logic bugs or missing cases?
    - **Code quality**: does it follow existing patterns? Is anything over-engineered or unnecessarily complex?
    - **Security**: any injection risks, exposed secrets, or missing input validation at system boundaries? OWASP top-10 considerations?
-   - **Tests / QA**: are the relevant cases covered? Are there obvious edge-case gaps? Any regression risk to existing behavior?
-   - **UX / Minimal impact**: does the change touch only what's necessary? Any scope creep? Are any fixes patches hiding a root-cause problem that should be fixed properly?
+   - **Tests / QA**: are the relevant cases covered? Are there obvious edge-case gaps? Any regression risk to existing behavior? Are component-level rendering tests present (not just pure-function tests)?
+   - **UX / Minimal impact**: does the change touch only what's necessary? Any scope creep? Are any fixes patches hiding a root-cause problem that should be fixed properly? For components displaying computed numbers, check for floating-point precision issues (use `.toFixed()` or `Math.round()`). For components with reactive state (useEffect + Zustand/Redux), check that dismissals, resets, and one-time actions cannot be re-triggered by unrelated state changes.
    - **PM**: does the change deliver business value? Does it align with the stated goal in the spec? Is anything built that wasn't asked for?
    - **DevOps**: any CI/CD implications? Environment variables, build config, or deployment steps affected? Any observability gaps (missing logs, metrics)?
    - **Spec validation**: check "Validation criteria" in the spec if present — can each criterion be confirmed from the diff? List each criterion and whether it is met or unmet.

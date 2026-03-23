@@ -89,7 +89,7 @@ Steps:
     - **Code quality**: patterns diverge from "Patterns to mirror" files? Over-engineering? Dead code?
     - **Security**: injection risks, exposed secrets, missing input validation at boundaries?
     - **Tests**: obvious edge-case gaps? Tests assert the right things? Coverage matches spec's test cases?
-    - **Scope**: anything built that wasn't in the spec? Unnecessary refactoring?
+    - **Scope**: anything built that wasn't in the spec? Unnecessary refactoring? Run `git diff --name-only` and check for files outside the spec's scope — revert formatting-only or cosmetic changes to unrelated files (e.g. linter auto-fixes in files you didn't intentionally edit).
     - **CLAUDE.md compliance**: any rule violations? (Literal types, pagination, error format, etc.)
       c. Fix any critical/major issues found, then re-run verify (step 12) to confirm nothing broke
       d. Do NOT aim for perfection — ignore minor style nits. The goal is zero critical/major findings in `/2_review`.
