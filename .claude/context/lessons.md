@@ -127,6 +127,14 @@ Each entry: what went wrong → rule that prevents it.
 
 ---
 
+## 2026-03-23 — Component-level spec test cases omitted during implementation
+
+**What went wrong**: During implementation of the benchmark-context feature, spec test cases 4-8 (component-level rendering assertions for RadarChartPanel, DimensionScorecard, ScoreCard, ScalingPanel) were not written. Only the pure-function test cases 1-3 were implemented in `benchmarks.test.ts`. The review caught all five missing component tests as a major issue.
+
+**Rule**: After writing pure-function tests, explicitly iterate through every numbered test case in the spec's "Test cases" section. For each TC tagged as a component rendering test (e.g., "renders two `<Radar>` elements", "shows text X when prop Y"), add it to the relevant component test file — not just the library test file. A spec with 8 test cases must produce 8 passing test assertions before implementation is complete. Components that use Radix `<Tooltip>` or `<HelpTerm>` must be rendered with `{ wrapper: Wrapper }` (a `TooltipProvider`) to avoid a runtime error in jsdom.
+
+---
+
 ## 2026-03-22 — Zustand persist middleware re-writes state after reset, defeating localStorage cleanup
 
 **What went wrong**: The Zustand `persist` middleware subscribes to all state changes. When `reset()` sets state back to initial values, the middleware immediately writes those initial values to localStorage. The key still exists (with `step: 0`), so any check for key existence (`localStorage.getItem(key) !== null`) would find saved state even after reset. The ResumeBanner appeared on every page load because the key was never actually removed.
