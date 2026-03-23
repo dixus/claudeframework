@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { getBenchmark, getNextLevelThreshold } from "./benchmarks";
+import {
+  getBenchmark,
+  getNextLevelThreshold,
+  getLevelThresholdScores,
+  getLevelThetaRange,
+} from "./benchmarks";
 
 describe("getBenchmark", () => {
   it("returns correct data for Level 0", () => {
@@ -41,4 +46,60 @@ describe("getNextLevelThreshold", () => {
   it("L2 → threshold 81", () => expect(getNextLevelThreshold(2)).toBe(81));
   it("L3 → null (no next level)", () =>
     expect(getNextLevelThreshold(3)).toBeNull());
+});
+
+describe("getLevelThresholdScores", () => {
+  it("Level 2 returns only workflow and data gates", () => {
+    const scores = getLevelThresholdScores(2);
+    expect(scores).toEqual({
+      workflow: 50,
+      data: 40,
+      strategy: null,
+      architecture: null,
+      talent: null,
+      adoption: null,
+    });
+  });
+
+  it("Level 3 returns workflow, data, and adoption gates", () => {
+    const scores = getLevelThresholdScores(3);
+    expect(scores).toEqual({
+      workflow: 70,
+      data: 60,
+      adoption: 50,
+      strategy: null,
+      architecture: null,
+      talent: null,
+    });
+  });
+
+  it("Level 1 returns all null (no gates)", () => {
+    const scores = getLevelThresholdScores(1);
+    expect(scores).toEqual({
+      strategy: null,
+      architecture: null,
+      workflow: null,
+      data: null,
+      talent: null,
+      adoption: null,
+    });
+  });
+});
+
+describe("getLevelThetaRange", () => {
+  it("Level 0 returns { min: 0, max: 20 }", () => {
+    expect(getLevelThetaRange(0)).toEqual({ min: 0, max: 20 });
+  });
+
+  it("Level 1 returns { min: 20, max: 50 }", () => {
+    expect(getLevelThetaRange(1)).toEqual({ min: 20, max: 50 });
+  });
+
+  it("Level 2 returns { min: 50, max: 80 }", () => {
+    expect(getLevelThetaRange(2)).toEqual({ min: 50, max: 80 });
+  });
+
+  it("Level 3 returns { min: 80, max: 100 }", () => {
+    expect(getLevelThetaRange(3)).toEqual({ min: 80, max: 100 });
+  });
 });
