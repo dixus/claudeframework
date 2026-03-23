@@ -135,6 +135,14 @@ Each entry: what went wrong → rule that prevents it.
 
 ---
 
+## 2026-03-23 — Vitest v1 incompatible with Node.js v24; environmentMatchGlobs broken on Windows in v2
+
+**What went wrong**: Vitest v1.6.x reports "No test suite found" for all test files when run on Node.js v24. This is a known incompatibility between vitest v1's vm module usage and Node v24's VM changes. Upgrading to vitest v2.x fixes the "No test suite found" crash. However, vitest v2 on Windows breaks `environmentMatchGlobs` path matching: vitest resolves the glob patterns with `path.resolve()` which produces Windows backslash paths (e.g., `D:\Repo\src\store\**`), but micromatch cannot match these because backslashes in a glob are treated as escape characters, not path separators. Test files that relied on `environmentMatchGlobs` for jsdom environment silently fall back to the node environment and fail with "localStorage is not defined".
+
+**Rule**: When using `environmentMatchGlobs` on Windows with vitest v2, the glob resolution bug means the patterns never match. The reliable workaround is to add `// @vitest-environment jsdom` directives directly in each test file that requires a browser-like environment (any test that uses `localStorage`, `document`, `window`, React `render()`, or Radix UI components). Do not rely on `environmentMatchGlobs` alone on Windows. For new test files that use browser APIs, always add the directive at line 1.
+
+---
+
 ## 2026-03-22 — Zustand persist middleware re-writes state after reset, defeating localStorage cleanup
 
 **What went wrong**: The Zustand `persist` middleware subscribes to all state changes. When `reset()` sets state back to initial values, the middleware immediately writes those initial values to localStorage. The key still exists (with `step: 0`), so any check for key existence (`localStorage.getItem(key) !== null`) would find saved state even after reset. The ResumeBanner appeared on every page load because the key was never actually removed.
