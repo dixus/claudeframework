@@ -9,9 +9,9 @@ Insights from references are routed directly to skill and rule changes via propo
 
 ## Active context files
 
-| File                                  | Topic                                             | Last updated |
-| ------------------------------------- | ------------------------------------------------- | ------------ |
-| [`lessons.md`](../context/lessons.md) | Corrections and patterns captured across sessions | 2026-03-23   |
+| File                                  | Topic                                                                                      | Last updated |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ | ------------ |
+| [`lessons.md`](../context/lessons.md) | Corrections and patterns captured across sessions (scope-tagged: `framework` or `project`) | 2026-03-25   |
 
 ---
 

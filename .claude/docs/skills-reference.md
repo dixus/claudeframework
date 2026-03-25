@@ -14,13 +14,13 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 **Input**: `$ARGUMENTS` — a feature description. Optional `--dry-run` flag to preview scope without implementing.
 
-**Output**: Merged feature branch with atomic commits, pipeline metrics appended to `.claude/metrics.csv`.
+**Output**: Merged feature branch with atomic commits, pipeline metrics appended to `.claude/metrics-pipeline.csv`.
 
 **What it does**:
 
 1. Creates a `feat/<spec-name>` branch (skipped in `--dry-run`)
 2. Front-loads all clarifying questions in a single batch — the only user interruption
-3. **Historical pattern analysis** (Step 1b) — reads `metrics.csv` for recurring issue categories in this feature area, passes guidance to spec subagent
+3. **Historical pattern analysis** (Step 1b) — reads `metrics-pipeline.csv` for recurring issue categories in this feature area, passes guidance to spec subagent
 4. Launches a **spec subagent** (opus) — writes `.claude/specs/<name>.md`
 5. **Complexity gate**: stops if file count exceeds threshold (default: 10)
 6. _Dry-run exit_: if `--dry-run`, prints a scope report and stops here
@@ -33,7 +33,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 13. Launches a **commit subagent** (sonnet) — creates atomic conventional commits
 14. Asks how to finalize: merge to main, open a PR, or leave on branch
 15. **Post-merge cleanup** — deletes feature and checkpoint branches, marks spec as completed
-16. Appends a row to `.claude/metrics.csv` with run statistics
+16. Appends a row to `.claude/metrics-pipeline.csv` with run statistics
 
 **Usage**:
 
@@ -259,16 +259,16 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 **What it does**:
 
 1. Reads CLAUDE.md, all skill files, and context files to understand current capabilities
-2. **Release notes phase**: fetches the official Claude Code changelog, extracts entries from the last 60 days, compares each against the framework's 20 skills and hooks
+2. **Release notes phase**: fetches the official Claude Code changelog, extracts entries from the last 60 days, compares each against the framework's 21 skills and hooks
 3. **Official skills repo phase**: checks the Anthropic skills repo and Agent Skills spec for gaps
 4. **Registry phase**: reads `references/scout-registry.md` to avoid re-fetching known URLs
 5. **Adaptive query phase**: reads pending proposals from `learn-proposals.md`, generates targeted searches to find supporting evidence
 6. **Search phase**: runs 4-6 web searches for best practices, GitHub skills, hooks/subagents, and CLAUDE.md patterns
 7. **Repo discovery phase**: runs 3 GitHub-targeted searches for Claude Code repos and frameworks; discovered repos are added to the registry as `queued-repo` for `/harvest`
-(skipped with `--quick`): fetches top 5 results, prioritized by source tier (T1 official > T2 established > T3 general)
-9. **Diff phase**: compares against previous scout report — highlights new findings, resolved items, and carried-over items
-10. **Reports** a structured analysis: release notes, skills repo gaps, new features, improvable skills, breaking changes, worth investigating links, repos worth harvesting, and patterns already implemented correctly
-11. Updates `references/scout-registry.md` and appends metrics to `metrics.csv`
+   (skipped with `--quick`): fetches top 5 results, prioritized by source tier (T1 official > T2 established > T3 general)
+8. **Diff phase**: compares against previous scout report — highlights new findings, resolved items, and carried-over items
+9. **Reports** a structured analysis: release notes, skills repo gaps, new features, improvable skills, breaking changes, worth investigating links, repos worth harvesting, and patterns already implemented correctly
+10. Updates `references/scout-registry.md` and appends metrics to `metrics-scout.csv`
 
 **Usage**:
 
@@ -505,6 +505,36 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 ```
 /deploy /path/to/my-project
+```
+
+---
+
+## `/apply-proposals`
+
+**Purpose**: Review and apply accepted proposals from `learn-proposals.md` to skill and rule files. Closes the scout→learn→apply loop.
+
+**When to use**: After reviewing proposals in `.claude/reviews/learn-proposals.md` and marking them as accepted. Or interactively to review and apply in one step.
+
+**Input**: Optional flags: `--all` (apply all accepted), `--proposal <N>` (apply specific proposal). No arguments = interactive mode.
+
+**Output**: Modified skill/rule files, updated proposal statuses in `learn-proposals.md`.
+
+**What it does**:
+
+1. Reads and parses all proposals from `learn-proposals.md`
+2. **Interactive mode**: presents a numbered table of all proposals with status, lets you select which to apply
+3. **Validates diffs** before applying — checks if the "old" text still exists in the target file. Stale proposals (where the file has changed) are auto-deferred, not force-applied.
+4. Applies changes: edits existing files or creates new skill/rule files
+5. **Syntax checks** modified files: valid YAML frontmatter, required fields present, no duplicates
+6. Updates proposal statuses in `learn-proposals.md` (pending→accepted, stale→deferred)
+7. **Proposal aging**: auto-defers proposals that have been pending for 3+ scout cycles; flags proposals deferred for 30+ days for potential rejection
+
+**Usage**:
+
+```
+/apply-proposals                  # interactive — review and select
+/apply-proposals --all            # apply all accepted proposals
+/apply-proposals --proposal 3     # apply proposal #3 only
 ```
 
 ---

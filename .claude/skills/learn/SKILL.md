@@ -104,4 +104,4 @@ Processed state is tracked on the filesystem — do NOT rely on the index table 
 2. Report:
    - Which reference files were processed (or "none — already up to date")
    - How many proposals were generated and for which skills/rules
-   - Next step: user reviews proposals in `.claude/reviews/learn-proposals.md`
+   - Next step: run `/apply-proposals` to review and apply, or review manually in `.claude/reviews/learn-proposals.md`

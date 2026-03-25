@@ -57,7 +57,7 @@ Use manual mode when you want to inspect and steer between steps — e.g., revie
     |
     +-- Step 0: branch setup              creates feat/<spec-name>
     +-- Step 1: clarifying questions       single batch, only interruption
-    +-- Step 1b: historical patterns       reads metrics.csv for recurring issues
+    +-- Step 1b: historical patterns       reads metrics-pipeline.csv for recurring issues
     +-- Subagent A: spec          [opus]   writes specs/<name>.md
     +-- Subagent B: implement     [opus]   writes source, runs verify
     +-- Subagent C: review        [opus]   writes reviews/<name>-review.md
@@ -130,18 +130,18 @@ After the review/fix loop passes, the full verify suite runs one last time befor
 
 ### Historical pattern analysis in `/ship`
 
-Before writing the spec, `/ship` reads `.claude/metrics.csv` to find recurring issue categories from past features in the same area. If prior features had validation or edge-case issues, the spec subagent receives extra guidance to write more detailed coverage in those areas. This makes the framework learn from its own history.
+Before writing the spec, `/ship` reads `.claude/metrics-pipeline.csv` to find recurring issue categories from past features in the same area. If prior features had validation or edge-case issues, the spec subagent receives extra guidance to write more detailed coverage in those areas. This makes the framework learn from its own history.
 
 ### Model routing in `/ship`
 
 Not every pipeline step needs the most powerful model. `/ship` routes each subagent to the appropriate model:
 
-| Step                     | Model      | Why                                                                     |
-| ------------------------ | ---------- | ----------------------------------------------------------------------- |
-| Spec, Implement, Review  | **opus**   | Deep reasoning — architecture, requirements analysis, multi-lens review |
-| Fix (pass with fixes)    | **sonnet** | Execution-heavy — targeted fixes guided by explicit instructions        |
-| Fix (needs rework)       | **opus**   | Critical issues need deeper reasoning                                   |
-| Commit                   | **sonnet** | Mechanical — staging and message composition                            |
+| Step                    | Model      | Why                                                                     |
+| ----------------------- | ---------- | ----------------------------------------------------------------------- |
+| Spec, Implement, Review | **opus**   | Deep reasoning — architecture, requirements analysis, multi-lens review |
+| Fix (pass with fixes)   | **sonnet** | Execution-heavy — targeted fixes guided by explicit instructions        |
+| Fix (needs rework)      | **opus**   | Critical issues need deeper reasoning                                   |
+| Commit                  | **sonnet** | Mechanical — staging and message composition                            |
 
 This saves ~40% of token cost on a typical `/ship` run without quality risk. The thinking-heavy steps stay on opus; the mechanical steps use sonnet.
 
@@ -382,7 +382,10 @@ The framework has three knowledge-acquisition skills that chain together:
 /learn              processes all unprocessed references (blogs + repos)
     │                   extracts insights → updates context/
     │                   reviews affected skills → proposes improvements
-    │                   runs /doc to regenerate documentation
+    ▼
+/apply-proposals    applies accepted proposals to skill/rule files
+    │                   validates diffs, syntax-checks, updates statuses
+    │                   auto-defers stale proposals
     ▼
 All future sessions automatically benefit
 ```
@@ -392,5 +395,15 @@ You can also use each skill independently:
 - Drop a blog post into `references/blogs/` and run `/learn`
 - Run `/learn <url>` to fetch and ingest a URL directly
 - Run `/harvest <repo-url>` on any repo you find interesting
+- Run `/apply-proposals` to review and apply accepted proposals to skill/rule files
 
 The context files in `.claude/context/` are read by `/0_spec` and `/1_implement` automatically, so accumulated knowledge influences every spec and implementation without any manual prompting.
+
+### Lesson scoping
+
+Lessons in `.claude/context/lessons.md` are tagged with `scope: framework` or `scope: project`:
+
+- **framework** — universal rules that apply in any project (e.g., "never use `|| null` for falsy-zero checks"). These can graduate to CLAUDE.md `## Learned Rules` via `/ship` Step 4b.
+- **project** — rules specific to this codebase's tech stack or architecture (e.g., "Radix Tooltip needs a Provider wrapper in jsdom"). These stay in `lessons.md` and are stripped by `/deploy` when distributing the framework.
+
+This prevents project-specific lessons from polluting the framework when deployed to other repos.

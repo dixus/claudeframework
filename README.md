@@ -107,7 +107,7 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
     │
     ├─ 0. Create feature branch
     ├─ 1. Front-load all questions (single batch)
-    ├─ 1b. Historical pattern analysis        → reads metrics.csv → builds spec guidance
+    ├─ 1b. Historical pattern analysis        → reads metrics-pipeline.csv → builds spec guidance
     ├─ 2. ▸ Subagent: /0_spec        [opus]   → writes spec file (informed by patterns)
     ├─ 3. ▸ Subagent: /1_implement   [opus]   → implements with TDD
     ├─ 4. ▸ Subagent: /2_review      [opus]   → review report
@@ -127,7 +127,7 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 - Review circuit breaker — escalates after 3 fix cycles without resolution
 - Recurring issue detection — if the same issue appears twice, escalates instead of retrying
 - Lesson graduation — proven corrections become permanent rules in `CLAUDE.md`
-- Metrics tracking — appends pipeline stats to `.claude/metrics.csv` after every run
+- Metrics tracking — appends pipeline stats to `.claude/metrics-pipeline.csv` after every run
 - **Dry-run mode** — `/ship --dry-run <feature>` runs only the spec phase, reports scope and complexity, then stops. No branch, no implementation, no commits. Review the spec before committing to a full pipeline run.
 
 ---
@@ -231,7 +231,7 @@ After 14+ days, /ship graduates proven lessons:
 ```
 /ship completes → appends metrics row (area, review cycles, issue categories)
     ↓
-Next /ship in same area → reads metrics.csv
+Next /ship in same area → reads metrics-pipeline.csv
     ↓
 Detects: "api features average 2.8 review cycles, recurring: validation, edge-cases"
     ↓
@@ -246,7 +246,7 @@ This is a **self-improving loop**: the framework doesn't just remember _rules_ �
 
 **Lessons** (`.claude/context/lessons.md`) are the inbox — corrections captured during review cycles. They graduate into permanent `CLAUDE.md` rules once proven over time.
 
-**Metrics** (`.claude/metrics.csv`) are the pattern source — aggregate data across all pipeline runs, read by `/ship` to guide spec depth.
+**Metrics** are split into two files: `.claude/metrics-pipeline.csv` (pipeline run data, read by `/ship` to guide spec depth) and `.claude/metrics-scout.csv` (scout and harvest run data).
 
 This means the framework gets stricter, more project-aware, and more precise with every feature shipped.
 
@@ -269,7 +269,8 @@ This means the framework gets stricter, more project-aware, and more precise wit
   reviews/         ← review reports + learn proposals
   input/           ← drop zone for PRDs, wireframes, sketches, requirement docs
   handoffs/        ← session state files (gitignored)
-  metrics.csv      ← pipeline run log (append-only)
+  metrics-pipeline.csv  ← /ship pipeline run log (append-only)
+  metrics-scout.csv     ← /scout and /harvest run log (append-only)
 ```
 
 ---
@@ -356,7 +357,7 @@ npm run build      # Production build
 
 ## Metrics
 
-`/ship` appends one row to `.claude/metrics.csv` after every pipeline run:
+`/ship` appends one row to `.claude/metrics-pipeline.csv` after every pipeline run:
 
 ```
 date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_major,issue_categories,commits,outcome
@@ -364,7 +365,7 @@ date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_m
 2026-03-17,file-upload,api,12,2,7,1,4,validation;edge-cases,3,shipped
 ```
 
-This is append-only — open in any spreadsheet or `column -t -s, .claude/metrics.csv` to spot trends like rising review cycles or recurring issue categories.
+This is append-only — open in any spreadsheet or `column -t -s, .claude/metrics-pipeline.csv` to spot trends like rising review cycles or recurring issue categories. Scout and harvest metrics are tracked separately in `.claude/metrics-scout.csv`.
 
 ---
 

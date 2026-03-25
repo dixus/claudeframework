@@ -183,10 +183,10 @@ Write a structured report to `references/repos/<slug>/harvest-report.md`:
 
 2. **Mark as processed.** Create the marker: `references/repos/<slug>/processed/.done`
 
-3. **Append metrics.** Add a row to `.claude/metrics.csv` (create with header if missing):
+3. **Append metrics.** Add a row to `.claude/metrics-scout.csv` (create with header if missing):
 
    ```
-   timestamp,skill,model,artifacts_found,new_count,enhancement_count,proposals_count
+   date,skill,model,artifacts_found,new_count,enhancement_count,proposals_count
    ```
 
 4. **Clean up (if `--clean`).** If `--clean` was passed:

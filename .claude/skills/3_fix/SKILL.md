@@ -32,7 +32,21 @@ Steps:
     d. If any issue is NOT actually resolved, fix it now before proceeding
     This step prevents the common pattern where `/3_fix` reports "all fixed" but the next `/2_review` finds the same issues still present.
 11. Spec-anchored check: review whether any fixes diverged from the spec's stated requirements. If they did, update the spec file to reflect the actual intent — keep spec and code in sync.
-12. Self-improvement gate: for each fixed issue, ask whether a rule would prevent recurrence. If yes, write it to `.claude/context/lessons.md` immediately (format: `## YYYY-MM-DD — <topic>` / what went wrong / rule that prevents it). Also flag it in the report so the team can consider promoting it to CLAUDE.md.
+12. Self-improvement gate: for each fixed issue, ask whether a rule would prevent recurrence. If yes, write it to `.claude/context/lessons.md` immediately using this format:
+
+    ```
+    ## YYYY-MM-DD — <topic>
+    **scope:** framework | project
+
+    **What went wrong**: ...
+    **Rule**: ...
+    ```
+
+    Scope guidelines:
+    - `scope: framework` — the lesson applies to any project using this framework (e.g., "never skip typecheck", "circular import prevention"). These can graduate to CLAUDE.md rules via `/ship` Step 4b.
+    - `scope: project` — the lesson is specific to the current codebase (e.g., "HelpSection goes below panel header", "Likert zero-value bug"). These stay in `lessons.md` and are stripped by `/deploy`.
+
+    When in doubt, use `scope: project` — it's safer to under-promote than to pollute the framework with project-specific rules. Also flag it in the report so the team can consider promoting it to CLAUDE.md.
 13. Report:
     - Which issues were fixed
     - Which (if any) were intentionally skipped and why

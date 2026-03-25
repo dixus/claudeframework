@@ -2,6 +2,8 @@
 
 Corrections and patterns captured across sessions. Updated automatically after any user correction.
 Each entry: what went wrong → rule that prevents it.
+Each entry must include a `scope:` tag: `framework` (universal, can graduate to CLAUDE.md) or `project` (codebase-specific, stripped by /deploy).
+Entries without a scope tag are treated as `project` (legacy default).
 
 ---
 

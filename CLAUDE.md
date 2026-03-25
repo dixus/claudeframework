@@ -74,13 +74,14 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 
 ### Knowledge & session management
 
-| Skill       | Purpose                                                                          |
-| ----------- | -------------------------------------------------------------------------------- |
-| `/learn`    | Process blog posts and repos into the knowledge base; propose skill improvements |
-| `/scout`    | Search the web for new Claude Code patterns and suggest framework optimizations  |
-| `/doc`      | Regenerate `.claude/docs/` from current skills and context                       |
-| `/handoff`  | Capture session state before `/clear`                                            |
-| `/continue` | Resume from a handoff file in a new session                                      |
+| Skill              | Purpose                                                                          |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `/learn`           | Process blog posts and repos into the knowledge base; propose skill improvements |
+| `/scout`           | Search the web for new Claude Code patterns and suggest framework optimizations  |
+| `/apply-proposals` | Apply accepted proposals from learn-proposals.md to skill/rule files             |
+| `/doc`             | Regenerate `.claude/docs/` from current skills and context                       |
+| `/handoff`         | Capture session state before `/clear`                                            |
+| `/continue`        | Resume from a handoff file in a new session                                      |
 
 ## Framework thresholds (optional)
 
@@ -97,17 +98,18 @@ This section is optional. If omitted, all skills use the defaults shown below. T
 
 ## `.claude/` directory layout
 
-| Path          | Purpose                                          |
-| ------------- | ------------------------------------------------ |
-| `skills/`     | 20 skill definitions (the framework itself)      |
-| `agents/`     | Subagent personas (code-reviewer, explorer)      |
-| `rules/`      | Auto-loaded instructions (like CLAUDE.md shards) |
-| `context/`    | Reference knowledge read by skills on demand     |
-| `references/` | Drop zone: paste blog posts and repo files here  |
-| `hooks/`      | Lifecycle hook scripts (e.g. auto-approve.js)    |
-| `docs/`       | Generated framework documentation                |
-| `specs/`      | Generated feature specs                          |
-| `reviews/`    | Review reports                                   |
-| `input/`      | Raw requirements                                 |
-| `handoffs/`   | Session state files (gitignored)                 |
-| `metrics.csv` | Pipeline run log (append-only)                   |
+| Path                   | Purpose                                          |
+| ---------------------- | ------------------------------------------------ |
+| `skills/`              | 21 skill definitions (the framework itself)      |
+| `agents/`              | Subagent personas (code-reviewer, explorer)      |
+| `rules/`               | Auto-loaded instructions (like CLAUDE.md shards) |
+| `context/`             | Reference knowledge read by skills on demand     |
+| `references/`          | Drop zone: paste blog posts and repo files here  |
+| `hooks/`               | Lifecycle hook scripts (e.g. auto-approve.js)    |
+| `docs/`                | Generated framework documentation                |
+| `specs/`               | Generated feature specs                          |
+| `reviews/`             | Review reports                                   |
+| `input/`               | Raw requirements                                 |
+| `handoffs/`            | Session state files (gitignored)                 |
+| `metrics-pipeline.csv` | Ship pipeline run log (append-only)              |
+| `metrics-scout.csv`    | Scout/harvest run log (append-only)              |

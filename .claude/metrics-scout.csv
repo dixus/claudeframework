@@ -1,0 +1,5 @@
+date,skill,model,findings_count,new_findings_count,action_items_count
+2026-03-20,scout,claude-opus-4-6,54,14,28
+2026-03-23,scout,claude-opus-4-6,66,12,34
+2026-03-25,scout,claude-opus-4-6,48,48,18
+2026-03-25,scout,claude-opus-4-6,48,8,18

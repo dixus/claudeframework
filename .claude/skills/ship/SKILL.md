@@ -24,8 +24,9 @@ Examples: `✓ Step 2 — Spec complete. 7 files, 3 new.` · `✓ Step 3 — Imp
 ```
 Main session (orchestrator — reads summaries only)
   ├── Step 0: branch setup              →  creates feat/<spec-name>
-  ├── Step 1b: historical patterns      →  reads metrics.csv → builds spec guidance
+  ├── Step 1b: historical patterns      →  reads metrics-pipeline.csv → builds spec guidance
   ├── Subagent A: spec          [opus]  →  writes .claude/specs/<name>.md (informed by patterns)
+  ├── Step 2b: decision review          →  reads spec "Decisions made by Claude" → user approval
   ├── Subagent B: implement     [opus]  →  commits to branch, returns summary
   ├── Subagent C: review        [opus]  →  writes .claude/reviews/<name>-review.md
   ├── Subagent D: fix  [opus if rework, sonnet if fixes]→  loop back to C
@@ -63,7 +64,7 @@ If requirements are fully unambiguous, skip to Step 1b.
 
 ## Step 1b — Historical pattern analysis (orchestrator)
 
-Read `.claude/metrics.csv` if it exists. If the file has fewer than 3 rows (excluding the header), skip this step — not enough data for meaningful patterns.
+Read `.claude/metrics-pipeline.csv` if it exists. If the file has fewer than 3 rows (excluding the header), skip this step — not enough data for meaningful patterns.
 
 **Analysis:**
 
@@ -91,11 +92,21 @@ If no meaningful patterns are found, set `historical_context` to empty and proce
 
 Launch a subagent (model: **opus**) with:
 
-> "Read `.claude/skills/0_spec/SKILL.md` and follow all steps exactly. The feature to spec is: $ARGUMENTS. The user has already answered clarifying questions; their answers are: [paste answers from Step 1 here, or 'none — requirements are unambiguous']. Do not ask further questions — skip step 6. Historical pattern analysis from prior pipeline runs: [paste historical_context from Step 1b here, or 'none — no historical data']. You are running as a subagent. Write the spec and return: (1) the spec filename, (2) the file count from Affected files + New files, (3) a one-paragraph summary of what will be built."
+> "Read `.claude/skills/0_spec/SKILL.md` and follow all steps exactly. The feature to spec is: $ARGUMENTS. The user has already answered clarifying questions; their answers are: [paste answers from Step 1 here, or 'none — requirements are unambiguous']. Do not ask further questions — skip step 6. Historical pattern analysis from prior pipeline runs: [paste historical_context from Step 1b here, or 'none — no historical data']. You are running as a subagent. Write the spec and return: (1) the spec filename, (2) the file count from Affected files + New files, (3) a one-paragraph summary of what will be built, (4) the full Decisions made by Claude section if present."
 
 Read the returned summary. Do not read the spec file itself.
 
 **Complexity gate:** if the returned file count exceeds `complexity_gate_max_files` from CLAUDE.md (default: 10), stop and tell the user — suggest decomposing into sub-specs. Do not continue without user confirmation.
+
+### Step 2b — Decision review (orchestrator)
+
+If the spec subagent returned a "Decisions made by Claude" section with any decisions:
+
+1. Print the decisions to the user, prefixed with: "The spec made these decisions autonomously. Please confirm or override:"
+2. List each decision as a numbered item
+3. Wait for user confirmation before proceeding to Step 3
+
+If no decisions were made (or the section is empty), skip to Step 3.
 
 ### Dry-run exit point
 
@@ -168,9 +179,10 @@ After the review/fix loop passes, graduate mature lessons into permanent CLAUDE.
 1. Read `.claude/context/lessons.md`
 2. If the file has **fewer than 5 entries**, skip this step — not enough to warrant graduation
 3. For each lesson entry:
-   - **Graduate** if the lesson is older than `lesson_graduation_age_days` from CLAUDE.md (default: 14) AND was not triggered again since it was written (no similar issue appeared in subsequent review cycles). Extract a **single-line rule** (the "Rule:" part, stripped of the "What went wrong" narrative) and append it to the `## Learned Rules` section in CLAUDE.md. If that section doesn't exist yet, create it at the bottom of CLAUDE.md.
+   - **Graduate** if the lesson has `scope: framework` AND is older than `lesson_graduation_age_days` from CLAUDE.md (default: 14) AND was not triggered again since it was written (no similar issue appeared in subsequent review cycles). Extract a **single-line rule** (the "Rule:" part, stripped of the "What went wrong" narrative) and append it to the `## Learned Rules` section in CLAUDE.md. If that section doesn't exist yet, create it at the bottom of CLAUDE.md.
    - **Keep** if the lesson is younger than the graduation age — it hasn't proven itself yet
-   - **Delete** if the lesson is project-specific and already enforced by code (e.g., a test exists that catches the exact scenario, or a linter rule covers it)
+   - **Delete** if the lesson has `scope: project` AND is already enforced by code (e.g., a test exists that catches the exact scenario, or a linter rule covers it). Project-scoped lessons are never graduated to CLAUDE.md — they stay in `lessons.md` or get deleted when enforced.
+   - **Skip** if the lesson has no `scope:` tag — treat as `scope: project` (legacy default)
 4. Remove graduated/deleted entries from `lessons.md`
 5. Do not graduate more than 15 lessons in a single pass — keep the diff reviewable
 6. All changes to `lessons.md` and `CLAUDE.md` will be included in the commit (Step 6 — Commit subagent)
@@ -262,7 +274,7 @@ Print a summary assembled from subagent return values:
 
 ## Metrics (orchestrator — always run after final report)
 
-Append one row to `.claude/metrics.csv`. Create the file with a header row if it doesn't exist.
+Append one row to `.claude/metrics-pipeline.csv`. Create the file with a header row if it doesn't exist.
 
 **Format:**
 
@@ -284,4 +296,4 @@ date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_m
 - `commits` — number of commits created in Step 6
 - `outcome` — `shipped` / `escalated` / `aborted`
 
-This is append-only — never modify or delete existing rows. The CSV is a lightweight log for spotting trends (e.g., rising review cycles, recurring issue categories). No tooling required — open in any spreadsheet or `column -t -s, .claude/metrics.csv`.
+This is append-only — never modify or delete existing rows. The CSV is a lightweight log for spotting trends (e.g., rising review cycles, recurring issue categories). No tooling required — open in any spreadsheet or `column -t -s, .claude/metrics-pipeline.csv`.

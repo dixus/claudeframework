@@ -17,7 +17,7 @@ $ARGUMENTS is optional. Pass `--quick` to search only (no page fetching) — ret
 2. Read all skill files in `.claude/skills/` to understand current capabilities
 3. Read `.claude/context/lessons.md` if it exists (`.claude/rules/instincts.md` is auto-loaded by Claude Code)
 4. Find the most recent previous scout report: glob `.claude/references/blogs/scout-*.md` and read the latest one. This is used in the diff phase later. If none exists, skip diffing.
-5. **Read metrics trend.** If `.claude/metrics.csv` exists and contains 2+ rows where `skill=scout`, compute the trend direction for `findings_count` and `action_items_count` across the last 3 scout runs (increasing / decreasing / stable). Store as a one-line summary for the report header. If fewer than 2 scout rows exist, note "First/second run — no trend data."
+5. **Read metrics trend.** If `.claude/metrics-scout.csv` exists and contains 2+ rows, compute the trend direction for `findings_count` and `action_items_count` across the last 3 scout runs (increasing / decreasing / stable). Store as a one-line summary for the report header. If fewer than 2 scout rows exist, note "First/second run — no trend data."
 
 ## Release notes phase (always runs first)
 
@@ -268,10 +268,10 @@ Do NOT modify skill or rule files directly — proposals are reviewed by the use
 
 ## Metrics
 
-Append a row to `.claude/metrics.csv` (create if missing, with header row):
+Append a row to `.claude/metrics-scout.csv` (create if missing, with header row):
 
 ```
-timestamp,skill,model,findings_count,new_findings_count,action_items_count
+date,skill,model,findings_count,new_findings_count,action_items_count
 ```
 
 Count: total findings across all tables, new findings (from diff phase, 0 if first run), and items with action needed (non-"none" entries).
@@ -296,7 +296,7 @@ Still update the registry: add all discovered URLs as `queued` (they weren't fet
 ## After reporting
 
 Ask: "Scout report written to `.claude/references/blogs/scout-<date>.md`. Proposals added to `.claude/reviews/learn-proposals.md`. Options:
-A) Review and apply proposals now
+A) Run `/apply-proposals` to review and apply proposals now
 B) Run `/learn <url>` on a "Worth investigating" URL
 C) Run `/harvest <url>` on a discovered repo
 D) Done — I'll review manually"

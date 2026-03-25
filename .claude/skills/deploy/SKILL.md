@@ -25,20 +25,21 @@ Replace shared framework directories in a target project with junctions pointing
 
 **Local (never symlinked)** — project-specific, stay as regular directories:
 
-| Dir                   | Why local                          |
-| --------------------- | ---------------------------------- |
-| `context/`            | Project-specific knowledge base    |
-| `specs/`              | Feature specs for this project     |
-| `reviews/`            | Review reports for this project    |
-| `input/`              | Requirements for this project      |
-| `references/`         | Research material for this project |
-| `hooks/`              | Project-specific lifecycle hooks   |
-| `handoffs/`           | Session state (gitignored)         |
-| `docs/`               | Generated docs (project-specific)  |
-| `worktrees/`          | Git worktree state                 |
-| `settings.json`       | Project-specific settings          |
-| `settings.local.json` | Local overrides                    |
-| `metrics.csv`         | Pipeline run log                   |
+| Dir                    | Why local                          |
+| ---------------------- | ---------------------------------- |
+| `context/`             | Project-specific knowledge base    |
+| `specs/`               | Feature specs for this project     |
+| `reviews/`             | Review reports for this project    |
+| `input/`               | Requirements for this project      |
+| `references/`          | Research material for this project |
+| `hooks/`               | Project-specific lifecycle hooks   |
+| `handoffs/`            | Session state (gitignored)         |
+| `docs/`                | Generated docs (project-specific)  |
+| `worktrees/`           | Git worktree state                 |
+| `settings.json`        | Project-specific settings          |
+| `settings.local.json`  | Local overrides                    |
+| `metrics-pipeline.csv` | Ship pipeline run log              |
+| `metrics-scout.csv`    | Scout/harvest run log              |
 
 ## Steps
 
@@ -70,9 +71,11 @@ Replace shared framework directories in a target project with junctions pointing
 
 5. **Ensure local directories exist.** For each local directory (`context`, `specs`, `reviews`, `input`, `references`, `hooks`, `handoffs`, `docs`), create it if missing: `mkdir -p <target>/.claude/<dir>`
 
-6. **Clean up stale files.** If `<target>/.claude/context/instincts.md` exists as a regular file (not via the `rules/` symlink), delete it — `rules/instincts.md` is now provided through the symlink and having both causes duplication.
+6. **Strip project-scoped lessons.** If `<target>/.claude/context/lessons.md` exists, read it and remove all entries that have `scope: project` or no scope tag (legacy entries are project-scoped by default). Keep only `scope: framework` entries. This prevents project-specific lessons from the Framework repo from leaking into target projects.
 
-7. **Report.**
+7. **Clean up stale files.** If `<target>/.claude/context/instincts.md` exists as a regular file (not via the `rules/` symlink), delete it — `rules/instincts.md` is now provided through the symlink and having both causes duplication.
+
+8. **Report.**
 
 ```
 ## Deploy complete
