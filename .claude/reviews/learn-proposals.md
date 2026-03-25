@@ -150,6 +150,66 @@ This is a larger refactor. Proposal: add `--deep` flag that spawns parallel suba
 | Medium   | 3     | Worktree isolation in `/ship`; `maxTurns` on ship fix subagent; Plan mode note in `/1_implement` |
 | Low      | 2     | Compliance score in `/scout`; `--deep` flag for `/audit`                                         |
 
+---
+
+## Proposals — 2026-03-25
+
+### Skill: ship
+
+**What:** Add agent team orchestration option for large multi-domain features
+**Why:** New knowledge on agent team practical patterns — domain-based file isolation (never let two agents touch the same file), shared task queue (orchestrator creates numbered list, teammates claim), 3-5 teammate sweet spot. Could parallelize implement phase for features spanning frontend/backend/tests.
+**Source tier:** T2
+**Status:** pending
+**Diff:**
+
+```
+old (Step 3 — Implement subagent):
+Launch a subagent (model: **opus**) with:
+
+new (add after the launch line):
+Launch a subagent (model: **opus**) with:
+
+**Agent team mode** (optional — for specs with 3+ distinct domains in "Affected files"):
+Instead of a single implement subagent, spawn parallel teammates with domain-based file isolation:
+- Assign each teammate a directory scope (e.g., `src/api/`, `src/ui/`, `tests/`)
+- Use a shared task queue: create numbered tasks from spec requirements, teammates claim by number
+- Cap at 3-5 teammates. Each runs `/1_implement` scoped to its domain.
+- Merge results and run verify suite once all complete.
+```
+
+---
+
+### Skill: 2_review
+
+**What:** Add parallel review lenses option via agent teams
+**Why:** Agent team patterns suggest deploying separate agents for security/performance/test-coverage reviews to prevent "context bias" — a single reviewer favoring one lens over others. Each agent reviews independently, findings are synthesized.
+**Source tier:** T2
+**Status:** pending
+**Diff:**
+
+```
+old (step 8, after listing all lens criteria):
+(9 lenses listed)
+
+new (add note after lenses):
+**Parallel lens option** (for large diffs with 10+ files):
+Instead of evaluating all 9 lenses sequentially, spawn parallel subagents:
+- Agent A: Correctness + Spec validation + Spec completeness
+- Agent B: Security + Code quality + Tests/QA
+- Agent C: UX + PM + DevOps
+Each agent reviews independently. Synthesize findings into a single report. This prevents context-heavy lenses (spec completeness) from crowding out security or UX findings.
+```
+
+---
+
+## Summary (updated 2026-03-25)
+
+| Priority | Status  | Count | Proposals                                                                                                                        |
+| -------- | ------- | ----- | -------------------------------------------------------------------------------------------------------------------------------- |
+| High     | pending | 3     | `disallowedTools` on `/2_review`; `maxTurns` on `/3_fix`; `--bare` in `/ship`                                                    |
+| Medium   | pending | 5     | Worktree isolation in `/ship`; `maxTurns` on fix subagent; Plan mode note; agent team in `/ship`; parallel lenses in `/2_review` |
+| Low      | pending | 2     | Compliance score in `/scout`; `--deep` flag for `/audit`                                                                         |
+
 ## Not proposed (considered and rejected)
 
 - **`$ARGUMENTS` bracket syntax audit**: All skills use `$ARGUMENTS` as a full string, not indexed. No instances of deprecated `$ARGUMENTS.0` syntax found.

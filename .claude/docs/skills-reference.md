@@ -1,6 +1,6 @@
 # Skills Reference
 
-Generated and maintained by `/doc`. Last updated: 2026-03-20.
+Generated and maintained by `/doc`. Last updated: 2026-03-25.
 
 Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology-agnostic — they read project commands from `CLAUDE.md` rather than hardcoding tools.
 
@@ -20,18 +20,20 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 1. Creates a `feat/<spec-name>` branch (skipped in `--dry-run`)
 2. Front-loads all clarifying questions in a single batch — the only user interruption
-3. Launches a **spec subagent** (opus) — writes `.claude/specs/<name>.md`
-4. **Complexity gate**: stops if file count exceeds threshold (default: 10)
-5. _Dry-run exit_: if `--dry-run`, prints a scope report and stops here
-6. Launches an **implement subagent** (opus) — writes source, runs verify
-7. Launches a **review subagent** (opus) — writes `.claude/reviews/<name>-review.md`
-8. If issues found, launches a **fix subagent** (sonnet) — loops review/fix up to 3 cycles
-9. **Lesson graduation** (Step 4b) — promotes mature lessons from `lessons.md` to `CLAUDE.md` rules
-10. **Cross-phase integration check** (Step 4c) — only for phased implementations; verifies data flow, interface contracts, and glue code across phases
-11. Runs a **final verify gate** — typecheck, lint, tests, build
-12. Launches a **commit subagent** (sonnet) — creates atomic conventional commits
-13. Asks how to finalize: merge to main, open a PR, or leave on branch
-14. Appends a row to `.claude/metrics.csv` with run statistics
+3. **Historical pattern analysis** (Step 1b) — reads `metrics.csv` for recurring issue categories in this feature area, passes guidance to spec subagent
+4. Launches a **spec subagent** (opus) — writes `.claude/specs/<name>.md`
+5. **Complexity gate**: stops if file count exceeds threshold (default: 10)
+6. _Dry-run exit_: if `--dry-run`, prints a scope report and stops here
+7. Launches an **implement subagent** (opus) — writes source, runs verify
+8. Launches a **review subagent** (opus in worktree) — writes `.claude/reviews/<name>-review.md`
+9. If issues found, launches a **fix subagent** (sonnet for major, opus for critical) — loops review/fix up to 3 cycles
+10. **Lesson graduation** (Step 4b) — promotes mature lessons from `lessons.md` to `CLAUDE.md` rules
+11. **Cross-phase integration check** (Step 4c) — only for phased implementations; verifies data flow, interface contracts, and glue code across phases
+12. Runs a **final verify gate** — typecheck, lint, tests, build
+13. Launches a **commit subagent** (sonnet) — creates atomic conventional commits
+14. Asks how to finalize: merge to main, open a PR, or leave on branch
+15. **Post-merge cleanup** — deletes feature and checkpoint branches, marks spec as completed
+16. Appends a row to `.claude/metrics.csv` with run statistics
 
 **Usage**:
 
@@ -246,21 +248,27 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 ## `/scout`
 
-**Purpose**: Search the web for recent Claude Code developments, release notes, and community patterns. Compare against the current framework and report optimization opportunities.
+**Purpose**: Search the web and GitHub for recent Claude Code developments, release notes, community patterns, and interesting repos. Compare against the current framework and report optimization opportunities.
 
-**When to use**: Periodically (e.g., weekly or monthly) to check for new Claude Code features, breaking changes, or community skills that could improve the framework.
+**When to use**: Periodically (e.g., weekly or monthly) to check for new Claude Code features, breaking changes, community skills, or repos that could improve the framework.
 
 **Input**: Optional `--quick` flag to skip page fetching and return titles/links only.
 
-**Output**: `.claude/reviews/scout-<YYYY-MM-DD>.md`
+**Output**: `.claude/references/blogs/scout-<YYYY-MM-DD>.md`
 
 **What it does**:
 
 1. Reads CLAUDE.md, all skill files, and context files to understand current capabilities
-2. **Release notes phase**: fetches the official Claude Code changelog, extracts entries from the last 60 days, compares each against the framework's 18 skills and hooks
-3. **Search phase**: runs 4 targeted web searches for Claude Code best practices, GitHub skills, hooks/subagents/agent teams, and CLAUDE.md patterns
-4. **Fetch phase** (skipped with `--quick`): fetches top 5 most relevant results, extracts actionable insights, assesses whether the framework already handles each one
-5. **Reports** a structured analysis: release notes table, new features not being used, skills that could be improved, breaking changes/deprecations, links worth investigating, and patterns already implemented correctly
+2. **Release notes phase**: fetches the official Claude Code changelog, extracts entries from the last 60 days, compares each against the framework's 20 skills and hooks
+3. **Official skills repo phase**: checks the Anthropic skills repo and Agent Skills spec for gaps
+4. **Registry phase**: reads `references/scout-registry.md` to avoid re-fetching known URLs
+5. **Adaptive query phase**: reads pending proposals from `learn-proposals.md`, generates targeted searches to find supporting evidence
+6. **Search phase**: runs 4-6 web searches for best practices, GitHub skills, hooks/subagents, and CLAUDE.md patterns
+7. **Repo discovery phase**: runs 3 GitHub-targeted searches for Claude Code repos and frameworks; discovered repos are added to the registry as `queued-repo` for `/harvest`
+(skipped with `--quick`): fetches top 5 results, prioritized by source tier (T1 official > T2 established > T3 general)
+9. **Diff phase**: compares against previous scout report — highlights new findings, resolved items, and carried-over items
+10. **Reports** a structured analysis: release notes, skills repo gaps, new features, improvable skills, breaking changes, worth investigating links, repos worth harvesting, and patterns already implemented correctly
+11. Updates `references/scout-registry.md` and appends metrics to `metrics.csv`
 
 **Usage**:
 
@@ -416,27 +424,87 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 **Purpose**: Process new references, distill insights into the knowledge base, and propose skill improvements.
 
-**When to use**: After dropping new blog posts or repo files into `.claude/references/`. Also run periodically to review if skills need updating even without new references.
+**When to use**: After dropping new blog posts or repo files into `.claude/references/`, after running `/scout` or `/harvest`, or periodically to review if skills need updating even without new references.
 
 **How to add material**:
 
 - Blog posts / articles: paste full text as `.md` or `.pdf` into `.claude/references/blogs/`
-- Repositories: copy README and key files into `.claude/references/repos/<name>/`
+- Repositories: clone via `/harvest <url>` or copy into `.claude/references/repos/<name>/`
+- URLs: pass directly as argument — `/learn <url>` fetches and ingests it
 
 **What it does**:
 
-1. Detects unprocessed items in `references/` using filesystem markers (not the index table)
-2. For **blog files**: reads full content, extracts actionable insights, routes to appropriate context file, moves to `processed/` subfolder
-3. For **repo directories**: selectively reads key files (README, resources, docs, command patterns), creates `processed/.done` marker when done
-4. Appends durable, actionable insights to context files under dated section headings
-5. **Reviews every skill** against accumulated context knowledge — writes improvement proposals to `.claude/reviews/learn-proposals.md` (does NOT modify skills directly)
-6. Updates `references/index.md` with processing status
-7. Runs `/doc` to regenerate documentation
+1. **URL ingestion** (when argument is a URL): fetches the page, saves as markdown to `references/blogs/`, then processes it
+2. Detects unprocessed items in `references/` using filesystem markers (not the index table)
+3. For **blog files**: reads full content, extracts actionable insights, routes to appropriate context file, moves to `processed/` subfolder
+4. For **repo directories**: checks for a `harvest-report.md` first (written by `/harvest`) — if present, uses the structured report instead of re-scanning. Otherwise selectively reads key files. Creates `processed/.done` marker when done.
+5. **Staleness updates**: when processing scout reports, updates contradicted context sections in-place rather than appending duplicates
+6. Appends durable, actionable insights to context files under dated section headings, tagged with `**Affects:** [skill1, skill2]`
+7. **Reviews affected skills** against accumulated context knowledge — writes improvement proposals to `.claude/reviews/learn-proposals.md` (does NOT modify skills directly). Also includes skills targeted by harvest-sourced proposals.
+8. Updates `references/index.md` with processing status
+9. Conditionally runs `/doc` to regenerate documentation (only if context files changed)
 
 **Usage**:
 
 ```
 /learn
+/learn https://example.com/blog-post
+```
+
+---
+
+## `/harvest`
+
+**Purpose**: Clone and analyze a Git repo's Claude Code setup — skills, hooks, agents, rules, CLAUDE.md — then generate adoption proposals.
+
+**When to use**: After `/scout` discovers interesting repos (listed in "Repos worth harvesting"), or directly on any repo URL you find interesting.
+
+**Input**: `$ARGUMENTS` — a Git-cloneable URL. Optional flags: `--clean` (delete clone after analysis), `--deep` (line-level comparison).
+
+**Output**: `references/repos/<slug>/harvest-report.md` + proposals appended to `reviews/learn-proposals.md`
+
+**What it does**:
+
+1. **Validate**: parses URL, checks idempotency (`processed/.done` marker + registry), loads framework inventory
+2. **Clone**: shallow clone (`--depth 1`) to `references/repos/<owner>-<repo>/`
+3. **Assess**: checks for `.claude/`, `CLAUDE.md`, MCP config; fetches repo metadata via `gh api`; classifies source tier (T1 Anthropic / T2 popular / T3 other)
+4. **Inventory**: scans skills, agents, hooks, rules, CLAUDE.md, MCP config, package.json scripts; classifies each as **new** / **enhancement** / **duplicate** / **incompatible** against our framework
+5. **Deep analysis** (with `--deep`): detailed side-by-side comparison for `new` and `enhancement` items, assesses adaptation effort (trivial / moderate / significant)
+6. **Proposals**: generates adoption proposals in learn-proposals format for `new` and `enhancement` items
+7. **Report**: writes structured harvest report with inventory table, key findings, and proposals summary
+8. **Finalize**: updates scout-registry (type `repo`, status `fetched`), creates `processed/.done` marker, appends metrics. If `--clean`, preserves report but deletes clone.
+
+**Non-framework repos**: If no `.claude/` or `CLAUDE.md` found, writes a minimal report noting interesting patterns (scripts, CI, MCP) and registers as processed.
+
+**Usage**:
+
+```
+/harvest https://github.com/anthropics/skills
+/harvest https://github.com/someone/cool-claude-setup --deep
+/harvest https://github.com/someone/large-repo --clean
+```
+
+---
+
+## `/deploy`
+
+**Purpose**: Deploy the framework to a target project by replacing shared directories with symlinks (junctions on Windows) back to this repo.
+
+**When to use**: After copying `.claude/` to a new project, run once to convert shared directories into symlinks so all projects stay in sync.
+
+**Input**: `$ARGUMENTS` — path to the target project.
+
+**What it does**:
+
+1. Detects OS (Windows → junctions via `mklink /J`, Linux/Mac → symlinks via `ln -s`)
+2. For each shared directory (`skills/`, `agents/`, `rules/`, `commands/`): backs up the existing copy and creates a symlink/junction back to the framework repo
+3. Leaves project-specific directories local (`context/`, `specs/`, `reviews/`, `input/`, `references/`, `hooks/`, `handoffs/`, `docs/`)
+4. Ensures all local directories exist, cleans up stale files
+
+**Usage**:
+
+```
+/deploy /path/to/my-project
 ```
 
 ---
@@ -491,9 +559,18 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 5. **Registers** the hook in the appropriate `settings.json` (merges with existing)
 6. **Tests** both happy path (hook passes silently) and sad path (hook fires correctly)
 
-**Hook types**: `command` (local script) or `http` (POST JSON to URL)
+**Hook types**: `command` (local script), `http` (POST JSON to URL), `prompt` (single-turn LLM evaluation — no script needed), or `agent` (subagent verification)
 
-**Hook event types**: `PreToolUse` (can block) / `PostToolUse` (feedback/fix) / `UserPromptSubmit` (before prompt) / `PermissionRequest` (approve/deny) / `PostCompact` (after context compaction)
+**Hook event types**:
+
+- **Tool execution**: `PreToolUse` (can block) / `PostToolUse` (feedback/fix) / `PostToolUseFailure` (react to errors) / `PermissionRequest` (approve/deny/ask)
+- **User interaction**: `UserPromptSubmit` (before prompt) / `Notification` (permission prompts, idle, auth)
+- **Session lifecycle**: `SessionStart` / `SessionEnd` / `InstructionsLoaded` / `Stop` / `StopFailure`
+- **Context management**: `PreCompact` / `PostCompact`
+- **Agent operations**: `SubagentStart` / `SubagentStop` / `TeammateIdle` / `TaskCompleted`
+- **Version control**: `WorktreeCreate` / `WorktreeRemove`
+- **MCP integration**: `Elicitation` / `ElicitationResult`
+- **Configuration**: `ConfigChange` / `Setup`
 
 **Usage**:
 

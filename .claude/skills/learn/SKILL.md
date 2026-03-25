@@ -1,11 +1,11 @@
 ---
 name: learn
-description: Process new references into context knowledge and propose skill improvements. Use after adding blog posts, repos, or docs to .claude/references/, or pass a URL to fetch and ingest directly.
+description: Process references into skill/rule improvement proposals. Use after adding blog posts, repos, or docs to .claude/references/, or pass a URL to fetch and ingest directly.
 disable-model-invocation: true
 argument-hint: "[url]"
 ---
 
-Process new material from `.claude/references/` and distill insights into `.claude/context/`. Then review affected skills against the accumulated knowledge and propose improvements.
+Process new material from `.claude/references/` and propose concrete changes to skills and rules. No intermediate knowledge files — findings route directly to actionable proposals.
 
 ## URL ingestion (when $ARGUMENTS is a URL)
 
@@ -37,45 +37,34 @@ Processed state is tracked on the filesystem — do NOT rely on the index table 
 **For blog/article files** (individual files in `references/blogs/`):
 
 1. Read the full content. For PDF files, use the `pages` parameter to read in chunks of 20 pages (e.g. `pages: "1-20"`, then `pages: "21-40"`) — do not attempt to read an entire large PDF at once.
-2. Identify which context file(s) it belongs to:
-   - Claude Code workflow, prompting, session management → `.claude/context/claude-code-knowledge.md`
-   - SaaS architecture, auth, billing, infra, multi-tenancy → `.claude/context/saas-architecture-patterns.md`
-   - Other topics → `.claude/context/` (create a new clearly-named file if needed)
-3. Extract only actionable, durable insights — skip opinions, anecdotes, and anything already captured in the target context file
-4. Append to the relevant context file under a dated section heading: `## Added YYYY-MM-DD`
-5. **Tag affected skills.** For each extracted insight, identify 0–3 skills it most directly affects and add an `**Affects:** [skill1, skill2]` line in the context file entry. Example: a hook-related insight → `**Affects:** [create-hook, ship]`. This drives targeted skill review in step 6.
-6. **Immediately after processing**, move the file into the `processed/` subfolder: `references/blogs/processed/<filename>`
+2. Extract only actionable, durable insights — skip opinions, anecdotes, and general knowledge Claude already has
+3. For each insight, map it to a **concrete change target**:
+   - A specific skill file (`.claude/skills/<name>/SKILL.md`) — what line/section to change
+   - A rule file (`.claude/rules/<name>.md`) — create new or update existing
+   - `CLAUDE.md` — if it's a project-wide convention
+   - If an insight doesn't map to any file, discard it — it's not actionable
+4. Tag each insight with the affected skills: `**Affects:** [skill1, skill2]`
+5. **Immediately after processing**, move the file into the `processed/` subfolder: `references/blogs/processed/<filename>`
 
 **For repo subdirectories** (full repos in `references/repos/<dir>/`):
 
-1. Identify the key files to read — prioritize: `README.md`, files under `resources/`, `docs/`, `commands/`, `skills/`; skip: CI configs, scripts, tests, lock files, generated files
-2. Read those key files selectively (not every file — focus on workflow, command patterns, CLAUDE.md examples, and architectural decisions)
-3. Extract actionable insights per the same routing rules above
-4. Append to the relevant context file(s) under a dated section heading: `## Added YYYY-MM-DD`
-5. **Tag affected skills** — same as blog step 5 above. Add `**Affects:** [skill1, skill2]` for each insight.
+1. **Check for harvest report.** If `references/repos/<dir>/harvest-report.md` exists, this repo was already analyzed by `/harvest`. Read the harvest report instead of scanning the repo directly — it contains a structured inventory, classification, and key findings. Skip to step 3 using the harvest report as the source material.
+2. If no harvest report: identify the key files to read — prioritize: `README.md`, files under `resources/`, `docs/`, `commands/`, `skills/`; skip: CI configs, scripts, tests, lock files, generated files
+3. Read those key files selectively (not every file — focus on workflow, command patterns, CLAUDE.md examples, and architectural decisions)
+4. Extract actionable insights and map each to a concrete change target (same as blog step 3 above)
+5. Tag affected skills: `**Affects:** [skill1, skill2]`
 6. **Immediately after processing**, mark the repo directory as done by creating `references/repos/<dir>/processed/.done` (an empty marker file). Do NOT move the entire directory — repos are large and the marker is sufficient for idempotency
-
-## Staleness updates (when processing scout reports)
-
-If the reference being processed is a scout report (`scout-*.md`), scan its "Claude Code release notes" table for entries marked `**Context update needed**`. For each:
-
-1. Locate the referenced section heading in the target context file (e.g., `## Added 2026-03-23`)
-2. **Update the section in-place** — replace the outdated content with the corrected information from the release note. Do not append a duplicate section.
-3. Note the update in the final report as: "Updated: `<section heading>` in `<context file>` (was: `<old>`, now: `<new>`)"
-
-This prevents the knowledge base from accumulating contradictory entries as Claude Code evolves.
 
 ## Skill review (always run — even when no new references)
 
-1. **Identify which skills to review.** Collect all `**Affects:**` tags from insights added in this run. Also include any skill with a `deferred` proposal in `learn-proposals.md`. If no new references were processed (and no deferred proposals exist), fall back to reviewing all skills.
+1. **Identify which skills to review.** Collect all `**Affects:**` tags from insights extracted in this run. Also include any skill with a `deferred` proposal in `learn-proposals.md`, and any skill targeted by harvest-sourced proposals (proposals where `**Source:**` contains "harvested") with status `pending`. If no new references were processed (and no deferred or harvest proposals exist), fall back to reviewing all skills.
    - **Targeted mode** (new references processed): read only the identified skill files
-   - **Fallback mode** (no new references): read all skill files, but limit depth — check only for contradictions with current knowledge, not speculative improvements
-2. Read all context files in `.claude/context/`
-3. For each skill in scope (from step 1), ask: does the current knowledge in context suggest a concrete improvement to this skill's steps, inputs, outputs, or guardrails? Consider:
+   - **Fallback mode** (no new references): read all skill files, but limit depth — check only for obvious gaps, not speculative improvements
+2. For each skill in scope, ask: do the insights extracted in this run suggest a concrete improvement to this skill's steps, inputs, outputs, or guardrails? Consider:
    - Are there missing steps that current best practices demand?
    - Are there steps that are now outdated or weaker than the state of the art?
    - Does a skill lack a safety check, decomposition gate, or verification step that the context recommends?
-4. **Propose, do not apply.** Append new skill improvement proposals to `.claude/reviews/learn-proposals.md`. Follow these sub-steps:
+3. **Propose, do not apply.** Append new skill improvement proposals to `.claude/reviews/learn-proposals.md`. Follow these sub-steps:
 
    a. **Read existing proposals.** If `learn-proposals.md` exists, read it and parse the `**Status:**` line of each proposal. Proposals without a Status line (legacy) are treated as `pending`.
    b. **Skip closed items.** Do not re-propose any item whose Status is `accepted` or `rejected`.
@@ -104,7 +93,7 @@ This prevents the knowledge base from accumulating contradictory entries as Clau
 
    **Status values:** `pending` (new, awaiting review), `accepted` (user approved and applied), `rejected` (user declined), `deferred` (postponed — re-evaluate next run).
 
-5. For each proposal, note: which skill, what would change, and why (one line each)
+4. For each proposal, note: which skill, what would change, and why (one line each)
 
 ## After processing
 
@@ -112,9 +101,7 @@ This prevents the knowledge base from accumulating contradictory entries as Clau
    - For each newly processed file, add a row to the "Processed entries" table with ✅ and a one-line insight summary
    - The "File" column value should be the original relative path (e.g. `` `blogs/uninterrupted.pdf` ``) — this is an audit log only, not used for deduplication
    - Remove the file from "Unprocessed entries" if it was listed there
-2. **Conditionally run `/doc`.** If any context file in `.claude/context/` was created or modified during this run, run `/doc` to regenerate documentation. Otherwise skip and note "No context changes — `/doc` skipped" in the report.
-3. Report:
+2. Report:
    - Which reference files were processed (or "none — already up to date")
-   - Which context files were updated
-   - Which skills were changed and what improved
-   - Whether `/doc` ran or was skipped
+   - How many proposals were generated and for which skills/rules
+   - Next step: user reviews proposals in `.claude/reviews/learn-proposals.md`

@@ -37,7 +37,7 @@ Extract all entries from the last 60 days. For each entry, note:
 
 Compare each entry against the current framework: does it affect any of our skills, hooks, or settings? Flag anything that does.
 
-**Staleness check:** For each flagged entry, check if the affected feature is already documented in `.claude/context/claude-code-knowledge.md`. If the release note contradicts or supersedes documented content, mark the Action needed column as `**Context update needed** — section: "<section heading>"` (include the specific `## Added YYYY-MM-DD` heading that needs updating). This tells `/learn` to update in-place rather than append.
+**Actionable mapping:** For each flagged entry, map it to a concrete change target: which skill file and what to change (e.g., "add `maxTurns: 15` to `3_fix/SKILL.md` frontmatter"), or which rule file to create/update in `.claude/rules/`. If the change doesn't map to any skill or rule, note it as "informational only" — do not propose writing it to a knowledge file.
 
 ## Official skills repo phase (always runs)
 
@@ -69,7 +69,9 @@ Read `.claude/references/scout-registry.md` if it exists. This file tracks every
 | https://example.com/other | Other Post | queued  | 2026-03-20 |
 ```
 
-Status values: `fetched` (already read and analyzed), `queued` (flagged for next run), `skip` (manually marked irrelevant).
+Status values: `fetched` (already read and analyzed), `queued` (flagged for next run), `queued-repo` (GitHub repo flagged for `/harvest`), `skip` (manually marked irrelevant).
+
+If the table has a Type column, use it. If not, treat all existing rows as type `article`. When adding new rows, always include the Type column (`article` or `repo`).
 
 Build a set of known URLs from this file. These are used in the search and fetch phases to avoid re-reading content.
 
@@ -100,6 +102,22 @@ Deduplicate by URL. Discard results older than 60 days if the date is visible in
 - **T3** — general blog posts, unknown authors, unverified sources
 
 Include the tier in all report tables that reference external sources.
+
+## Repo discovery phase (runs after search)
+
+Search GitHub specifically for Claude Code framework repos and skill collections:
+
+a. WebSearch `"Claude Code" framework skills site:github.com`
+b. WebSearch `".claude" commands OR skills directory site:github.com`
+c. WebSearch `CLAUDE.md hooks OR agents "best practices" site:github.com`
+
+For each result that is a GitHub **repository** URL (not a file blob, issue, or discussion):
+
+1. Check if the URL is already in scout-registry.md — skip if status is `fetched`, `queued-repo`, or `skip`
+2. If new, add to the registry with status `queued-repo`, type `repo`, and today's date
+3. Collect for the "Repos worth harvesting" report section
+
+Do NOT clone or deeply analyze repos — that is `/harvest`'s job. Scout only discovers and queues.
 
 ## Fetch phase
 
@@ -137,17 +155,30 @@ Write the report to `.claude/references/blogs/scout-<YYYY-MM-DD>.md` with this s
 | ---------------- | ------------- | ------------- | ----------------- |
 | <field>          | <spec status> | <our status>  | <gap description> |
 
-## New features we're not using
+## Proposed changes
 
-| Feature   | Source | Tier   | Impact          | Recommendation |
-| --------- | ------ | ------ | --------------- | -------------- |
-| <feature> | <link> | T1/2/3 | high/medium/low | <what to do>   |
+Concrete edits to skills and rules. Each proposal maps directly to a file and change.
 
-## Skills that could be improved
+| #   | Target file                       | Change                                  | Source | Tier   | Priority        |
+| --- | --------------------------------- | --------------------------------------- | ------ | ------ | --------------- |
+| 1   | `.claude/skills/<skill>/SKILL.md` | <specific edit: add/change/remove what> | <link> | T1/2/3 | high/medium/low |
+| 2   | `.claude/rules/<rule>.md`         | <create or update rule>                 | <link> | T1/2/3 | high/medium/low |
 
-| Skill    | Insight           | Source | Tier   | Suggested change       |
-| -------- | ----------------- | ------ | ------ | ---------------------- |
-| /<skill> | <what we learned> | <link> | T1/2/3 | <specific improvement> |
+For each high-priority proposal, include a diff block:
+```
+
+### Proposal 1 — <skill>/<rule>
+
+**File:** .claude/skills/<skill>/SKILL.md
+**What:** <one-line description>
+**Why:** <which finding motivates this>
+**Diff:**
+
+- old: <current line or "new file">
+
+* new: <proposed line>
+
+```
 
 ## Breaking changes / deprecations
 
@@ -160,6 +191,16 @@ Write the report to `.claude/references/blogs/scout-<YYYY-MM-DD>.md` with this s
 Links to save into `.claude/references/` for deeper `/learn` processing:
 
 - [<title>](url) — <why it's relevant>
+
+## Repos worth harvesting
+
+GitHub repos discovered that may contain adoptable skills, hooks, or patterns:
+
+| Repo URL | Description                                 | Tier     | Status      |
+| -------- | ------------------------------------------- | -------- | ----------- |
+| <url>    | <description from search snippet or README> | T1/T2/T3 | queued-repo |
+
+Run `/harvest <url>` to clone and analyze any of these repos.
 
 ## No action needed
 
@@ -198,9 +239,32 @@ After the report is written, update `.claude/references/scout-registry.md`:
 
 1. **Create the file** if it doesn't exist (with the header row from the registry phase format)
 2. **Add fetched URLs**: every URL that was fetched in this run gets status `fetched` with today's date
-3. **Add queued URLs**: every URL from the "Worth investigating" section gets status `queued` with today's date (unless already in the registry)
-4. **Promote queued → fetched**: any URL that was `queued` and got fetched this run, update its status to `fetched`
-5. **Keep existing entries**: never remove rows — the registry is append-only (users can manually set `skip` status)
+3. **Add queued URLs**: every URL from the "Worth investigating" section gets status `queued`, type `article`, with today's date (unless already in the registry)
+4. **Add queued repos**: every URL from the "Repos worth harvesting" section gets status `queued-repo`, type `repo`, with today's date (unless already in the registry)
+5. **Promote queued → fetched**: any URL that was `queued` and got fetched this run, update its status to `fetched`
+6. **Keep existing entries**: never remove rows — the registry is append-only (users can manually set `skip` status)
+
+## Write proposals
+
+After the report and registry are updated, write formal proposals directly to `.claude/reviews/learn-proposals.md` for every entry in the "Proposed changes" table:
+
+1. **Read existing proposals.** If `learn-proposals.md` exists, parse the `**Status:**` line of each proposal. Skip any item whose Status is `accepted` or `rejected`. Do not re-propose something already tracked.
+2. **Append under a dated separator.** Add new proposals below a `## Proposals — YYYY-MM-DD` heading. Do not overwrite or remove existing sections.
+3. **Use this format** for each proposal:
+
+   ```
+   ### Skill: <skill-name> (or Rule: <rule-name>)
+   **What:** <one-line description of the change>
+   **Why:** <which finding motivates this>
+   **Source:** scout-<YYYY-MM-DD> — <source URL>
+   **Source tier:** T1/T2/T3
+   **Status:** pending
+   **Diff:** <show the specific lines to change — old → new>
+   ```
+
+4. **Update the summary table** at the bottom of the file if it exists.
+
+Do NOT modify skill or rule files directly — proposals are reviewed by the user first.
 
 ## Metrics
 
@@ -231,7 +295,8 @@ Still update the registry: add all discovered URLs as `queued` (they weren't fet
 
 ## After reporting
 
-Ask: "Scout report written to `.claude/references/blogs/scout-<date>.md`. Run `/learn` to process it into context and generate skill improvement proposals. Or:
-A) Run `/learn` now to process the scout report and all "Worth investigating" URLs
-B) Implement a specific suggestion now
-C) Done — I'll review manually"
+Ask: "Scout report written to `.claude/references/blogs/scout-<date>.md`. Proposals added to `.claude/reviews/learn-proposals.md`. Options:
+A) Review and apply proposals now
+B) Run `/learn <url>` on a "Worth investigating" URL
+C) Run `/harvest <url>` on a discovered repo
+D) Done — I'll review manually"

@@ -28,7 +28,7 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## The solution
 
-19 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
+20 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
@@ -147,15 +147,17 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 
 ### Development tools
 
-| Skill                | Purpose                                                                            |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `/commit`            | Atomic conventional commits with multi-concern detection                           |
-| `/debug`             | Diagnose and fix a failing test, type error, or runtime error                      |
-| `/impact <function>` | Blast radius analysis — find all call sites, test mocks, and consumers (read-only) |
-| `/smoke [spec]`      | Write and run smoke tests against a Docker stack from a spec                       |
-| `/audit`             | Find and fix vulnerable dependencies across package managers                       |
-| `/healthcheck`       | Scan Docker container logs for errors, crashes, and warnings                       |
-| `/create-hook`       | Scaffold a Claude Code lifecycle hook                                              |
+| Skill                 | Purpose                                                                            |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `/commit`             | Atomic conventional commits with multi-concern detection                           |
+| `/debug`              | Diagnose and fix a failing test, type error, or runtime error                      |
+| `/impact <function>`  | Blast radius analysis — find all call sites, test mocks, and consumers (read-only) |
+| `/smoke [spec]`       | Write and run smoke tests against a Docker stack from a spec                       |
+| `/audit`              | Find and fix vulnerable dependencies across package managers                       |
+| `/healthcheck`        | Scan Docker container logs for errors, crashes, and warnings                       |
+| `/create-hook`        | Scaffold a Claude Code lifecycle hook                                              |
+| `/harvest <repo-url>` | Clone and analyze a repo's Claude Code setup; generate adoption proposals          |
+| `/deploy <path>`      | Deploy framework to a project via symlinks (junctions on Windows)                  |
 
 ### Knowledge & session management
 
@@ -254,15 +256,17 @@ This means the framework gets stricter, more project-aware, and more precise wit
 
 ```
 .claude/
-  skills/          ← 19 skills defining the full pipeline
+  skills/          ← 20 skills defining the full pipeline
+  agents/          ← subagent personas (code-reviewer, explorer)
+  rules/           ← auto-loaded instructions (like CLAUDE.md shards)
   context/         ← curated knowledge read by all skills
     instincts.md   ← universal rules loaded every session
     lessons.md     ← corrections inbox (graduates to CLAUDE.md)
   hooks/           ← lifecycle hooks (auto-approve, safety guards)
   docs/            ← generated documentation
-  references/      ← drop zone for blog posts and repos
+  references/      ← drop zone for blog posts and repos (+ harvested repos)
   specs/           ← generated feature specs
-  reviews/         ← review reports
+  reviews/         ← review reports + learn proposals
   input/           ← drop zone for PRDs, wireframes, sketches, requirement docs
   handoffs/        ← session state files (gitignored)
   metrics.csv      ← pipeline run log (append-only)
@@ -304,14 +308,25 @@ Processed files are moved to `processed/` so `/learn` is idempotent.
 
 ### Staying current
 
-`/scout` searches the web for new Claude Code features, community skills, and best practices, then compares them against the current framework:
+`/scout` searches the web for new Claude Code features, community skills, and best practices, then compares them against the current framework. It also discovers GitHub repos with Claude Code setups worth analyzing:
 
 ```
-/scout              # Full analysis — fetches top 5 results, writes report
+/scout              # Full analysis — fetches top 5 results, discovers repos, writes report
 /scout --quick      # Titles and links only — fast scan
 ```
 
-Scout reports go to `.claude/reviews/scout-<date>.md`. Promising links can be saved to `.claude/references/` for deeper `/learn` processing — the two skills chain naturally.
+Scout reports go to `.claude/references/blogs/scout-<date>.md`. Promising links feed into `/learn`; discovered repos feed into `/harvest`.
+
+### Harvesting repos
+
+`/harvest` clones a GitHub repo, inventories its `.claude/` setup (skills, hooks, agents, rules), and compares against the framework. Items classified as `new` or `enhancement` become adoption proposals:
+
+```
+/harvest https://github.com/someone/cool-claude-setup
+/harvest https://github.com/anthropics/skills --deep    # Line-level comparison
+```
+
+The three skills chain naturally: `/scout` discovers repos → `/harvest` analyzes them → `/learn` integrates accepted patterns into the knowledge base.
 
 ---
 

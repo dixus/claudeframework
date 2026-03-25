@@ -26,6 +26,8 @@ Drop raw material into `blogs/` or `repos/` and run `/learn` to extract insights
 | `blogs/scout-2026-03-23.md`                | /scout report (2026-03-23)                    | v2.1.78-v2.1.81 features: `--bare` flag, `maxTurns`/`disallowedTools` frontmatter, `${CLAUDE_SKILL_DIR}`, Agent Skills spec compliance gaps, plugin distribution patterns, orchestrator-worker hierarchy pattern         | ✅        |
 | `blogs/scout-2026-03-25.md`                | /scout report (2026-03-25)                    | v2.1.69-v2.1.83: `.claude/agents/` official, agent persistent memory, 12 new hook events, `initialPrompt`/`isolation: worktree`/`background` agent fields, `TaskOutput` deprecated, skill authoring best practices       | ✅        |
 
+| `blogs/scout-2026-03-25-v2.md` | /scout report (2026-03-25 v2) | Agent team practical patterns (file isolation, shared task queue, 3-5 sweet spot), teammate_idle/task_complete hooks, multi-agent observability, managed-settings.d/ | ✅ |
+
 ## Unprocessed entries
 
 _None — drop files here and run `/learn`_
