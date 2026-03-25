@@ -98,6 +98,7 @@ This section is optional. If omitted, all skills use the defaults shown below. T
 | Path          | Purpose                                          |
 | ------------- | ------------------------------------------------ |
 | `skills/`     | 17 skill definitions (the framework itself)      |
+| `agents/`     | Subagent personas (code-reviewer, explorer)      |
 | `rules/`      | Auto-loaded instructions (like CLAUDE.md shards) |
 | `context/`    | Reference knowledge read by skills on demand     |
 | `references/` | Drop zone: paste blog posts and repo files here  |
