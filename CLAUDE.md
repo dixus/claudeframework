@@ -49,14 +49,14 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 
 ### Core pipeline
 
-| Skill                 | Purpose                                                                      |
-| --------------------- | ---------------------------------------------------------------------------- |
+| Skill                 | Purpose                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit. `--dry-run` runs spec only and reports scope |
-| `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                |
-| `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis |
-| `/2_review [spec]`    | 9-lens code review with severity classification and spec completeness check  |
-| `/3_fix [review]`     | Fix issues by severity (critical → major → minor) with circuit breaker       |
-| `/test [file]`        | Run typecheck → lint → tests → build (report only, no fixes)                 |
+| `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                                                       |
+| `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis                                        |
+| `/2_review [spec]`    | 9-lens code review with severity classification and spec completeness check                                         |
+| `/3_fix [review]`     | Fix issues by severity (critical → major → minor) with circuit breaker                                              |
+| `/test [file]`        | Run typecheck → lint → tests → build (report only, no fixes)                                                        |
 
 ### Development tools
 
@@ -95,15 +95,16 @@ This section is optional. If omitted, all skills use the defaults shown below. T
 
 ## `.claude/` directory layout
 
-| Path          | Purpose                                         |
-| ------------- | ----------------------------------------------- |
-| `skills/`     | 17 skill definitions (the framework itself)     |
-| `context/`    | Curated knowledge read by all skills            |
-| `references/` | Drop zone: paste blog posts and repo files here |
-| `hooks/`      | Lifecycle hook scripts (e.g. auto-approve.js)   |
-| `docs/`       | Generated framework documentation               |
-| `specs/`      | Generated feature specs                         |
-| `reviews/`    | Review reports                                  |
-| `input/`      | Raw requirements                                |
-| `handoffs/`   | Session state files (gitignored)                |
-| `metrics.csv` | Pipeline run log (append-only)                  |
+| Path          | Purpose                                          |
+| ------------- | ------------------------------------------------ |
+| `skills/`     | 17 skill definitions (the framework itself)      |
+| `rules/`      | Auto-loaded instructions (like CLAUDE.md shards) |
+| `context/`    | Reference knowledge read by skills on demand     |
+| `references/` | Drop zone: paste blog posts and repo files here  |
+| `hooks/`      | Lifecycle hook scripts (e.g. auto-approve.js)    |
+| `docs/`       | Generated framework documentation                |
+| `specs/`      | Generated feature specs                          |
+| `reviews/`    | Review reports                                   |
+| `input/`      | Raw requirements                                 |
+| `handoffs/`   | Session state files (gitignored)                 |
+| `metrics.csv` | Pipeline run log (append-only)                   |
