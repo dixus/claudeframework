@@ -19,6 +19,7 @@ CLAUDE.local.md
 .claude/settings.local.json
 .claude/handoffs/
 .claude/input
+.claude/references/repos/
 
 # OS
 .DS_Store
