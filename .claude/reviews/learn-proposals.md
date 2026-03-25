@@ -27,6 +27,7 @@ disallowedTools: Edit, Write, Bash, NotebookEdit, MultiEdit
 
 **What:** Add `maxTurns: 15` frontmatter as a hard circuit breaker
 **Why:** v2.1.78 introduced `maxTurns` for skills/agents. The skill has a soft circuit breaker (recurring issue detection in step 5), but no hard turn limit. If the soft breaker fails (e.g., each cycle produces a different error), the skill can spin indefinitely. `maxTurns: 15` provides a guaranteed stop.
+**Status:** accepted
 **Diff:**
 
 ```
@@ -85,6 +86,7 @@ new (add note after step 3):
 
 **What:** Add `maxTurns` to fix subagent spawn for defense in depth
 **Why:** The fix loop has a soft cycle counter (max 3 review/fix cycles), but each fix subagent has no internal turn limit. A subagent could spin internally on a single fix cycle. Adding `maxTurns: 15` to the subagent spawn prevents this.
+**Status:** accepted
 **Diff:**
 
 ```
@@ -202,13 +204,87 @@ Each agent reviews independently. Synthesize findings into a single report. This
 
 ---
 
+## Proposals — 2026-03-25 (harvest: alirezarezvani-claude-skills)
+
+### Skill: debug
+
+**What:** Adopt focused-fix 5-phase evidence-based diagnosis protocol
+**Why:** Their `/focused-fix` enforces "no fixes before completing Phase 3" — evidence-required diagnosis. Our `/debug` jumps to fixing too quickly for module-level issues. The 5-phase protocol (SCOPE → TRACE → DIAGNOSE → FIX → VERIFY) with risk labeling (HIGH/MED/LOW) and 3-strike escalation prevents fix-stacking.
+**Source:** https://github.com/alirezarezvani/claude-skills (harvested 2026-03-25)
+**Source tier:** T2
+**Status:** pending
+**Adaptation:** moderate
+**Diff:** Restructure `/debug` phases:
+
+```
+old: Current debug is a simpler diagnose→fix loop
+
+new: Add explicit phases before fixing:
+Phase 1 — SCOPE: Map the feature boundary (all files, entry points)
+Phase 2 — TRACE: Map inbound + outbound dependencies
+Phase 3 — DIAGNOSE: Check code, runtime, tests, logs. Assign risk labels. Confirm root causes with evidence.
+Phase 4 — FIX: Repair in dependency order (deps → types → logic → tests). One fix at a time, test after each. 3-strike escalation.
+Phase 5 — VERIFY: Run all feature tests + consumer tests.
+Iron Law: No fixes before completing Phase 3.
+```
+
+---
+
+### Skill: audit
+
+**What:** Add gitleaks secret scanning pass before dependency audit
+**Why:** Our `/audit` checks dependencies for known vulnerabilities but doesn't scan for committed secrets. Their `/security-scan` runs `gitleaks detect --verbose --redact` as a first pass. Committed secrets are a common and high-severity issue that dependency scanning alone misses.
+**Source:** https://github.com/alirezarezvani/claude-skills (harvested 2026-03-25)
+**Source tier:** T2
+**Status:** accepted
+**Adaptation:** trivial
+**Diff:**
+
+```
+old (Phase 1 — before dependency scanning):
+(dependency scanning starts immediately)
+
+new (add Phase 0 — Secret Scan):
+Phase 0 — Secret Scan:
+1. Check if `gitleaks` is available: `which gitleaks || gitleaks version`
+2. If available, run: `gitleaks detect --verbose --redact`
+3. Report any findings as CRITICAL severity — committed secrets must be rotated
+4. If gitleaks not installed, note "gitleaks not available — secret scan skipped" and continue
+5. Proceed to dependency scanning
+```
+
+---
+
+### Skill: 2_review
+
+**What:** Add confidence tagging to review findings
+**Why:** Their communication standard requires every finding tagged with confidence: 🟢 verified (confirmed by code/tests), 🟡 medium (likely but not confirmed), 🔴 assumed (based on patterns, not evidence). This reduces noise — reviewers can prioritize verified findings and treat assumptions differently.
+**Source:** https://github.com/alirezarezvani/claude-skills (harvested 2026-03-25)
+**Source tier:** T2
+**Status:** accepted
+**Adaptation:** trivial
+**Diff:**
+
+```
+old (Step 8, issue format):
+### <severity>-<number>: <title>
+**File:** ... **Line:** ...
+
+new (add confidence tag):
+### <severity>-<number>: <title> — 🟢/🟡/🔴
+**File:** ... **Line:** ...
+**Confidence:** 🟢 verified / 🟡 likely / 🔴 assumed
+```
+
+---
+
 ## Summary (updated 2026-03-25)
 
-| Priority | Status  | Count | Proposals                                                                                                                        |
-| -------- | ------- | ----- | -------------------------------------------------------------------------------------------------------------------------------- |
-| High     | pending | 3     | `disallowedTools` on `/2_review`; `maxTurns` on `/3_fix`; `--bare` in `/ship`                                                    |
-| Medium   | pending | 5     | Worktree isolation in `/ship`; `maxTurns` on fix subagent; Plan mode note; agent team in `/ship`; parallel lenses in `/2_review` |
-| Low      | pending | 2     | Compliance score in `/scout`; `--deep` flag for `/audit`                                                                         |
+| Priority | Status  | Count | Proposals                                                                                                                                                                                                                    |
+| -------- | ------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| High     | pending | 3     | `disallowedTools` on `/2_review`; `maxTurns` on `/3_fix`; `--bare` in `/ship`                                                                                                                                                |
+| Medium   | pending | 8     | Worktree isolation in `/ship`; `maxTurns` on fix subagent; Plan mode note; agent team in `/ship`; parallel lenses in `/2_review`; focused-fix protocol for `/debug`; gitleaks in `/audit`; confidence tagging in `/2_review` |
+| Low      | pending | 2     | Compliance score in `/scout`; `--deep` flag for `/audit`                                                                                                                                                                     |
 
 ## Not proposed (considered and rejected)
 
@@ -216,3 +292,8 @@ Each agent reviews independently. Synthesize findings into a single report. This
 - **`${CLAUDE_SKILL_DIR}`**: Not applicable — no skills currently bundle per-skill resources. Revisit if skills adopt `scripts/` or `references/` directories.
 - **`license`/`metadata` fields**: Only relevant for plugin distribution. Framework is currently copied as a directory.
 - **Multi-model review (Codex/Gemini)**: Interesting pattern from community, but adds external API dependencies. Not recommended for the default framework.
+- **plugin-audit pipeline**: 8-phase pipeline deeply tied to their marketplace ecosystem (Tessl CLI, ClawHub, cross-platform sync). Not applicable to our directory-copy distribution.
+- **seo-auditor**: Domain-specific marketing tool for docs SEO. Not relevant to dev workflow framework.
+- **7 agent personas**: Business/consulting personas (content-strategist, growth-marketer, etc.) serve different purpose than our technical agents.
+- **SKILL_PIPELINE eval framework**: Impressive (evals.json, grader agents, benchmarking) but requires external tooling (Tessl CLI) and heavy infrastructure. Noted for future consideration.
+- **git/cm, git/cp, git/pr, git/clean**: Our `/commit` is more sophisticated; their git utilities don't add value.

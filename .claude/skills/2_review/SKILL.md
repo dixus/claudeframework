@@ -65,7 +65,7 @@ Steps:
 10. Write the review to `.claude/reviews/<name>-review.md` (use spec name if available, otherwise `latest-review.md`) with sections:
 
 - **Summary**: overall assessment — use the severity-based verdict rules below
-- **Issues**: numbered list, each with severity (critical / major / minor), affected file + line, and a clear description
+- **Issues**: numbered list, each with severity (critical / major / minor), affected file + line, confidence tag, and a clear description. Tag each finding: 🟢 verified (confirmed by code/tests), 🟡 likely (probable but not confirmed), 🔴 assumed (pattern-based, not evidence-backed)
 - **Suggestions**: optional improvements that are not blockers (never block a "pass" verdict)
 
 **Verdict rules:**

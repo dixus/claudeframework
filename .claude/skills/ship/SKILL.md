@@ -164,7 +164,7 @@ Select the model based on the review verdict:
 - **"needs rework"** (critical issues — architectural, security, missing requirements) → use **opus**
 - **"pass with fixes"** (major-only issues — straightforward fixes) → use **sonnet**
 
-Launch a subagent (model: **opus** or **sonnet** per above) with:
+Launch a subagent (model: **opus** or **sonnet** per above, maxTurns: 15) with:
 
 > "Read `.claude/skills/3_fix/SKILL.md` and follow all steps exactly for spec: <spec-name>. You are running as a subagent. Return: (1) list of issues fixed, (2) any issues skipped and why, (3) verify suite status, (4) any lessons written to `.claude/context/lessons.md`."
 

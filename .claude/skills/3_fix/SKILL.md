@@ -5,6 +5,7 @@ disable-model-invocation: true
 argument-hint: "[review-file]"
 model: claude-opus-4-6
 effort: high
+maxTurns: 15
 ---
 
 Fix issues found in a review report.
@@ -47,6 +48,7 @@ Steps:
     - `scope: project` — the lesson is specific to the current codebase (e.g., "HelpSection goes below panel header", "Likert zero-value bug"). These stay in `lessons.md` and are stripped by `/deploy`.
 
     When in doubt, use `scope: project` — it's safer to under-promote than to pollute the framework with project-specific rules. Also flag it in the report so the team can consider promoting it to CLAUDE.md.
+
 13. Report:
     - Which issues were fixed
     - Which (if any) were intentionally skipped and why
