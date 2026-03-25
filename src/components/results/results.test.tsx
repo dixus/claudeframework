@@ -205,6 +205,31 @@ describe("ScoreCard validation badge", () => {
   });
 });
 
+// TC1 (radar-chart): Max-score legend always renders
+describe("RadarChartPanel max-score polygon", () => {
+  it("renders 'Maximum (100)' legend when no level is provided", () => {
+    render(<RadarChartPanel dimensions={baseResult.dimensions} />);
+    expect(screen.getByText("Maximum (100)")).toBeInTheDocument();
+    expect(screen.getByText("Your scores")).toBeInTheDocument();
+  });
+
+  // TC2: Three legend entries with level
+  it("renders three legend entries when level is provided", () => {
+    render(<RadarChartPanel dimensions={baseResult.dimensions} level={1} />);
+    expect(screen.getByText("Your scores")).toBeInTheDocument();
+    expect(screen.getByText("Level 2 threshold")).toBeInTheDocument();
+    expect(screen.getByText("Maximum (100)")).toBeInTheDocument();
+  });
+
+  // TC3: Max-score Radar element rendered (smoke test)
+  it("renders without errors when max-score polygon is included", () => {
+    const { container } = render(
+      <RadarChartPanel dimensions={baseResult.dimensions} />,
+    );
+    expect(container.querySelector("#radar-chart")).toBeInTheDocument();
+  });
+});
+
 // TC4 (spec test case 4): RadarChartPanel with level=1 renders benchmark overlay label
 describe("RadarChartPanel benchmark overlay", () => {
   it("renders 'Level 2 threshold' legend text when level=1", () => {
@@ -221,7 +246,8 @@ describe("RadarChartPanel benchmark overlay", () => {
   it("does not render benchmark legend when level is not provided", () => {
     render(<RadarChartPanel dimensions={baseResult.dimensions} />);
     expect(screen.queryByText("Level 2 threshold")).not.toBeInTheDocument();
-    expect(screen.queryByText("Your scores")).not.toBeInTheDocument();
+    // "Your scores" is now always visible as part of the legend (alongside "Maximum (100)")
+    expect(screen.getByText("Your scores")).toBeInTheDocument();
   });
 });
 
