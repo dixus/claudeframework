@@ -32,7 +32,7 @@ Steps:
     c. Check that the fix didn't introduce a new problem in the same area (e.g. breaking an import, changing a signature without updating callers)
     d. If any issue is NOT actually resolved, fix it now before proceeding
     This step prevents the common pattern where `/3_fix` reports "all fixed" but the next `/2_review` finds the same issues still present.
-11. Spec-anchored check: review whether any fixes diverged from the spec's stated requirements. If they did, update the spec file to reflect the actual intent — keep spec and code in sync.
+11. Spec-anchored check: review whether any fixes diverged from the spec's stated requirements. If they did, **do not update the spec** — the spec is ground truth. Instead, document the divergence in the report (step 13) and flag it for user decision. Only the user may approve spec changes.
 12. Self-improvement gate: for each fixed issue, ask whether a rule would prevent recurrence. If yes, write it to `.claude/context/lessons.md` immediately using this format:
 
     ```

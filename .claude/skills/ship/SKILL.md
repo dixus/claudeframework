@@ -49,6 +49,7 @@ Before doing anything else:
 2. If already on a feature branch (not `main` or `master`), skip this step
 3. Otherwise run: `git checkout -b feat/<spec-name>` where `<spec-name>` is derived from $ARGUMENTS or the most recently modified file in `.claude/input/`
 4. Confirm the branch was created and note the branch name — all subsequent subagent commits will land here
+5. Create a checkpoint branch: `git branch checkpoint/<spec-name>` — this marks the pre-implementation state for safe rollback. Must happen before any subagent runs.
 
 ---
 
