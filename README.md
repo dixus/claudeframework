@@ -28,7 +28,7 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## The solution
 
-18 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
+19 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
@@ -254,7 +254,7 @@ This means the framework gets stricter, more project-aware, and more precise wit
 
 ```
 .claude/
-  skills/          ← 18 skills defining the full pipeline
+  skills/          ← 19 skills defining the full pipeline
   context/         ← curated knowledge read by all skills
     instincts.md   ← universal rules loaded every session
     lessons.md     ← corrections inbox (graduates to CLAUDE.md)

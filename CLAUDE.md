@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working in this repository.
 
 ## This repo
 
-**Claude Code Development Framework** — a reusable `.claude/` directory with 18 skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline with built-in learning.
+**Claude Code Development Framework** — a reusable `.claude/` directory with 19 skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline with built-in learning.
 
 The `src/` directory contains the **AI Maturity Score** demo app — a working example of the framework applied to a real Next.js/TypeScript project.
 
@@ -69,6 +69,7 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 | `/audit`             | Find and fix vulnerable dependencies across package managers                       |
 | `/healthcheck`       | Scan Docker container logs for errors, crashes, and warnings                       |
 | `/create-hook`       | Scaffold a Claude Code lifecycle hook                                              |
+| `/deploy <path>`     | Deploy framework to a project via symlinks (junctions on Windows)                  |
 
 ### Knowledge & session management
 
@@ -97,7 +98,7 @@ This section is optional. If omitted, all skills use the defaults shown below. T
 
 | Path          | Purpose                                          |
 | ------------- | ------------------------------------------------ |
-| `skills/`     | 17 skill definitions (the framework itself)      |
+| `skills/`     | 19 skill definitions (the framework itself)      |
 | `agents/`     | Subagent personas (code-reviewer, explorer)      |
 | `rules/`      | Auto-loaded instructions (like CLAUDE.md shards) |
 | `context/`    | Reference knowledge read by skills on demand     |
