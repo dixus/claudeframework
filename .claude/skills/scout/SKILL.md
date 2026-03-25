@@ -15,7 +15,7 @@ $ARGUMENTS is optional. Pass `--quick` to search only (no page fetching) — ret
 
 1. Read CLAUDE.md for current framework context
 2. Read all skill files in `.claude/skills/` to understand current capabilities
-3. Read `.claude/context/instincts.md` and `.claude/context/lessons.md` if they exist
+3. Read `.claude/context/lessons.md` if it exists (`.claude/rules/instincts.md` is auto-loaded by Claude Code)
 4. Find the most recent previous scout report: glob `.claude/references/blogs/scout-*.md` and read the latest one. This is used in the diff phase later. If none exists, skip diffing.
 
 ## Release notes phase (always runs first)
