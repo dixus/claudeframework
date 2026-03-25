@@ -53,6 +53,23 @@ For each finding:
 
 Include findings in the report under a dedicated "Official Anthropic skills repo analysis" section.
 
+## Registry phase (runs before search)
+
+Read `.claude/references/scout-registry.md` if it exists. This file tracks every URL the scout has already fetched. Format:
+
+```markdown
+# Scout Registry
+
+| URL                       | Title      | Status  | Date       |
+| ------------------------- | ---------- | ------- | ---------- |
+| https://example.com/post  | Some Post  | fetched | 2026-03-20 |
+| https://example.com/other | Other Post | queued  | 2026-03-20 |
+```
+
+Status values: `fetched` (already read and analyzed), `queued` (flagged for next run), `skip` (manually marked irrelevant).
+
+Build a set of known URLs from this file. These are used in the search and fetch phases to avoid re-reading content.
+
 ## Search phase
 
 Run these web searches (use WebSearch):
@@ -64,13 +81,18 @@ d. `"CLAUDE.md" patterns OR framework`
 
 For each search, collect the top 3 results (title, URL, snippet).
 
-Deduplicate by URL. Discard results older than 60 days if the date is visible in the snippet.
+Deduplicate by URL. Discard results older than 60 days if the date is visible in the snippet. **Remove any URL already in the registry with status `fetched` or `skip`.**
 
 ## Fetch phase
 
 **If `--quick` was passed:** skip this phase entirely. Go straight to the Quick report.
 
-For the top 5 most relevant results (prioritize: official Anthropic docs > GitHub repos with skills > blog posts):
+Collect fetch candidates from two sources:
+
+1. **Queued URLs** from the registry (status = `queued`) — these were flagged by a previous run
+2. **New URLs** from the search phase that are not in the registry
+
+Prioritize: queued items first, then new items. From the combined list, take the top 5 (prioritize: official Anthropic docs > GitHub repos with skills > blog posts):
 
 a. Fetch the page content with WebFetch
 b. Extract only actionable information: new Claude Code features or CLI flags, new skill frontmatter fields or hook events, workflow patterns this framework doesn't use, breaking changes that affect current skills, community skills worth evaluating
@@ -150,6 +172,16 @@ If a previous scout report was loaded in step 4, compare the new report against 
 
 This prevents report fatigue — the user can focus on deltas instead of re-reading the full report.
 
+## Update registry
+
+After the report is written, update `.claude/references/scout-registry.md`:
+
+1. **Create the file** if it doesn't exist (with the header row from the registry phase format)
+2. **Add fetched URLs**: every URL that was fetched in this run gets status `fetched` with today's date
+3. **Add queued URLs**: every URL from the "Worth investigating" section gets status `queued` with today's date (unless already in the registry)
+4. **Promote queued → fetched**: any URL that was `queued` and got fetched this run, update its status to `fetched`
+5. **Keep existing entries**: never remove rows — the registry is append-only (users can manually set `skip` status)
+
 ## Metrics
 
 Append a row to `.claude/metrics.csv` (create if missing, with header row):
@@ -174,6 +206,8 @@ Skip the full report format. Instead, print a concise list:
 
 Run `/scout` (without --quick) to fetch and analyze the top results.
 ```
+
+Still update the registry: add all discovered URLs as `queued` (they weren't fetched, so they'll be prioritized next full run).
 
 ## After reporting
 
