@@ -17,6 +17,7 @@ $ARGUMENTS is optional. Pass `--quick` to search only (no page fetching) — ret
 2. Read all skill files in `.claude/skills/` to understand current capabilities
 3. Read `.claude/context/lessons.md` if it exists (`.claude/rules/instincts.md` is auto-loaded by Claude Code)
 4. Find the most recent previous scout report: glob `.claude/references/blogs/scout-*.md` and read the latest one. This is used in the diff phase later. If none exists, skip diffing.
+5. **Read metrics trend.** If `.claude/metrics.csv` exists and contains 2+ rows where `skill=scout`, compute the trend direction for `findings_count` and `action_items_count` across the last 3 scout runs (increasing / decreasing / stable). Store as a one-line summary for the report header. If fewer than 2 scout rows exist, note "First/second run — no trend data."
 
 ## Release notes phase (always runs first)
 
@@ -34,7 +35,9 @@ Extract all entries from the last 60 days. For each entry, note:
 - Breaking changes or deprecations
 - New tool capabilities
 
-Compare each entry against the current framework: does it affect any of our 18 skills, hooks, or settings? Flag anything that does.
+Compare each entry against the current framework: does it affect any of our skills, hooks, or settings? Flag anything that does.
+
+**Staleness check:** For each flagged entry, check if the affected feature is already documented in `.claude/context/claude-code-knowledge.md`. If the release note contradicts or supersedes documented content, mark the Action needed column as `**Context update needed** — section: "<section heading>"` (include the specific `## Added YYYY-MM-DD` heading that needs updating). This tells `/learn` to update in-place rather than append.
 
 ## Official skills repo phase (always runs)
 
@@ -70,18 +73,33 @@ Status values: `fetched` (already read and analyzed), `queued` (flagged for next
 
 Build a set of known URLs from this file. These are used in the search and fetch phases to avoid re-reading content.
 
+## Adaptive query phase (runs before search)
+
+Read `.claude/reviews/learn-proposals.md` if it exists. Identify proposals with Status `pending` or `deferred`. From the top 3 by priority, generate 1–2 targeted search queries that could find supporting evidence, alternatives, or updated information. Example: if a pending proposal suggests adding worktree isolation to `/ship`, generate `"Claude Code" worktree isolation workflow 2026`.
+
+Cap adaptive queries at 2. If no proposals file exists or no open proposals remain, skip this phase.
+
 ## Search phase
 
-Run these web searches (use WebSearch):
+Run the 4 standard searches below, plus any adaptive queries from the previous phase (max 6 total). Use WebSearch:
 
 a. `"Claude Code" best practices 2026`
 b. `"Claude Code" skills site:github.com`
 c. `"Claude Code" hooks OR subagents OR "agent teams" new`
 d. `"CLAUDE.md" patterns OR framework`
+e–f. (adaptive queries, if generated above)
 
 For each search, collect the top 3 results (title, URL, snippet).
 
 Deduplicate by URL. Discard results older than 60 days if the date is visible in the snippet. **Remove any URL already in the registry with status `fetched` or `skip`.**
+
+**Classify each result by source tier:**
+
+- **T1** — official Anthropic sources: `anthropic.com`, `code.claude.com`, `agentskills.io`, `github.com/anthropics`
+- **T2** — known community experts, GitHub repos with 100+ stars, established tech blogs (e.g. Builder.io, Substack engineering blogs)
+- **T3** — general blog posts, unknown authors, unverified sources
+
+Include the tier in all report tables that reference external sources.
 
 ## Fetch phase
 
@@ -92,7 +110,7 @@ Collect fetch candidates from two sources:
 1. **Queued URLs** from the registry (status = `queued`) — these were flagged by a previous run
 2. **New URLs** from the search phase that are not in the registry
 
-Prioritize: queued items first, then new items. From the combined list, take the top 5 (prioritize: official Anthropic docs > GitHub repos with skills > blog posts):
+Prioritize: queued items first, then new items. From the combined list, take the top 5 (prioritize: T1 > T2 > T3; within each tier: docs > GitHub repos > blog posts):
 
 a. Fetch the page content with WebFetch
 b. Extract only actionable information: new Claude Code features or CLI flags, new skill frontmatter fields or hook events, workflow patterns this framework doesn't use, breaking changes that affect current skills, community skills worth evaluating
@@ -104,6 +122,8 @@ Write the report to `.claude/references/blogs/scout-<YYYY-MM-DD>.md` with this s
 
 ```markdown
 # Scout Report — <YYYY-MM-DD>
+
+**Trend:** <trend summary from step 5, e.g. "Findings ↓ (66→48), action items ↓ (34→18) over last 3 runs" or "First run — no trend data">
 
 ## Claude Code release notes (last 60 days)
 
@@ -119,15 +139,15 @@ Write the report to `.claude/references/blogs/scout-<YYYY-MM-DD>.md` with this s
 
 ## New features we're not using
 
-| Feature   | Source | Impact          | Recommendation |
-| --------- | ------ | --------------- | -------------- |
-| <feature> | <link> | high/medium/low | <what to do>   |
+| Feature   | Source | Tier   | Impact          | Recommendation |
+| --------- | ------ | ------ | --------------- | -------------- |
+| <feature> | <link> | T1/2/3 | high/medium/low | <what to do>   |
 
 ## Skills that could be improved
 
-| Skill    | Insight           | Source | Suggested change       |
-| -------- | ----------------- | ------ | ---------------------- |
-| /<skill> | <what we learned> | <link> | <specific improvement> |
+| Skill    | Insight           | Source | Tier   | Suggested change       |
+| -------- | ----------------- | ------ | ------ | ---------------------- |
+| /<skill> | <what we learned> | <link> | T1/2/3 | <specific improvement> |
 
 ## Breaking changes / deprecations
 
