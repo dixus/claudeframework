@@ -24,6 +24,7 @@ Drop raw material into `blogs/` or `repos/` and run `/learn` to extract insights
 | `blogs/best_practises.txt`                 | Habib Mrad / Medium (Dec 2025)                | Agentic TDD loop (red→green), visual iteration with screenshots, autonomy isolation (blast radius), headless mode as CI/triage infrastructure                                                                            | ✅        |
 | `repos/awesome-claude-code-main/`          | hesreallyhim/awesome-claude-code (2026-03-02) | Hook implementation standards (stdin/stdout, event types, parallel execution); multi-role PR review (6 lenses); PRP concept; commit quality pattern with conventional commits + emoji; design review with Playwright MCP | ✅        |
 | `blogs/scout-2026-03-23.md`                | /scout report (2026-03-23)                    | v2.1.78-v2.1.81 features: `--bare` flag, `maxTurns`/`disallowedTools` frontmatter, `${CLAUDE_SKILL_DIR}`, Agent Skills spec compliance gaps, plugin distribution patterns, orchestrator-worker hierarchy pattern         | ✅        |
+| `blogs/scout-2026-03-25.md`                | /scout report (2026-03-25)                    | v2.1.69-v2.1.83: `.claude/agents/` official, agent persistent memory, 12 new hook events, `initialPrompt`/`isolation: worktree`/`background` agent fields, `TaskOutput` deprecated, skill authoring best practices       | ✅        |
 
 ## Unprocessed entries
 

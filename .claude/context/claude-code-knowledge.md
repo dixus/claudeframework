@@ -353,3 +353,97 @@ When using Agent Teams, pre-approve all expected permissions before spawning tea
 ### `/btw` for side questions
 
 Official best practices recommend `/btw` for side questions that shouldn't enter context history. The question is answered but doesn't consume permanent context window space. Document as a workflow tip.
+
+## Added 2026-03-25
+
+### `.claude/agents/` directory (official pattern)
+
+Subagent definitions are now a first-class `.claude/` feature. Each agent is a markdown file with YAML frontmatter:
+
+```markdown
+---
+name: code-reviewer
+description: Reviews code for quality and best practices
+tools: Read, Grep, Glob, Bash
+model: sonnet
+memory: project
+---
+
+System prompt here.
+```
+
+**Key frontmatter fields:**
+
+| Field             | Purpose                                                                 |
+| ----------------- | ----------------------------------------------------------------------- |
+| `name`            | Unique identifier (lowercase-with-hyphens)                              |
+| `description`     | When Claude should delegate (include "proactively" for auto-delegation) |
+| `tools`           | Allowlist of tools (inherits all if omitted)                            |
+| `disallowedTools` | Denylist (applied before `tools`)                                       |
+| `model`           | `sonnet`, `opus`, `haiku`, full ID, or `inherit`                        |
+| `permissionMode`  | `default`, `acceptEdits`, `dontAsk`, `bypassPermissions`, `plan`        |
+| `maxTurns`        | Circuit breaker for agentic turns                                       |
+| `skills`          | Preload skill content into agent context                                |
+| `mcpServers`      | Scoped MCP servers (inline definitions or references)                   |
+| `hooks`           | Lifecycle hooks scoped to this agent only                               |
+| `memory`          | `user`, `project`, or `local` — persistent cross-session learning       |
+| `background`      | `true` to always run as background task                                 |
+| `effort`          | Override effort level (`low`/`medium`/`high`)                           |
+| `isolation`       | `worktree` for isolated git worktree                                    |
+| `initialPrompt`   | Auto-submit first turn (v2.1.83+)                                       |
+
+**Scope priority:** CLI `--agents` (1) > `.claude/agents/` (2) > `~/.claude/agents/` (3) > plugins (4).
+
+**Agent persistent memory:** When `memory` is set, agent gets a dedicated directory (`~/.claude/agent-memory/<name>/` for user, `.claude/agent-memory/<name>/` for project). System prompt auto-includes instructions for reading/writing memory. The first 200 lines of `MEMORY.md` in that directory are injected into context.
+
+**`skills` field:** Injects full skill content into agent's context at startup. Agents don't inherit skills from parent — must list explicitly. This is the inverse of `context: fork` in a skill.
+
+**Subagents cannot spawn other subagents.** Chain from the main conversation instead.
+
+### New hook events (v2.1.50–v2.1.83)
+
+Events added since the previous knowledge update:
+
+| Event                | When                               | Matcher input   |
+| -------------------- | ---------------------------------- | --------------- |
+| `CwdChanged`         | Working directory changed          | —               |
+| `FileChanged`        | File modified                      | —               |
+| `StopFailure`        | Turn ends due to API error         | —               |
+| `PostCompact`        | After context compaction           | —               |
+| `InstructionsLoaded` | CLAUDE.md/rules loaded             | —               |
+| `ConfigChange`       | Config file changes during session | —               |
+| `WorktreeCreate`     | Git worktree created               | —               |
+| `WorktreeRemove`     | Git worktree removed               | —               |
+| `Elicitation`        | MCP input request                  | —               |
+| `ElicitationResult`  | Response to MCP elicitation        | —               |
+| `SubagentStart`      | Subagent begins execution          | Agent type name |
+| `SubagentStop`       | Subagent completes                 | Agent type name |
+
+Also: `agent_id` and `agent_type` are now available in hook input JSON for tracking subagents.
+
+**HTTP hooks** (v2.1.63): Alternative to shell hooks — POST JSON to a URL and receive JSON. Useful for team notification webhooks.
+
+### `TaskOutput` deprecated (v2.1.83)
+
+Use `Read` on the background task output file path instead. Grep skills for any `TaskOutput` references.
+
+### Effort levels simplified (v2.1.72)
+
+Only `low`, `medium`, `high` — `max` removed. The `effort` frontmatter field can be set on any skill or command.
+
+### Skill authoring best practices (official Anthropic guide)
+
+Key recommendations from platform.claude.com skill authoring docs:
+
+- **SKILL.md body under 500 lines** — move detailed content to referenced files
+- **Description field is critical** — Claude uses it to select from 100+ available skills. Write in third person. Include both what and when.
+- **Progressive disclosure**: metadata ~100 tokens (loaded always) → instructions <5000 tokens (loaded when activated) → resources (loaded on demand)
+- **Keep file references one level deep** — avoid nested reference chains (SKILL.md → file.md → detail.md). Claude may partially read deeply nested files.
+- **Evaluation-driven development**: create evaluations BEFORE writing extensive docs. Run Claude without the skill, document failures, then write minimal content to address gaps.
+- **Iterative development with Claude**: use Claude A to write/refine the skill, Claude B to test it, observe B's behavior, bring insights back to A.
+- **Avoid time-sensitive information** — use "old patterns" collapsible sections instead of date-conditional logic.
+- **Use consistent terminology** — pick one term and use it everywhere (e.g., always "API endpoint", never mix with "route" or "path").
+
+### `${CLAUDE_SKILL_DIR}` variable (v2.1.69)
+
+Skills can reference co-located files in their own directory using this variable. Enables portable file references without hardcoding paths. Useful for skills with bundled scripts, templates, or reference docs.
