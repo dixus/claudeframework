@@ -240,6 +240,12 @@ D) Run `/smoke <spec-name>` first to validate against Docker"
 
 Execute the chosen option. If A: `git checkout main && git merge feat/<spec-name> && git push`. If push fails, report to the user — do not force-push.
 
+### Post-merge cleanup (runs after A or after a PR is merged)
+
+1. **Delete feature branches**: `git branch -d feat/<spec-name>` and `git branch -d checkpoint/<spec-name>` (if it exists). Do not delete if the merge hasn't happened yet.
+2. **Mark spec as completed**: prepend `status: completed` to the spec's YAML frontmatter (or add a `## Status: completed` line at the top if the spec has no frontmatter). This makes it easy to distinguish shipped specs from in-progress ones.
+3. **Clean up phase manifest**: if `.claude/specs/<name>-phases.md` exists, mark all phases as `done` (they should already be, but this is a consistency safeguard).
+
 ---
 
 ## Final report (orchestrator)
