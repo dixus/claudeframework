@@ -147,7 +147,7 @@ Maintain a cycle counter starting at 0.
 
 ### Review subagent
 
-Launch a subagent (model: **opus**, isolation: **worktree**) with:
+Launch a subagent (model: **opus**) with:
 
 > "Read `.claude/skills/2_review/SKILL.md` and follow all steps exactly for spec: <spec-name>. You are running as a subagent. Return: (1) the overall assessment (pass / pass with fixes / needs rework), (2) the full numbered issue list with severities."
 
