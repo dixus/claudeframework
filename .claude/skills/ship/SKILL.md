@@ -251,7 +251,7 @@ B) Open a PR (show me the GitHub PR URL)
 C) Leave on branch — I'll handle it manually
 D) Run `/smoke <spec-name>` first to validate against Docker"
 
-Execute the chosen option. If A: `git checkout main && git merge feat/<spec-name> && git push`. If push fails, report to the user — do not force-push.
+Execute the chosen option. If A: `git checkout main && git merge --no-ff feat/<spec-name> && git push`. If push fails, report to the user — do not force-push.
 
 ### Post-merge cleanup (runs after A or after a PR is merged)
 

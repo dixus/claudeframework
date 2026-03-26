@@ -16,12 +16,11 @@ Replace shared framework directories in a target project with junctions pointing
 
 **Shared (symlinked)** — maintained in Framework, identical across all projects:
 
-| Dir         | Contents                             |
-| ----------- | ------------------------------------ |
-| `skills/`   | All 18+ skill definitions            |
-| `agents/`   | Subagent personas                    |
-| `rules/`    | Auto-loaded instructions (instincts) |
-| `commands/` | Custom slash commands                |
+| Dir       | Contents                             |
+| --------- | ------------------------------------ |
+| `skills/` | All 21 skill definitions             |
+| `agents/` | Subagent personas                    |
+| `rules/`  | Auto-loaded instructions (instincts) |
 
 **Local (never symlinked)** — project-specific, stay as regular directories:
 
@@ -51,7 +50,7 @@ Replace shared framework directories in a target project with junctions pointing
 
 3. **Detect framework root.** The framework repo root is the working directory where this skill is invoked. Store as `$FRAMEWORK_ROOT`. Verify `$FRAMEWORK_ROOT/.claude/skills/` exists.
 
-4. **For each shared directory** (`skills`, `agents`, `rules`, `commands`):
+4. **For each shared directory** (`skills`, `agents`, `rules`):
 
    a. Check if `<target>/.claude/<dir>` is already a symlink/junction pointing to the correct source:
    - On Windows: `cmd.exe //c "dir <target>\.claude\" | grep <dir>` and look for `<JUNCTION>` marker

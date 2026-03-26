@@ -5,7 +5,7 @@ disable-model-invocation: true
 argument-hint: "[spec-name]"
 model: claude-opus-4-6
 effort: high
-allowed-tools: Read, Glob, Grep, WebFetch, WebSearch, Agent
+allowed-tools: Read, Write, Glob, Grep, WebFetch, WebSearch, Agent
 ---
 
 Review the current implementation changes and produce a written review report.

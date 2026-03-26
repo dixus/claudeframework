@@ -17,7 +17,7 @@ Steps:
 4. Read all files listed under "Affected files", "New files", and "Patterns to mirror" in the spec — the "Patterns to mirror" files are the primary convention references; follow their structure, naming, and style
    4b. Context budget check: count the total files from steps 3 and 4. If the total exceeds 15, read "Patterns to mirror" files in full and only read the relevant sections of remaining files. Note which files were fully read vs. partially read.
 5. Decomposition gate: count the total files listed under "Affected files" + "New files". If the total exceeds `complexity_gate_max_files` from CLAUDE.md (default: 10), or if the spec has a ⚠ Complexity flag, pause and ask the user whether to proceed as a single session or break the spec into smaller sub-specs first. Continue only after confirmation.
-6. Create a safety checkpoint: if the project uses git, run `git checkout -b checkpoint/<spec-name>` from the current branch, then immediately switch back with `git checkout -`. This creates a named rollback point that survives crashes and avoids stash collisions. Skip if the working tree is already clean (no staged or unstaged changes).
+6. Create a safety checkpoint: if the project uses git and `checkpoint/<spec-name>` does not already exist (e.g., already created by `/ship`), run `git checkout -b checkpoint/<spec-name>` from the current branch, then immediately switch back with `git checkout -`. This creates a named rollback point that survives crashes and avoids stash collisions. Skip if the checkpoint branch already exists or the working tree is already clean (no staged or unstaged changes).
 7. Enter plan mode: propose a step-by-step implementation plan and wait for approval before writing any code
 8. **Phase management** — check whether this is a phased implementation:
    a. If `.claude/specs/<name>-phases.md` already exists (resuming a later phase): read it, find the next `pending` phase, set its status to `in-progress`, and implement only that phase's scope. If all phases are `done`, report completion and stop.
@@ -93,7 +93,7 @@ Steps:
     - **CLAUDE.md compliance**: any rule violations? (Literal types, pagination, error format, etc.)
       c. Fix any critical/major issues found, then re-run verify (step 12) to confirm nothing broke
       d. Do NOT aim for perfection — ignore minor style nits. The goal is zero critical/major findings in `/2_review`.
-16. Quality pass (optional): run `/simplify` — a native Claude Code built-in (not a framework skill) — to catch code smells, dead code, and CLAUDE.md violations before handing off to `/2_review`. Skip if `/simplify` is unavailable or the change is fewer than 5 lines.
+16. Quality pass (optional): run `/simplify` to catch code smells, dead code, and CLAUDE.md violations before handing off to `/2_review`. Skip if the change is fewer than 5 lines.
 17. If the implementation touches multiple distinct concerns (e.g. engine logic + UI component + tests), suggest splitting into atomic commits: one commit per concern, using conventional commit format (`✨ feat:`, `✅ test:`, etc.)
 18. Report which files were changed and summarize what was implemented.
 

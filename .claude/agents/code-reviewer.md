@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 description: Expert code reviewer. Use PROACTIVELY when reviewing PRs, checking for bugs, or validating implementations before merging.
-tools: Read, Grep, Glob, Agent
+tools: Read, Grep, Glob, Agent, Write, Edit
 model: sonnet
 memory: project
 ---
