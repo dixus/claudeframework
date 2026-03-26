@@ -9,3 +9,4 @@ date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_m
 2026-03-22,ux-polish,ui,18,2,5,1,2,localStorage;scope-creep;hydration,5,shipped
 2026-03-23,benchmark-context,ui,7,1,1,0,1,missing-tests,4,shipped
 2026-03-23,what-if-explorer,ui,5,1,2,0,2,a11y;stale-state,4,shipped
+2026-03-25,radar-chart,ui,2,0,0,0,0,,2,shipped
