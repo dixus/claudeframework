@@ -11,10 +11,10 @@
  * it back as additionalContext so Claude stays oriented.
  *
  * Checks (in order):
- *   1. Most recent handoff file (.claude/handoffs/)
- *   2. Most recent review file (.claude/reviews/)
- *   3. Most recent spec file (.claude/specs/)
- *   4. Current git branch and status
+ *   1. Current git branch and status
+ *   2. Most recent spec file (.claude/specs/)
+ *   3. Most recent review file (.claude/reviews/)
+ *   4. Most recent handoff file (.claude/handoffs/) — capped at 60 lines
  */
 
 const { execSync } = require("child_process");
@@ -22,6 +22,7 @@ const fs = require("fs");
 const path = require("path");
 
 const PROJECT_DIR = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const HANDOFF_MAX_LINES = 60;
 
 function getMostRecentFile(dir, ext) {
   const fullDir = path.join(PROJECT_DIR, dir);
@@ -87,7 +88,6 @@ async function main() {
     context.push(`## Active spec: ${spec.name}`);
     try {
       const content = fs.readFileSync(spec.path, "utf8");
-      // Extract just the goal and requirements (first ~30 lines)
       const lines = content.split("\n").slice(0, 30);
       context.push(lines.join("\n"));
     } catch {
@@ -101,7 +101,6 @@ async function main() {
     context.push(`## Active review: ${review.name}`);
     try {
       const content = fs.readFileSync(review.path, "utf8");
-      // Extract verdict and issue summary (first ~20 lines)
       const lines = content.split("\n").slice(0, 20);
       context.push(lines.join("\n"));
     } catch {
@@ -109,13 +108,19 @@ async function main() {
     }
   }
 
-  // Most recent handoff
+  // Most recent handoff — capped to prevent flooding context
   const handoff = getMostRecentFile(".claude/handoffs", ".md");
   if (handoff) {
     context.push(`## Last handoff: ${handoff.name}`);
     try {
       const content = fs.readFileSync(handoff.path, "utf8");
-      context.push(content);
+      const lines = content.split("\n");
+      if (lines.length > HANDOFF_MAX_LINES) {
+        context.push(lines.slice(0, HANDOFF_MAX_LINES).join("\n"));
+        context.push(`(truncated — full handoff at ${handoff.path})`);
+      } else {
+        context.push(content);
+      }
     } catch {
       context.push(`(could not read ${handoff.name})`);
     }

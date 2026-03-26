@@ -7,9 +7,12 @@
  * Scope:   project (.claude/settings.json)
  *
  * Blocks edits to files matching secret/credential patterns:
- *   .env, .env.*, credentials.*, *.pem, *.key, *.p12, *.pfx,
- *   *.keystore, id_rsa, id_ed25519, secrets.*, .npmrc (with auth),
- *   .pypirc, service-account*.json
+ *   .env, .env.*, credentials.*, *.pem, *.p12, *.pfx,
+ *   *.keystore, id_rsa, id_ed25519, secrets.*, .npmrc, .pypirc,
+ *   service-account*.json
+ *
+ * Note: .key was removed — too broad (matches i18n files, registry keys, etc.).
+ * Private keys are covered by .pem and the ssh key patterns.
  *
  * Exit code 2 = block the tool call entirely.
  */
@@ -21,12 +24,12 @@ const BLOCKED_PATTERNS = [
   /^\.env\..+$/,
   /^credentials\..+$/,
   /\.pem$/,
-  /\.key$/,
   /\.p12$/,
   /\.pfx$/,
   /\.keystore$/,
   /^id_rsa$/,
   /^id_ed25519$/,
+  /^id_ecdsa$/,
   /^secrets\..+$/,
   /^\.npmrc$/,
   /^\.pypirc$/,
@@ -64,10 +67,11 @@ async function main() {
 
   for (const pattern of BLOCKED_PATTERNS) {
     if (pattern.test(fileName)) {
-      // Exit code 2 blocks the tool call
-      process.stderr.write(
-        `BLOCKED: write to "${fileName}" denied — matches secret/credential pattern (${pattern}). ` +
-          `If intentional, temporarily disable this hook in .claude/settings.json.`,
+      process.stdout.write(
+        JSON.stringify({
+          continue: false,
+          additionalContext: `Blocked write to "${fileName}" — matches credential pattern (${pattern}). Disable in .claude/settings.json if intentional.`,
+        }),
       );
       process.exit(2);
     }
