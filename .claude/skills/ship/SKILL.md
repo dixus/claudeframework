@@ -207,21 +207,14 @@ For each work unit (max 3), launch a subagent with `isolation: worktree` and `ru
 
 Print: `⏳ Spawned <N> parallel implement agents in isolated worktrees`
 
-### Step 3P-d — Wait and collect results (orchestrator)
+### Step 3P-d — Collect results with active monitoring (orchestrator)
 
-Wait for background agents to complete. **Do not wait passively** — agent notifications can be delayed.
+**Do not wait passively for agent notifications** — they can arrive minutes after files are ready. Use active monitoring:
 
-**Active monitoring:** While waiting for agents that haven't returned yet:
-1. After 90 seconds of silence, check each pending worktree: `ls -la <worktree-path>/src/` to see if expected files exist
-2. Print a progress update: `⏳ Unit <N> (<domain>): <N>/<total> expected files written, still running...`
-3. If ALL expected EXCLUSIVE files for an agent exist in its worktree AND 3+ minutes have elapsed since spawn, **proceed to Step 3P-e immediately** — copy the files without waiting for the agent's return message. The post-merge verify (3P-g) will catch any issues. Print: `⚡ Unit <N> (<domain>): all files present, proceeding without waiting for agent return`
-
-For agents that DO return normally, read their summary and record:
-- Files changed (verify they match the EXCLUSIVE list — flag any scope violations)
-- Verify suite status
-- Blockers reported
-
-Print status as each agent completes: `✓ Unit <N> (<domain>) complete — <files_changed> files, verify: <pass/fail>`
+1. As each agent notification arrives, record its summary. Print: `✓ Unit <N> (<domain>) complete — <files_changed> files, verify: <pass/fail>`
+2. After **90 seconds** with unreturned agents, check each pending worktree: `ls` the expected EXCLUSIVE files to see which exist
+3. Print a progress update: `⏳ Unit <N> (<domain>): <N>/<total> expected files written, still running...`
+4. If ALL expected EXCLUSIVE files for an agent exist in its worktree, **proceed to Step 3P-e immediately** — copy the files without waiting for the agent's return message. The post-merge verify (3P-g) will catch any issues. Print: `⚡ Unit <N> (<domain>): all files present, proceeding to merge`
 
 **Failure handling:**
 - If ANY agent reports a scope violation (modified a file outside its EXCLUSIVE list), flag it but continue — the integration step will handle conflicts
@@ -247,10 +240,12 @@ Print after each unit: `✓ Merged unit <N> (<domain>) — <N> files copied`
 
 Parallel agents work in isolation, so their outputs will have predictable integration issues. Fix these **before** running post-merge verify:
 
-1. **Duplicate types**: Search for any `PARALLEL_` prefixed types and replace them with imports from the real source. Also search for locally-defined interfaces that duplicate types in shared files (e.g., a component defining `BenchmarkComparison` locally when it exists in `types.ts`) — replace with imports
-2. **Stubs**: If any agent created a stub file that another agent implemented fully, delete the stub (the real implementation was already copied in Step 3P-e)
-3. **Type assertions**: Search for `as {` type assertions that bridge missing type fields — if the real type now includes the field, remove the assertion and use direct access
-4. **Re-exports**: If a component was exporting a locally-defined type that consumers import, update the export to re-export from the canonical source
+1. **`PARALLEL_` types and inline functions**: Search all copied files for `PARALLEL_` prefixed types. Replace with imports from the real source. Also remove any inline function duplicates that duplicate functions from the real scoring module — replace with imports
+2. **Duplicate types without prefix**: Search for locally-defined interfaces that duplicate types in shared files (e.g., a component defining `BenchmarkComparison` locally when it exists in `types.ts`) — replace with imports and re-export if needed
+3. **Stubs**: If any agent created a stub file that another agent implemented fully, delete the stub (the real implementation was already copied in Step 3P-e)
+4. **Type assertions**: Search for `as {` type assertions that bridge missing type fields — if the real type now includes the field, remove the assertion and use direct access
+5. **Cross-unit API contracts**: If one unit produces data (API route) and another consumes it (UI component), verify the response field names match the consumer's expected type. Common mismatch: DB column names (e.g., `resultSnapshot`) vs TypeScript interface names (e.g., `result`). Fix in the producer (API response mapping), not the consumer
+6. **Missing props**: If a unit added a required prop to a component's interface but the parent file is in a different unit, the parent may not pass it. Check for missing prop errors in typecheck output and fix them
 
 Run typecheck after resolving seams to confirm the fixes compile.
 
