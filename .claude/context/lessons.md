@@ -179,6 +179,14 @@ Entries without a scope tag are treated as `project` (legacy default).
 
 ---
 
+## 2026-03-30 — Accessibility requires data the component type doesn't carry
+
+**What went wrong**: The `BenchmarkComparisonPanel` spec required `aria-label` on dimension bars containing "user score and cohort mean," but `BenchmarkComparison` only stored `dimensionDeltas`. The component could not construct the required accessible description without additional data, which was only discovered during review.
+
+**Rule**: When defining a result/comparison DTO (e.g., `BenchmarkComparison`), include all values that the accessibility spec requires to be surfaced — not just what the visual rendering needs. Deltas alone are insufficient when `aria-label` must state absolute user and reference values. If a spec has an Accessibility section, cross-check every `aria-label` requirement against the DTO fields before finalizing the type definition.
+
+---
+
 ## 2026-03-22 — Zustand persist middleware re-writes state after reset, defeating localStorage cleanup
 
 **scope:** project
