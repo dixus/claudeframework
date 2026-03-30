@@ -2,7 +2,7 @@
 name: ship
 description: Orchestrate the full spec → implement → review → fix → commit pipeline. Use when shipping a complete feature end-to-end.
 disable-model-invocation: true
-argument-hint: <feature description> [--dry-run] [--parallel]
+argument-hint: <feature description> [--dry-run]
 model: claude-opus-4-6
 effort: high
 ---
@@ -10,8 +10,6 @@ effort: high
 Orchestrate the full spec-to-commit pipeline for the feature described in $ARGUMENTS or in `.claude/input/`.
 
 **`--dry-run` mode:** If $ARGUMENTS contains `--dry-run`, run only Steps 1–2 (questions + spec), then print a scope report and stop. No branch, no implementation, no commits. Use this to preview complexity and scope before committing to a full pipeline run.
-
-**`--parallel` mode:** If $ARGUMENTS contains `--parallel`, replace Step 3 (sequential implement) with Step 3P (parallel implement). The orchestrator decomposes the spec into independent work units based on file domains, validates that no two units write the same file, spawns up to 3 parallel subagents in isolated git worktrees, then merges their results back. If decomposition fails or merge conflicts are unresolvable, falls back to sequential Step 3 automatically. All other steps (spec, review, fix, commit) remain unchanged.
 
 **Architecture:** The main session is a thin orchestrator only — it never reads code files or accumulates implementation context. Each phase runs in a dedicated subagent with a clean context. The spec file, review file, and git diff are the handoff mechanism between phases.
 
@@ -30,17 +28,7 @@ Main session (orchestrator — reads summaries only)
   ├── Subagent A: spec          [opus]  →  writes .claude/specs/<name>.md (informed by patterns)
   ├── Step 2b: decision review          →  reads spec "Decisions made by Claude" → user approval
   │
-  ├── [sequential] Step 3: implement    →  single subagent [opus], returns summary
-  │   — OR —
-  ├── [--parallel] Step 3P: parallel implement
-  │     ├── 3P-a: decompose spec into work units (by file domain)
-  │     ├── 3P-b: validate file claims (no EXCLUSIVE overlaps)
-  │     ├── 3P-c: foundation unit first (foreground), then remaining units (background)
-  │     ├── 3P-d: collect results with active file monitoring
-  │     ├── 3P-e: copy files from worktrees → feature branch
-  │     ├── 3P-f: integration seam subagent (deterministic, not manual)
-  │     └── 3P-g: post-merge verify (typecheck → lint → tests → build)
-  │
+  ├── Subagent B: implement     [opus]  →  single subagent, returns summary
   ├── Subagent C: review        [opus]  →  writes .claude/reviews/<name>-review.md
   ├── Subagent D: fix  [opus if rework, sonnet if fixes]→  loop back to C
   ├── Step 4b: lesson graduation        →  graduates mature lessons → CLAUDE.md
@@ -141,9 +129,7 @@ Do not create a branch, do not implement, do not commit. The spec file is writte
 
 ---
 
-## Step 3 — Implement subagent (sequential — skip if `--parallel`)
-
-**If `--parallel` is set, skip to Step 3P below.**
+## Step 3 — Implement subagent
 
 Launch a subagent (model: **opus**) with:
 
@@ -152,169 +138,6 @@ Launch a subagent (model: **opus**) with:
 Read the returned summary. Do not read any changed files.
 
 If the subagent reports a blocker (verify suite failing after two attempts), stop and report to the user — do not continue to review.
-
----
-
-## Step 3P — Parallel implement (only when `--parallel` is set)
-
-**If `--parallel` is NOT set, this step was already skipped — Step 3 ran instead.**
-
-Replace the single implement subagent with a decompose → parallel spawn → merge flow. Every substep has an explicit fallback to sequential Step 3 — parallel is optimistic, never forced.
-
-### Step 3P-a — Decompose spec into work units (orchestrator)
-
-1. Read the spec file `.claude/specs/<spec-name>.md` — extract **only** the file paths from "Affected files" and "New files" sections
-2. Group files by their top-level directory (e.g., `src/components/`, `src/lib/`, `src/api/`, `tests/`). Each group is a candidate **work unit**
-3. If only 1 group exists → print "Spec files are all in one domain — falling back to sequential" and run Step 3 instead
-4. If more than 3 groups → merge the smallest groups (by file count) until at most 3 remain
-5. Print the decomposition for transparency:
-
-```
-Parallel decomposition: <N> work units
-  Unit 1 — <domain>: <file list>
-  Unit 2 — <domain>: <file list>
-  Unit 3 — <domain>: <file list>
-```
-
-### Step 3P-b — Validate file claims (orchestrator)
-
-For each work unit, classify every file:
-
-- **EXCLUSIVE** — files this unit will create or modify
-- **READ-ONLY** — files outside this unit's scope that it may need to read (shared types, configs, interfaces)
-
-Validation rules:
-
-1. No file may appear in the EXCLUSIVE list of two different work units
-2. If an overlap is detected, merge the overlapping work units into one
-3. After merging, if only 1 work unit remains → fall back to sequential Step 3
-
-### Step 3P-c — Spawn implement subagents: foundation first, then parallel (orchestrator)
-
-**Identify the foundation unit** — the unit that contains shared types, interfaces, or pure logic modules that other units depend on (e.g., `types.ts`, scoring modules). This is typically the unit in `src/lib/` or similar. If no clear foundation unit exists (all units are independent), skip the foreground step and spawn all in parallel.
-
-**Phase 1 — Foundation unit (foreground):** Launch the foundation unit as a **foreground** subagent (NOT background) with `isolation: worktree`:
-
-> "Read `.claude/skills/1_implement/SKILL.md` and follow all steps exactly for spec: <spec-name>. Auto-proceed through plan mode (step 7) without waiting for approval.
->
-> **SCOPE CONSTRAINT — you are one of <N> parallel agents.** Your scope is limited to these files only:
-> - EXCLUSIVE (you may create/modify): [list of EXCLUSIVE files for this unit]
-> - READ-ONLY (you may read but NOT modify): [list of READ-ONLY files for this unit]
->
-> Do not create, modify, or delete any file outside your EXCLUSIVE list.
->
-> **Verify scope override:** Only run typecheck (`tsc --noEmit`) and tests (`vitest run` on your files). Do NOT run `npm run build` or full lint — deferred to post-merge verify.
->
-> You are running as a subagent. Return: (1) list of files changed, (2) verify suite status (pass/fail), (3) any blockers."
-
-Wait for this agent to return. Then:
-
-1. Copy its files to the feature branch (same process as Step 3P-e but just for this unit)
-2. **Commit the foundation files** so that worktrees created afterward inherit them:
-   ```bash
-   git add <foundation files>
-   git commit -m "wip: foundation types for parallel implementation"
-   ```
-   This is a temporary commit — it gets replaced by the atomic commits in Step 6. Without it, worktree agents cannot import the new types and will fall back to `PARALLEL_` prefixes.
-
-   **Record the commit hash** of this wip commit (e.g., `FOUNDATION_HASH=$(git rev-parse HEAD)`). You will pass it to remaining agents so they can cherry-pick it into their worktrees.
-
-Print: `✓ Foundation unit (<domain>) complete — <N> files. Committed as <hash> to branch for worktree visibility.`
-
-**Phase 2 — Remaining units (background):** Launch the remaining units (max 2) with `isolation: worktree` and `run_in_background: true`:
-
-> "Read `.claude/skills/1_implement/SKILL.md` and follow all steps exactly for spec: <spec-name>. Auto-proceed through plan mode (step 7) without waiting for approval.
->
-> **SCOPE CONSTRAINT — you are one of <N> parallel agents.** Your scope is limited to these files only:
-> - EXCLUSIVE (you may create/modify): [list of EXCLUSIVE files for this unit]
-> - READ-ONLY (you may read but NOT modify): [list of READ-ONLY files for this unit]
->
-> Do not create, modify, or delete any file outside your EXCLUSIVE list. If you discover you need to modify a READ-ONLY file, note it as a blocker and continue with the files you can modify.
->
-> **IMPORTANT — Shared types are already implemented.** The foundation unit has already created the shared types and interfaces. **As your first action**, run `git cherry-pick <FOUNDATION_HASH> --no-commit` to pull the foundation files into your worktree (the worktree may not have them yet). Then import from the real file paths (e.g., `@/lib/scoring/types`). If an import still fails after cherry-picking, define a temporary type prefixed with `PARALLEL_` so the orchestrator can find and replace it during integration.
->
-> **Verify scope override:** Only run typecheck (`tsc --noEmit`) and tests (`vitest run` on your files). Do NOT run `npm run build` or full lint — deferred to post-merge verify.
->
-> You are running as a subagent. Return: (1) list of files changed, (2) verify suite status (pass/fail), (3) any blockers."
-
-Print: `⏳ Spawned <N> parallel implement agents (foundation types already in place)`
-
-### Step 3P-d — Collect results with active monitoring (orchestrator)
-
-**Note:** The foundation unit already completed in 3P-c (foreground). This step only monitors the remaining background agents (typically 2: API + UI).
-
-**Do not wait passively for agent notifications** — they can arrive minutes after files are ready. Use active monitoring:
-
-1. As each agent notification arrives, record its summary. Print: `✓ Unit <N> (<domain>) complete — <files_changed> files, verify: <pass/fail>`
-2. After **90 seconds** with unreturned agents, check each pending worktree: `ls` the expected EXCLUSIVE files to see which exist
-3. Print a progress update: `⏳ Unit <N> (<domain>): <N>/<total> expected files written, still running...`
-4. If ALL expected EXCLUSIVE files for an agent exist in its worktree, **proceed to Step 3P-e immediately** — copy the files without waiting for the agent's return message. The post-merge verify (3P-g) will catch any issues. Print: `⚡ Unit <N> (<domain>): all files present, proceeding to merge`
-
-**Failure handling:**
-- If ANY agent reports a scope violation (modified a file outside its EXCLUSIVE list), flag it but continue — the integration step will handle conflicts
-- If ALL agents report blockers, fall back to sequential Step 3
-- If SOME agents completed and others blocked, proceed with merge of completed units only
-
-### Step 3P-e — Merge files from worktrees (orchestrator)
-
-Copy each **remaining** worktree's changed files back into the feature branch. The foundation unit was already copied in Step 3P-c. Process remaining units in order of dependency (API before UI if both exist).
-
-For each completed worktree agent:
-
-1. List changed files in the worktree: `git -C <worktree-path> diff --name-only` and `git -C <worktree-path> ls-files --others --exclude-standard`
-2. Copy each changed/new file from the worktree to the feature branch working directory
-3. If a file was modified by the worktree agent AND also exists as a NEW file from a previously merged unit (both units created it), this is a conflict — compare contents and keep the more complete version, or merge manually
-4. After copying all files from a unit, run a quick typecheck (`tsc --noEmit`) as a smoke test before merging the next unit
-
-Print after each unit: `✓ Merged unit <N> (<domain>) — <N> files copied`
-
-**If any copy produces a typecheck failure that wasn't present in isolation**, stop and diagnose — this likely indicates a type mismatch between units. If unresolvable after one attempt, fall back to sequential Step 3.
-
-### Step 3P-f — Resolve integration seams (subagent)
-
-**Do not resolve seams manually.** Launch a subagent (model: **sonnet**) to perform deterministic integration fixes:
-
-> "You are an integration seam resolver for a parallel implementation. The following files were implemented by separate agents working in isolation and have been copied into a single working directory. Your job is to fix predictable integration issues so the code compiles and works together.
->
-> **Files changed:** [list all files from Step 3P-e]
-> **Foundation unit files (already correct):** [list files from the foundation unit — do NOT modify these]
-> **Spec:** `.claude/specs/<spec-name>.md`
->
-> Run these checks in order. For each check, make the fix immediately if needed:
->
-> 1. **`PARALLEL_` types**: `grep -r 'PARALLEL_' src/` — for each hit, replace the local `PARALLEL_*` interface/type with an import from the real source (check `types.ts` for the canonical type). Delete the local definition.
->
-> 2. **Inline function duplicates**: If any non-foundation file defines functions that also exist in a foundation module (e.g., `computeProgressDelta` defined inline in a component AND exported from `progress-tracking.ts`), delete the inline version and add an import from the real module.
->
-> 3. **Stub files**: `grep -r 'PARALLEL_STUB\|stub.*parallel\|another.*agent' src/` — if any file is a stub placeholder created because the real implementation wasn't available, delete it (the real file was already copied).
->
-> 4. **Type assertions bridging missing fields**: `grep -rn 'as {' src/components/ src/app/` — if the assertion was used because a type field didn't exist yet but now does (check the real type in `types.ts`), remove the assertion and use direct property access.
->
-> 5. **API response contract check**: For each new API route in the changed files, read the route's response mapping (the object passed to `NextResponse.json()`). Then find the consumer (component that fetches from that endpoint). Verify that every field name in the response matches what the consumer expects. Common mismatch: DB column names (`resultSnapshot`) vs interface field names (`result`). Fix in the API route's response mapping.
->
-> 6. **Missing props**: Run `npx tsc --noEmit 2>&1`. If any error mentions a missing required prop, add the prop to the parent component's JSX. Common case: one unit added `email: string | null` to a component's props interface, but the parent (in a different unit) doesn't pass it.
->
-> After all fixes, run `npx tsc --noEmit` to confirm zero type errors.
->
-> Return: (1) list of seams fixed (or 'none — clean integration'), (2) typecheck status."
-
-Read the returned summary. If typecheck fails, fix remaining issues manually (there should be very few after the subagent pass).
-
-### Step 3P-g — Post-merge verify (orchestrator)
-
-Run the full verify suite (typecheck → lint → tests → build) on the merged result. Individual worktree agents ran verify in isolation — this catches cross-unit integration issues.
-
-- If all checks pass → print `✓ Step 3P — Parallel implementation complete. <N> units merged, all checks pass.` and proceed to Step 4
-- If any check fails → launch a single fix subagent (model: **opus**) to resolve cross-unit integration issues. Re-run verify. If it fails after two attempts, stop and escalate to user
-
-### Post-merge cleanup
-
-After Step 3P completes (pass or fallback), clean up worktrees:
-
-```bash
-git worktree remove <worktree-path> --force  # for each worktree
-git branch -D <worktree-branch>              # for each worktree branch
-```
 
 ---
 
@@ -413,14 +236,6 @@ Note: Smoke testing against Docker (`/smoke <spec-name>`) is a separate manual s
 ---
 
 ## Step 6 — Commit subagent
-
-**If `--parallel` was used**, the branch may contain a temporary `wip: foundation types` commit from Step 3P-c. Before launching the commit subagent, soft-reset it so the commit subagent sees all changes as uncommitted:
-
-```bash
-git reset --soft checkpoint/<spec-name>
-```
-
-This preserves all file changes but removes the wip commit, giving the commit subagent a clean slate to create proper atomic commits.
 
 Launch a subagent (model: **sonnet**) with:
 
