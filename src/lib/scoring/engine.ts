@@ -22,6 +22,7 @@ import {
 } from "./coordination";
 import { selectInterventionModel } from "./intervention";
 import { getRelevantCaseStudies } from "./case-studies";
+import { computeBenchmarkComparison } from "./industry-benchmarks";
 
 // Weights per Architecture Document v4.5.3
 export const DIMENSIONS = [
@@ -483,6 +484,18 @@ export function computeResult(input: AssessmentInput): AssessmentResult {
 
   if (input.growthEngine) {
     result.growthEngine = GROWTH_ENGINES[input.growthEngine];
+  }
+
+  if (input.enablers && input.growthEngine) {
+    const comparison = computeBenchmarkComparison(
+      thetaScore,
+      scoreMap,
+      input.enablers.fundingStage,
+      input.growthEngine,
+    );
+    if (comparison) {
+      result.benchmarkComparison = comparison;
+    }
   }
 
   if (result.capabilities) {
