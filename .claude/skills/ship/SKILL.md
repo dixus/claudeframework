@@ -207,9 +207,17 @@ Validation rules:
 >
 > You are running as a subagent. Return: (1) list of files changed, (2) verify suite status (pass/fail), (3) any blockers."
 
-Wait for this agent to return. Copy its files immediately to the feature branch (same process as Step 3P-e but just for this one unit). This ensures types and interfaces exist in the working directory before the next units need them.
+Wait for this agent to return. Then:
 
-Print: `✓ Foundation unit (<domain>) complete — <N> files. Copied to feature branch.`
+1. Copy its files to the feature branch (same process as Step 3P-e but just for this unit)
+2. **Commit the foundation files** so that worktrees created afterward inherit them:
+   ```bash
+   git add <foundation files>
+   git commit -m "wip: foundation types for parallel implementation"
+   ```
+   This is a temporary commit — it gets replaced by the atomic commits in Step 6. Without it, worktree agents cannot import the new types and will fall back to `PARALLEL_` prefixes.
+
+Print: `✓ Foundation unit (<domain>) complete — <N> files. Committed to branch for worktree visibility.`
 
 **Phase 2 — Remaining units (background):** Launch the remaining units (max 2) with `isolation: worktree` and `run_in_background: true`:
 
@@ -403,6 +411,14 @@ Note: Smoke testing against Docker (`/smoke <spec-name>`) is a separate manual s
 ---
 
 ## Step 6 — Commit subagent
+
+**If `--parallel` was used**, the branch may contain a temporary `wip: foundation types` commit from Step 3P-c. Before launching the commit subagent, soft-reset it so the commit subagent sees all changes as uncommitted:
+
+```bash
+git reset --soft checkpoint/<spec-name>
+```
+
+This preserves all file changes but removes the wip commit, giving the commit subagent a clean slate to create proper atomic commits.
 
 Launch a subagent (model: **sonnet**) with:
 
