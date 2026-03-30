@@ -2,6 +2,7 @@
 name: audit
 description: Audit dependencies for vulnerabilities and scan for committed secrets. Use periodically or when security alerts flag a dependency.
 disable-model-invocation: true
+effort: medium
 ---
 
 Check for and fix vulnerable dependencies.

@@ -102,30 +102,44 @@ async function main() {
   const tool = input.tool_name || "";
   const command = (input.tool_input && input.tool_input.command) || "";
 
+  const allow = {
+    hookSpecificOutput: {
+      hookEventName: "PermissionRequest",
+      decision: { behavior: "allow" },
+    },
+    suppressOutput: true,
+  };
+
+  function deny(reason) {
+    return {
+      hookSpecificOutput: {
+        hookEventName: "PermissionRequest",
+        decision: { behavior: "deny", message: reason, interrupt: false },
+      },
+    };
+  }
+
   // Tier 2/3: Bash — deny destructive patterns, approve the rest
   if (tool === "Bash") {
     for (const pattern of ALWAYS_DENY_PATTERNS) {
       if (pattern.test(command)) {
         process.stdout.write(
-          JSON.stringify({
-            continue: false,
-            additionalContext: `Auto-denied: command matches destructive pattern (${pattern}). Review before proceeding.`,
-          }),
+          JSON.stringify(
+            deny(
+              `Auto-denied: command matches destructive pattern (${pattern}). Review before proceeding.`,
+            ),
+          ),
         );
         return;
       }
     }
-    process.stdout.write(
-      JSON.stringify({ continue: true, suppressOutput: true }),
-    );
+    process.stdout.write(JSON.stringify(allow));
     return;
   }
 
   // Tier 1: auto-approve safe read-only tools
   if (ALWAYS_ALLOW_TOOLS.has(tool)) {
-    process.stdout.write(
-      JSON.stringify({ continue: true, suppressOutput: true }),
-    );
+    process.stdout.write(JSON.stringify(allow));
     return;
   }
 
@@ -133,15 +147,13 @@ async function main() {
   if ((tool === "Edit" || tool === "Write") && input.tool_input) {
     const filePath = input.tool_input.file_path || "";
     if (filePath && isSafeClaudePath(filePath)) {
-      process.stdout.write(
-        JSON.stringify({ continue: true, suppressOutput: true }),
-      );
+      process.stdout.write(JSON.stringify(allow));
       return;
     }
   }
 
   // Tier 5: pass through (everything else — falls back to normal prompt)
-  process.stdout.write(JSON.stringify({ continue: true }));
+  process.stdout.write(JSON.stringify({}));
 }
 
 main();

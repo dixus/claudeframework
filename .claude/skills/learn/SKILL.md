@@ -3,6 +3,7 @@ name: learn
 description: Process references into skill/rule improvement proposals. Use after adding blog posts, repos, or docs to .claude/references/, or pass a URL to fetch and ingest directly.
 disable-model-invocation: true
 argument-hint: "[url]"
+effort: low
 ---
 
 Process new material from `.claude/references/` and propose concrete changes to skills and rules. No intermediate knowledge files — findings route directly to actionable proposals.

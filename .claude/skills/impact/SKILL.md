@@ -4,6 +4,7 @@ description: Analyze blast radius of a code change — find all call sites, test
 disable-model-invocation: true
 argument-hint: <function, file, class, or method name>
 allowed-tools: Read, Glob, Grep, Agent
+effort: medium
 ---
 
 Analyze the blast radius of changing a function, method, class, or file before making the change.

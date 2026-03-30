@@ -3,6 +3,7 @@ name: deploy
 description: Deploy the framework to a target project by replacing shared dirs with symlinks (junctions) back to the framework repo. Run once after copying .claude/ to a new project.
 argument-hint: <target-project-path>
 model: sonnet
+effort: medium
 ---
 
 Replace shared framework directories in a target project with junctions pointing back to this framework repo, so updates propagate automatically.

@@ -3,6 +3,7 @@ name: create-hook
 description: Scaffold a Claude Code hook (command or HTTP) for this project. Use when you want to automate quality checks, formatting, or notifications on tool events.
 disable-model-invocation: true
 argument-hint: "[hook description]"
+effort: medium
 ---
 
 Analyse the project, suggest useful hooks, then create and validate the one the user selects.
@@ -57,7 +58,12 @@ Ask only what you don't already know from the user's description:
    - `SubagentStart`: when a subagent launches (matcher: agent type name).
    - `SubagentStop`: when a subagent finishes.
    - `TeammateIdle`: when an agent team member is idle.
+   - `TaskCreated`: when a task is being created (exit 2 to prevent creation and send feedback).
    - `TaskCompleted`: when a background task finishes.
+
+   **File system:**
+   - `CwdChanged`: when the working directory changes.
+   - `FileChanged`: when a file is modified on disk.
 
    **Version control:**
    - `WorktreeCreate`: when a git worktree is created for isolated work.

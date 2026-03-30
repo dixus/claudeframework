@@ -4,6 +4,7 @@ description: Write and run smoke tests against the Docker stack from a spec. Use
 disable-model-invocation: true
 argument-hint: "[spec-name]"
 compatibility: Requires Docker and docker compose
+effort: medium
 ---
 
 Run smoke tests against the running Docker stack for a spec.
