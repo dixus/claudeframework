@@ -16,6 +16,7 @@ import { VelocityPanel } from "./VelocityPanel";
 import { CoordinationPanel } from "./CoordinationPanel";
 import { RoadmapPanel } from "./RoadmapPanel";
 import { CaseStudyPanel } from "./CaseStudyPanel";
+import { BenchmarkComparisonPanel } from "./BenchmarkComparisonPanel";
 import { WhatIfPanel } from "./WhatIfPanel";
 import { PdfExportButton } from "./PdfExportButton";
 import { SaveResultsCard } from "./SaveResultsCard";
@@ -93,6 +94,9 @@ export function ResultsPage() {
                 />
               )}
               <InsightsPanel result={result} />
+              <BenchmarkComparisonPanel
+                benchmarkComparison={result.benchmarkComparison}
+              />
               <DimensionScorecard
                 dimensions={result.dimensions}
                 level={result.level.level}
