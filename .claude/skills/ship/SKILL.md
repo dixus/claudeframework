@@ -217,7 +217,9 @@ Wait for this agent to return. Then:
    ```
    This is a temporary commit — it gets replaced by the atomic commits in Step 6. Without it, worktree agents cannot import the new types and will fall back to `PARALLEL_` prefixes.
 
-Print: `✓ Foundation unit (<domain>) complete — <N> files. Committed to branch for worktree visibility.`
+   **Record the commit hash** of this wip commit (e.g., `FOUNDATION_HASH=$(git rev-parse HEAD)`). You will pass it to remaining agents so they can cherry-pick it into their worktrees.
+
+Print: `✓ Foundation unit (<domain>) complete — <N> files. Committed as <hash> to branch for worktree visibility.`
 
 **Phase 2 — Remaining units (background):** Launch the remaining units (max 2) with `isolation: worktree` and `run_in_background: true`:
 
@@ -229,7 +231,7 @@ Print: `✓ Foundation unit (<domain>) complete — <N> files. Committed to bran
 >
 > Do not create, modify, or delete any file outside your EXCLUSIVE list. If you discover you need to modify a READ-ONLY file, note it as a blocker and continue with the files you can modify.
 >
-> **IMPORTANT — Shared types are already implemented.** The foundation unit has already created the shared types and interfaces. Import from the real file paths (e.g., `@/lib/scoring/types`). If an import still fails, define a temporary type prefixed with `PARALLEL_` so the orchestrator can find and replace it during integration — but this should be rare since the foundation unit ran first.
+> **IMPORTANT — Shared types are already implemented.** The foundation unit has already created the shared types and interfaces. **As your first action**, run `git cherry-pick <FOUNDATION_HASH> --no-commit` to pull the foundation files into your worktree (the worktree may not have them yet). Then import from the real file paths (e.g., `@/lib/scoring/types`). If an import still fails after cherry-picking, define a temporary type prefixed with `PARALLEL_` so the orchestrator can find and replace it during integration.
 >
 > **Verify scope override:** Only run typecheck (`tsc --noEmit`) and tests (`vitest run` on your files). Do NOT run `npm run build` or full lint — deferred to post-merge verify.
 >
