@@ -1,6 +1,28 @@
 export type { GrowthEngineType } from "./growth-engines";
 export type { CaseStudy } from "./case-studies";
 
+export interface CohortBenchmark {
+  fundingStage: FundingStage;
+  growthEngine: import("./growth-engines").GrowthEngineType;
+  label: string;
+  sampleSize: number;
+  meanTheta: number;
+  medianTheta: number;
+  p25Theta: number;
+  p75Theta: number;
+  dimensionMeans: Record<DimensionKey, number>;
+}
+
+export interface BenchmarkComparison {
+  cohortLabel: string;
+  sampleSize: number;
+  percentile: number;
+  dimensionDeltas: Record<DimensionKey, number>;
+  dimensionMeans: Record<DimensionKey, number>;
+  topStrength: { dimension: DimensionKey; delta: number };
+  keyGap: { dimension: DimensionKey; delta: number };
+}
+
 export type DimensionKey =
   | "strategy"
   | "architecture"
@@ -116,6 +138,7 @@ export interface AssessmentResult {
     rationale: string;
   };
   caseStudies?: import("./case-studies").CaseStudy[];
+  benchmarkComparison?: BenchmarkComparison;
 }
 
 export type ModelId = "model1" | "model2" | "model3";
