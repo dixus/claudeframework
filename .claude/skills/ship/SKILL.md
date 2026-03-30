@@ -35,11 +35,11 @@ Main session (orchestrator — reads summaries only)
   ├── [--parallel] Step 3P: parallel implement
   │     ├── 3P-a: decompose spec into work units (by file domain)
   │     ├── 3P-b: validate file claims (no EXCLUSIVE overlaps)
-  │     ├── 3P-c: spawn up to 3 subagents [opus, isolation: worktree, background]
-  │     ├── 3P-d: wait and collect results
-  │     ├── 3P-e: merge (copy files from worktrees → feature branch)
-  │     ├── 3P-f: resolve integration seams (duplicate types, stubs, type assertions)
-  │     └── 3P-g: post-merge verify
+  │     ├── 3P-c: foundation unit first (foreground), then remaining units (background)
+  │     ├── 3P-d: collect results with active file monitoring
+  │     ├── 3P-e: copy files from worktrees → feature branch
+  │     ├── 3P-f: integration seam subagent (deterministic, not manual)
+  │     └── 3P-g: post-merge verify (typecheck → lint → tests → build)
   │
   ├── Subagent C: review        [opus]  →  writes .claude/reviews/<name>-review.md
   ├── Subagent D: fix  [opus if rework, sonnet if fixes]→  loop back to C
@@ -189,9 +189,29 @@ Validation rules:
 2. If an overlap is detected, merge the overlapping work units into one
 3. After merging, if only 1 work unit remains → fall back to sequential Step 3
 
-### Step 3P-c — Spawn parallel implement subagents (orchestrator)
+### Step 3P-c — Spawn implement subagents: foundation first, then parallel (orchestrator)
 
-For each work unit (max 3), launch a subagent with `isolation: worktree` and `run_in_background: true`:
+**Identify the foundation unit** — the unit that contains shared types, interfaces, or pure logic modules that other units depend on (e.g., `types.ts`, scoring modules). This is typically the unit in `src/lib/` or similar. If no clear foundation unit exists (all units are independent), skip the foreground step and spawn all in parallel.
+
+**Phase 1 — Foundation unit (foreground):** Launch the foundation unit as a **foreground** subagent (NOT background) with `isolation: worktree`:
+
+> "Read `.claude/skills/1_implement/SKILL.md` and follow all steps exactly for spec: <spec-name>. Auto-proceed through plan mode (step 7) without waiting for approval.
+>
+> **SCOPE CONSTRAINT — you are one of <N> parallel agents.** Your scope is limited to these files only:
+> - EXCLUSIVE (you may create/modify): [list of EXCLUSIVE files for this unit]
+> - READ-ONLY (you may read but NOT modify): [list of READ-ONLY files for this unit]
+>
+> Do not create, modify, or delete any file outside your EXCLUSIVE list.
+>
+> **Verify scope override:** Only run typecheck (`tsc --noEmit`) and tests (`vitest run` on your files). Do NOT run `npm run build` or full lint — deferred to post-merge verify.
+>
+> You are running as a subagent. Return: (1) list of files changed, (2) verify suite status (pass/fail), (3) any blockers."
+
+Wait for this agent to return. Copy its files immediately to the feature branch (same process as Step 3P-e but just for this one unit). This ensures types and interfaces exist in the working directory before the next units need them.
+
+Print: `✓ Foundation unit (<domain>) complete — <N> files. Copied to feature branch.`
+
+**Phase 2 — Remaining units (background):** Launch the remaining units (max 2) with `isolation: worktree` and `run_in_background: true`:
 
 > "Read `.claude/skills/1_implement/SKILL.md` and follow all steps exactly for spec: <spec-name>. Auto-proceed through plan mode (step 7) without waiting for approval.
 >
@@ -201,13 +221,17 @@ For each work unit (max 3), launch a subagent with `isolation: worktree` and `ru
 >
 > Do not create, modify, or delete any file outside your EXCLUSIVE list. If you discover you need to modify a READ-ONLY file, note it as a blocker and continue with the files you can modify.
 >
-> **IMPORTANT — Types from READ-ONLY files:** If you need types/interfaces that don't exist yet in a READ-ONLY file (because another parallel agent is creating them), import from the real file path anyway — do NOT create local duplicate type definitions. If the import fails during development, define a temporary type prefixed with `PARALLEL_` (e.g., `type PARALLEL_BenchmarkComparison = { ... }`) so the orchestrator can find and replace them during integration.
+> **IMPORTANT — Shared types are already implemented.** The foundation unit has already created the shared types and interfaces. Import from the real file paths (e.g., `@/lib/scoring/types`). If an import still fails, define a temporary type prefixed with `PARALLEL_` so the orchestrator can find and replace it during integration — but this should be rare since the foundation unit ran first.
 >
-> You are running as a subagent. Return: (1) list of files changed, (2) verify suite status (pass/fail), (3) any blockers — especially files you needed to modify but couldn't due to scope constraint."
+> **Verify scope override:** Only run typecheck (`tsc --noEmit`) and tests (`vitest run` on your files). Do NOT run `npm run build` or full lint — deferred to post-merge verify.
+>
+> You are running as a subagent. Return: (1) list of files changed, (2) verify suite status (pass/fail), (3) any blockers."
 
-Print: `⏳ Spawned <N> parallel implement agents in isolated worktrees`
+Print: `⏳ Spawned <N> parallel implement agents (foundation types already in place)`
 
 ### Step 3P-d — Collect results with active monitoring (orchestrator)
+
+**Note:** The foundation unit already completed in 3P-c (foreground). This step only monitors the remaining background agents (typically 2: API + UI).
 
 **Do not wait passively for agent notifications** — they can arrive minutes after files are ready. Use active monitoring:
 
@@ -223,7 +247,7 @@ Print: `⏳ Spawned <N> parallel implement agents in isolated worktrees`
 
 ### Step 3P-e — Merge files from worktrees (orchestrator)
 
-Copy each worktree's changed files back into the feature branch. Process in order of dependency (types/scoring first, then API, then UI — foundations before consumers).
+Copy each **remaining** worktree's changed files back into the feature branch. The foundation unit was already copied in Step 3P-c. Process remaining units in order of dependency (API before UI if both exist).
 
 For each completed worktree agent:
 
@@ -236,18 +260,35 @@ Print after each unit: `✓ Merged unit <N> (<domain>) — <N> files copied`
 
 **If any copy produces a typecheck failure that wasn't present in isolation**, stop and diagnose — this likely indicates a type mismatch between units. If unresolvable after one attempt, fall back to sequential Step 3.
 
-### Step 3P-f — Resolve integration seams (orchestrator)
+### Step 3P-f — Resolve integration seams (subagent)
 
-Parallel agents work in isolation, so their outputs will have predictable integration issues. Fix these **before** running post-merge verify:
+**Do not resolve seams manually.** Launch a subagent (model: **sonnet**) to perform deterministic integration fixes:
 
-1. **`PARALLEL_` types and inline functions**: Search all copied files for `PARALLEL_` prefixed types. Replace with imports from the real source. Also remove any inline function duplicates that duplicate functions from the real scoring module — replace with imports
-2. **Duplicate types without prefix**: Search for locally-defined interfaces that duplicate types in shared files (e.g., a component defining `BenchmarkComparison` locally when it exists in `types.ts`) — replace with imports and re-export if needed
-3. **Stubs**: If any agent created a stub file that another agent implemented fully, delete the stub (the real implementation was already copied in Step 3P-e)
-4. **Type assertions**: Search for `as {` type assertions that bridge missing type fields — if the real type now includes the field, remove the assertion and use direct access
-5. **Cross-unit API contracts**: If one unit produces data (API route) and another consumes it (UI component), verify the response field names match the consumer's expected type. Common mismatch: DB column names (e.g., `resultSnapshot`) vs TypeScript interface names (e.g., `result`). Fix in the producer (API response mapping), not the consumer
-6. **Missing props**: If a unit added a required prop to a component's interface but the parent file is in a different unit, the parent may not pass it. Check for missing prop errors in typecheck output and fix them
+> "You are an integration seam resolver for a parallel implementation. The following files were implemented by separate agents working in isolation and have been copied into a single working directory. Your job is to fix predictable integration issues so the code compiles and works together.
+>
+> **Files changed:** [list all files from Step 3P-e]
+> **Foundation unit files (already correct):** [list files from the foundation unit — do NOT modify these]
+> **Spec:** `.claude/specs/<spec-name>.md`
+>
+> Run these checks in order. For each check, make the fix immediately if needed:
+>
+> 1. **`PARALLEL_` types**: `grep -r 'PARALLEL_' src/` — for each hit, replace the local `PARALLEL_*` interface/type with an import from the real source (check `types.ts` for the canonical type). Delete the local definition.
+>
+> 2. **Inline function duplicates**: If any non-foundation file defines functions that also exist in a foundation module (e.g., `computeProgressDelta` defined inline in a component AND exported from `progress-tracking.ts`), delete the inline version and add an import from the real module.
+>
+> 3. **Stub files**: `grep -r 'PARALLEL_STUB\|stub.*parallel\|another.*agent' src/` — if any file is a stub placeholder created because the real implementation wasn't available, delete it (the real file was already copied).
+>
+> 4. **Type assertions bridging missing fields**: `grep -rn 'as {' src/components/ src/app/` — if the assertion was used because a type field didn't exist yet but now does (check the real type in `types.ts`), remove the assertion and use direct property access.
+>
+> 5. **API response contract check**: For each new API route in the changed files, read the route's response mapping (the object passed to `NextResponse.json()`). Then find the consumer (component that fetches from that endpoint). Verify that every field name in the response matches what the consumer expects. Common mismatch: DB column names (`resultSnapshot`) vs interface field names (`result`). Fix in the API route's response mapping.
+>
+> 6. **Missing props**: Run `npx tsc --noEmit 2>&1`. If any error mentions a missing required prop, add the prop to the parent component's JSX. Common case: one unit added `email: string | null` to a component's props interface, but the parent (in a different unit) doesn't pass it.
+>
+> After all fixes, run `npx tsc --noEmit` to confirm zero type errors.
+>
+> Return: (1) list of seams fixed (or 'none — clean integration'), (2) typecheck status."
 
-Run typecheck after resolving seams to confirm the fixes compile.
+Read the returned summary. If typecheck fails, fix remaining issues manually (there should be very few after the subagent pass).
 
 ### Step 3P-g — Post-merge verify (orchestrator)
 
