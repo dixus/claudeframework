@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { AssessmentResult } from "@/lib/scoring/types";
 import { ScoreCard } from "@/components/results/ScoreCard";
 import { RadarChartPanel } from "@/components/results/RadarChartPanel";
@@ -18,6 +19,8 @@ import { RoadmapPanel } from "@/components/results/RoadmapPanel";
 import { CaseStudyPanel } from "@/components/results/CaseStudyPanel";
 import { PdfExportButton } from "@/components/results/PdfExportButton";
 import { ProgressTimelinePanel } from "@/components/results/ProgressTimelinePanel";
+import { ComparisonPanel } from "@/components/results/ComparisonPanel";
+import { AssessmentSelector } from "@/components/results/AssessmentSelector";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 type ResultsTab = "overview" | "scaling" | "diagnosis" | "roadmap";
@@ -32,10 +35,33 @@ const TABS: { key: ResultsTab; label: string; icon: string }[] = [
 interface ResultsPageClientProps {
   result: AssessmentResult;
   email: string | null;
+  hash: string;
 }
 
-export function ResultsPageClient({ result, email }: ResultsPageClientProps) {
+export function ResultsPageClient({ result, email, hash }: ResultsPageClientProps) {
   const [activeTab, setActiveTab] = useState<ResultsTab>("overview");
+  const searchParams = useSearchParams();
+  const compareHash = searchParams.get("compare");
+
+  if (compareHash && email) {
+    return (
+      <TooltipPrimitive.Provider delayDuration={300}>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Assessment Comparison
+            </h1>
+            <p className="text-sm text-gray-500">{result.companyName}</p>
+          </div>
+          <ComparisonPanel
+            currentHash={hash}
+            compareHash={compareHash}
+            email={email}
+          />
+        </div>
+      </TooltipPrimitive.Provider>
+    );
+  }
 
   return (
     <TooltipPrimitive.Provider delayDuration={300}>
@@ -45,6 +71,9 @@ export function ResultsPageClient({ result, email }: ResultsPageClientProps) {
             AI Maturity Results
           </h1>
           <div className="flex items-center gap-3">
+            {email && (
+              <AssessmentSelector email={email} currentHash={hash} />
+            )}
             <p className="text-sm text-gray-500">{result.companyName}</p>
             <PdfExportButton result={result} />
           </div>
