@@ -216,6 +216,35 @@ export interface TimestampedResult {
   createdAt: string; // ISO date
 }
 
+export interface ComparisonDimensionDelta {
+  key: DimensionKey;
+  label: string;
+  scoreBefore: number;
+  scoreAfter: number;
+  delta: number;
+}
+
+export interface ComparisonCapabilityDelta {
+  key: CapabilityKey;
+  label: string;
+  scoreBefore: number;
+  scoreAfter: number;
+  delta: number;
+}
+
+export interface AssessmentComparison {
+  thetaBefore: number;
+  thetaAfter: number;
+  thetaDelta: number;
+  levelBefore: number;
+  levelAfter: number;
+  levelChanged: boolean;
+  dimensions: ComparisonDimensionDelta[];
+  mostImproved: { dimension: DimensionKey; delta: number } | null;
+  mostRegressed: { dimension: DimensionKey; delta: number } | null;
+  capabilities: ComparisonCapabilityDelta[] | null;
+}
+
 export interface ProgressDelta {
   thetaDelta: number;
   dimensionDeltas: Record<DimensionKey, number>;
