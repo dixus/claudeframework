@@ -17,6 +17,7 @@ import { CoordinationPanel } from "@/components/results/CoordinationPanel";
 import { RoadmapPanel } from "@/components/results/RoadmapPanel";
 import { CaseStudyPanel } from "@/components/results/CaseStudyPanel";
 import { PdfExportButton } from "@/components/results/PdfExportButton";
+import { ProgressTimelinePanel } from "@/components/results/ProgressTimelinePanel";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 type ResultsTab = "overview" | "scaling" | "diagnosis" | "roadmap";
@@ -30,9 +31,10 @@ const TABS: { key: ResultsTab; label: string; icon: string }[] = [
 
 interface ResultsPageClientProps {
   result: AssessmentResult;
+  email: string | null;
 }
 
-export function ResultsPageClient({ result }: ResultsPageClientProps) {
+export function ResultsPageClient({ result, email }: ResultsPageClientProps) {
   const [activeTab, setActiveTab] = useState<ResultsTab>("overview");
 
   return (
@@ -84,6 +86,7 @@ export function ResultsPageClient({ result }: ResultsPageClientProps) {
                 />
               )}
               <InsightsPanel result={result} />
+              <ProgressTimelinePanel result={result} email={email} />
               <DimensionScorecard dimensions={result.dimensions} />
             </>
           )}
