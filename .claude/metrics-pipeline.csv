@@ -1,0 +1,13 @@
+date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_major,issue_categories,commits,outcome,parallel_units
+2026-03-21,landing-page,ui,11,1,1,0,1,test-coverage,3,shipped,0
+2026-03-22,intervention-model,scoring,6,0,3,0,0,,3,shipped,0
+2026-03-22,case-studies,scoring,7,0,3,0,0,,4,shipped,0
+2026-03-22,help-system,ui,22,1,3,0,3,,6,shipped,0
+2026-03-22,landing-page-enhancement,ui,9,1,1,0,1,scope-creep,4,shipped,0
+2026-03-22,pdf-export,ui,3,1,4,0,2,circular-import;error-handling,5,shipped,0
+2026-03-22,database-persistence,api,13,1,3,0,3,lazy-init;missing-tests;error-handling,5,shipped,0
+2026-03-22,ux-polish,ui,18,2,5,1,2,localStorage;scope-creep;hydration,5,shipped,0
+2026-03-23,benchmark-context,ui,7,1,1,0,1,missing-tests,4,shipped,0
+2026-03-23,what-if-explorer,ui,5,1,2,0,2,a11y;stale-state,4,shipped,0
+2026-03-25,radar-chart,ui,2,0,0,0,0,,2,shipped,0
+2026-03-30,industry-benchmarks,scoring,9,1,3,0,1,accessibility,8,shipped,3
