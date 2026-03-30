@@ -28,7 +28,7 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## The solution
 
-18 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
+20 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
@@ -107,7 +107,7 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
     │
     ├─ 0. Create feature branch
     ├─ 1. Front-load all questions (single batch)
-    ├─ 1b. Historical pattern analysis        → reads metrics.csv → builds spec guidance
+    ├─ 1b. Historical pattern analysis        → reads metrics-pipeline.csv → builds spec guidance
     ├─ 2. ▸ Subagent: /0_spec        [opus]   → writes spec file (informed by patterns)
     ├─ 3. ▸ Subagent: /1_implement   [opus]   → implements with TDD
     ├─ 4. ▸ Subagent: /2_review      [opus]   → review report
@@ -127,7 +127,7 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 - Review circuit breaker — escalates after 3 fix cycles without resolution
 - Recurring issue detection — if the same issue appears twice, escalates instead of retrying
 - Lesson graduation — proven corrections become permanent rules in `CLAUDE.md`
-- Metrics tracking — appends pipeline stats to `.claude/metrics.csv` after every run
+- Metrics tracking — appends pipeline stats to `.claude/metrics-pipeline.csv` after every run
 - **Dry-run mode** — `/ship --dry-run <feature>` runs only the spec phase, reports scope and complexity, then stops. No branch, no implementation, no commits. Review the spec before committing to a full pipeline run.
 
 ---
@@ -147,15 +147,17 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 
 ### Development tools
 
-| Skill                | Purpose                                                                            |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `/commit`            | Atomic conventional commits with multi-concern detection                           |
-| `/debug`             | Diagnose and fix a failing test, type error, or runtime error                      |
-| `/impact <function>` | Blast radius analysis — find all call sites, test mocks, and consumers (read-only) |
-| `/smoke [spec]`      | Write and run smoke tests against a Docker stack from a spec                       |
-| `/audit`             | Find and fix vulnerable dependencies across package managers                       |
-| `/healthcheck`       | Scan Docker container logs for errors, crashes, and warnings                       |
-| `/create-hook`       | Scaffold a Claude Code lifecycle hook                                              |
+| Skill                 | Purpose                                                                            |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `/commit`             | Atomic conventional commits with multi-concern detection                           |
+| `/debug`              | Diagnose and fix a failing test, type error, or runtime error                      |
+| `/impact <function>`  | Blast radius analysis — find all call sites, test mocks, and consumers (read-only) |
+| `/smoke [spec]`       | Write and run smoke tests against a Docker stack from a spec                       |
+| `/audit`              | Find and fix vulnerable dependencies across package managers                       |
+| `/healthcheck`        | Scan Docker container logs for errors, crashes, and warnings                       |
+| `/create-hook`        | Scaffold a Claude Code lifecycle hook                                              |
+| `/harvest <repo-url>` | Clone and analyze a repo's Claude Code setup; generate adoption proposals          |
+| `/deploy <path>`      | Deploy framework to a project via symlinks (junctions on Windows)                  |
 
 ### Knowledge & session management
 
@@ -229,7 +231,7 @@ After 14+ days, /ship graduates proven lessons:
 ```
 /ship completes → appends metrics row (area, review cycles, issue categories)
     ↓
-Next /ship in same area → reads metrics.csv
+Next /ship in same area → reads metrics-pipeline.csv
     ↓
 Detects: "api features average 2.8 review cycles, recurring: validation, edge-cases"
     ↓
@@ -244,7 +246,7 @@ This is a **self-improving loop**: the framework doesn't just remember _rules_ �
 
 **Lessons** (`.claude/context/lessons.md`) are the inbox — corrections captured during review cycles. They graduate into permanent `CLAUDE.md` rules once proven over time.
 
-**Metrics** (`.claude/metrics.csv`) are the pattern source — aggregate data across all pipeline runs, read by `/ship` to guide spec depth.
+**Metrics** are split into two files: `.claude/metrics-pipeline.csv` (pipeline run data, read by `/ship` to guide spec depth) and `.claude/metrics-scout.csv` (scout and harvest run data).
 
 This means the framework gets stricter, more project-aware, and more precise with every feature shipped.
 
@@ -254,18 +256,21 @@ This means the framework gets stricter, more project-aware, and more precise wit
 
 ```
 .claude/
-  skills/          ← 18 skills defining the full pipeline
+  skills/          ← 20 skills defining the full pipeline
+  agents/          ← subagent personas (code-reviewer, explorer)
+  rules/           ← auto-loaded instructions (like CLAUDE.md shards)
   context/         ← curated knowledge read by all skills
     instincts.md   ← universal rules loaded every session
     lessons.md     ← corrections inbox (graduates to CLAUDE.md)
   hooks/           ← lifecycle hooks (auto-approve, safety guards)
   docs/            ← generated documentation
-  references/      ← drop zone for blog posts and repos
+  references/      ← drop zone for blog posts and repos (+ harvested repos)
   specs/           ← generated feature specs
-  reviews/         ← review reports
+  reviews/         ← review reports + learn proposals
   input/           ← drop zone for PRDs, wireframes, sketches, requirement docs
   handoffs/        ← session state files (gitignored)
-  metrics.csv      ← pipeline run log (append-only)
+  metrics-pipeline.csv  ← /ship pipeline run log (append-only)
+  metrics-scout.csv     ← /scout and /harvest run log (append-only)
 ```
 
 ---
@@ -304,14 +309,25 @@ Processed files are moved to `processed/` so `/learn` is idempotent.
 
 ### Staying current
 
-`/scout` searches the web for new Claude Code features, community skills, and best practices, then compares them against the current framework:
+`/scout` searches the web for new Claude Code features, community skills, and best practices, then compares them against the current framework. It also discovers GitHub repos with Claude Code setups worth analyzing:
 
 ```
-/scout              # Full analysis — fetches top 5 results, writes report
+/scout              # Full analysis — fetches top 5 results, discovers repos, writes report
 /scout --quick      # Titles and links only — fast scan
 ```
 
-Scout reports go to `.claude/reviews/scout-<date>.md`. Promising links can be saved to `.claude/references/` for deeper `/learn` processing — the two skills chain naturally.
+Scout reports go to `.claude/references/blogs/scout-<date>.md`. Promising links feed into `/learn`; discovered repos feed into `/harvest`.
+
+### Harvesting repos
+
+`/harvest` clones a GitHub repo, inventories its `.claude/` setup (skills, hooks, agents, rules), and compares against the framework. Items classified as `new` or `enhancement` become adoption proposals:
+
+```
+/harvest https://github.com/someone/cool-claude-setup
+/harvest https://github.com/anthropics/skills --deep    # Line-level comparison
+```
+
+The three skills chain naturally: `/scout` discovers repos → `/harvest` analyzes them → `/learn` integrates accepted patterns into the knowledge base.
 
 ---
 
@@ -341,7 +357,7 @@ npm run build      # Production build
 
 ## Metrics
 
-`/ship` appends one row to `.claude/metrics.csv` after every pipeline run:
+`/ship` appends one row to `.claude/metrics-pipeline.csv` after every pipeline run:
 
 ```
 date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_major,issue_categories,commits,outcome
@@ -349,7 +365,7 @@ date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_m
 2026-03-17,file-upload,api,12,2,7,1,4,validation;edge-cases,3,shipped
 ```
 
-This is append-only — open in any spreadsheet or `column -t -s, .claude/metrics.csv` to spot trends like rising review cycles or recurring issue categories.
+This is append-only — open in any spreadsheet or `column -t -s, .claude/metrics-pipeline.csv` to spot trends like rising review cycles or recurring issue categories. Scout and harvest metrics are tracked separately in `.claude/metrics-scout.csv`.
 
 ---
 

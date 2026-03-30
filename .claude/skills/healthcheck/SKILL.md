@@ -4,6 +4,7 @@ description: Scan Docker container logs for errors, crashes, and warnings. Use w
 disable-model-invocation: false
 argument-hint: "[service-name]"
 compatibility: Requires Docker and docker compose
+effort: medium
 ---
 
 Check the health of all running Docker services. $ARGUMENTS is optional — pass a service name to check only that service.

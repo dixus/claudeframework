@@ -2,12 +2,16 @@
 
 Corrections and patterns captured across sessions. Updated automatically after any user correction.
 Each entry: what went wrong → rule that prevents it.
+Each entry must include a `scope:` tag: `framework` (universal, can graduate to CLAUDE.md) or `project` (codebase-specific, stripped by /deploy).
+Entries without a scope tag are treated as `project` (legacy default).
 
 ---
 
 <!-- Add entries below this line as: "## YYYY-MM-DD — <topic>" -->
 
 ## 2026-03-21 — Falsy-zero bug in Likert selection state
+
+**scope:** framework
 
 **What went wrong**: Using `value || null` to determine if a Likert button should show as selected fails when the valid selected value is `0` (e.g., "Not started"). The expression `0 || null` evaluates to `null`, so the "Not started" option never highlights after being selected, even though it was clicked.
 
@@ -17,6 +21,8 @@ Each entry: what went wrong → rule that prevents it.
 
 ## 2026-03-21 — Store tests placed in component test file
 
+**scope:** framework
+
 **What went wrong**: When implementing a feature, store/pure-function tests (testing Zustand actions, adaptive level computation, queue counts, back-nav recompute, scoring engine compatibility) were placed in the component test file (`assessment.test.tsx`) instead of the store test file (`assessmentStore.test.ts`). This violates separation of concerns and means the store test file is not the canonical location for store behavior.
 
 **Rule**: Tests that only interact with `useAssessmentStore.getState()` or pure library functions (no `render`, no `screen`, no `userEvent`) belong in the store/library test file. Only tests that call `render()` belong in component test files. When writing tests during implementation, place each test in the file that matches its subject (store logic → store test, component behavior → component test).
@@ -24,6 +30,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-21 — Test coverage for all spec test cases
+
+**scope:** framework
 
 **What went wrong**: When implementing a feature, the code change for the glossary back link (`href="/"`) was made correctly, but the corresponding spec test case (test case 7: "Glossary back link updated") was not added to the test file. The implementation was complete but the spec test coverage was incomplete.
 
@@ -33,6 +41,8 @@ Each entry: what went wrong → rule that prevents it.
 
 ## 2026-03-21 — GrowthEngineType not re-exported from types.ts
 
+**scope:** project
+
 **What went wrong**: The spec required `GrowthEngineType` to be added to `types.ts` exports, but the implementation used inline dynamic import syntax (`import("./growth-engines").GrowthEngineType`) in interface fields instead of a top-level re-export. Consumers of `types.ts` could not access `GrowthEngineType` without also importing directly from `growth-engines.ts`, fragmenting the API surface.
 
 **Rule**: When a spec says "add X to exports in file Y", always add a top-level `export type { X } from "./source"` re-export in file Y. Inline dynamic import references in interface fields are not equivalent to exporting the type — they satisfy TypeScript structurally but break the intended module API surface.
@@ -40,6 +50,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-21 — Review identified missing tests that already existed
+
+**scope:** framework
 
 **What went wrong**: A review flagged "no direct test for `classifyGrowthEngine()` with each pure type" as a partial issue, but the test file already contained tests for PLG, SLG, and CLG pure types. The review was likely generated from a stale view of the codebase or the reviewer missed the existing coverage.
 
@@ -49,6 +61,8 @@ Each entry: what went wrong → rule that prevents it.
 
 ## 2026-03-21 — What-if scenario hard assignment lowers an already-high score
 
+**scope:** framework
+
 **What went wrong**: In `computeScalingVelocity()`, the `fixBottleneck` what-if scenario used a hard assignment `{ ...capScores, [bottleneckCapability]: 85 }`. The `fixAll` scenario correctly used `Math.max`, but `fixBottleneck` did not, meaning if the bottleneck capability was already above 85, it would be lowered to 85 — producing a `fixBottleneckS` value less than `currentS`, which is logically wrong.
 
 **Rule**: When implementing a "raise X to at least Y" what-if scenario, always use `Math.max(currentValue, targetValue)` — never a bare assignment. A "floor" operation (`Math.max`) is semantically different from a "set" operation. If one scenario in a set uses `Math.max`, review all sibling scenarios for consistency before completing the implementation.
@@ -56,6 +70,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-21 — Unused function parameter when chart data doesn't include the user's position
+
+**scope:** framework
 
 **What went wrong**: `computeCoordinationCurves(teamSize, theta)` accepted a `teamSize` parameter but generated data only for a hardcoded array `[10, 25, 50, 100, 200, 500]`. If the company's team size (e.g., 80) was not in that array, the `ReferenceLine x={teamSize}` in the chart had no matching data point, so the "You are here" marker rendered with no dot on the company curve.
 
@@ -65,6 +81,8 @@ Each entry: what went wrong → rule that prevents it.
 
 ## 2026-03-22 — HelpSection placed before panel header instead of below it
 
+**scope:** project
+
 **What went wrong**: During panel integration, `<HelpSection>` was placed before the panel title element in ScoreCard.tsx, CaseStudyPanel.tsx, and CapabilityPlaybookPanel.tsx. The spec requirement 7 explicitly states it should be placed "directly below the panel header". The reviewer flagged all three as inconsistent placements that affect UX consistency.
 
 **Rule**: When integrating an expandable help/info component into a panel, always place it immediately after the panel's title/header element — not before it and not between unrelated content blocks. The pattern is: header → HelpSection → body content. Verify placement visually before closing the implementation by reading the first 30 lines of each modified panel.
@@ -72,6 +90,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-22 — HelpTerm missing for Recharts chart legend strings
+
+**scope:** project
 
 **What went wrong**: The spec listed "O(n²)" in CoordinationPanel as a term requiring `<HelpTerm>` wrapping, but the implementation left the Recharts `<Line name="...">` strings as plain text. These strings are not JSX — they're string props consumed by Recharts' `<Legend>` component, so direct wrapping in JSX is not possible at the `name` prop level.
 
@@ -81,6 +101,8 @@ Each entry: what went wrong → rule that prevents it.
 
 ## 2026-03-22 — Scope creep: out-of-spec files modified during implementation
 
+**scope:** framework
+
 **What went wrong**: During the landing-page-enhancement implementation, `InsightsPanel.tsx` and `RoadmapPanel.tsx` (in `src/components/results/`) were modified with quote-style and unicode escape reformatting. Neither file is listed in the spec's "Affected files" section. The changes were formatting-only with no functional impact, but they polluted the diff and violated the spec boundary.
 
 **Rule**: Before committing or ending an implementation cycle, run `git diff --name-only` and cross-reference every modified file against the spec's "Affected files" and "New files" lists. Any file not on those lists must be reverted with `git checkout main -- <file>` before proceeding. Linter/formatter auto-fixes that touch out-of-scope files should be undone — they belong in a dedicated formatting commit, not in a feature branch.
@@ -88,6 +110,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-22 — Tooltip data registry incomplete at implementation time
+
+**scope:** project
 
 **What went wrong**: The spec listed "scaling coefficient" and "O(n²)/O(n log n)/O(n)" as terms requiring HelpTerm wrapping, but the `HELP_TOOLTIPS` data registry in `tooltips.ts` was not updated with corresponding keys (`scaling_coefficient`, `coordination_o_n2`). The JSX wrapping was never added either. Both the data entry and the JSX integration were simultaneously missing.
 
@@ -97,6 +121,8 @@ Each entry: what went wrong → rule that prevents it.
 
 ## 2026-03-22 — Circular import from defining a utility in the wrong module
 
+**scope:** framework
+
 **What went wrong**: `slugify` was defined and exported from `PdfExportButton.tsx` (a UI component), then imported by `generatePdf.ts` (a pure logic module). `PdfExportButton.tsx` also imports from `generatePdf.ts`, creating a circular dependency. While bundlers often resolve this at build time, circular imports are fragile and can cause undefined values at runtime depending on evaluation order.
 
 **Rule**: Pure utility functions with no UI dependencies (string manipulation, date formatting, etc.) must live in the logic/utility module, not in a React component file. When a pure module and a UI component need a shared function, the function always goes in the pure module. A component may import from a logic module, but a logic module must never import from a component file.
@@ -104,6 +130,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-22 — Eager DB initialization throws at build time without env vars
+
+**scope:** framework
 
 **What went wrong**: `export const db = getDb()` at module level runs the DB initialization function immediately when the module is imported. Since Next.js server components import DB modules at the top level, `next build` throws at build time if `POSTGRES_URL` is not set in the build environment. The intent was to initialize once (singleton), but eager initialization is wrong for environment-dependent resources.
 
@@ -113,6 +141,8 @@ Each entry: what went wrong → rule that prevents it.
 
 ## 2026-03-22 — Test file inside Next.js dynamic route directory breaks vitest glob collection
 
+**scope:** framework
+
 **What went wrong**: A test file placed inside `src/app/results/[hash]/` could not be collected by vitest because the square brackets in the directory name are treated as glob character classes. Vitest's file discovery uses glob patterns to find test files, and `[hash]` in a path matches any single character from the set `{h, a, s}` rather than the literal directory name.
 
 **Rule**: Never place test files inside Next.js dynamic route directories (`[param]/`). Place co-located tests for dynamic-route page components in the nearest parent directory without brackets (e.g., `src/app/results/savedResults.test.tsx` tests `src/app/results/[hash]/page.tsx`). Use a descriptive filename like `savedResults.test.tsx` or `hashPage.test.tsx` to indicate what is being tested.
@@ -120,6 +150,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-22 — Missing catch block leaves PDF export failures silent
+
+**scope:** framework
 
 **What went wrong**: The `handleExport` async function in `PdfExportButton.tsx` used `try/finally` with no `catch`. If the dynamic `import("jspdf")` failed (network error) or `generatePdfContent` threw, the error was silently swallowed. The button returned to its default state with no feedback to the user.
 
@@ -129,6 +161,8 @@ Each entry: what went wrong → rule that prevents it.
 
 ## 2026-03-23 — Component-level spec test cases omitted during implementation
 
+**scope:** framework
+
 **What went wrong**: During implementation of the benchmark-context feature, spec test cases 4-8 (component-level rendering assertions for RadarChartPanel, DimensionScorecard, ScoreCard, ScalingPanel) were not written. Only the pure-function test cases 1-3 were implemented in `benchmarks.test.ts`. The review caught all five missing component tests as a major issue.
 
 **Rule**: After writing pure-function tests, explicitly iterate through every numbered test case in the spec's "Test cases" section. For each TC tagged as a component rendering test (e.g., "renders two `<Radar>` elements", "shows text X when prop Y"), add it to the relevant component test file — not just the library test file. A spec with 8 test cases must produce 8 passing test assertions before implementation is complete. Components that use Radix `<Tooltip>` or `<HelpTerm>` must be rendered with `{ wrapper: Wrapper }` (a `TooltipProvider`) to avoid a runtime error in jsdom.
@@ -136,6 +170,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-23 — Vitest v1 incompatible with Node.js v24; environmentMatchGlobs broken on Windows in v2
+
+**scope:** framework
 
 **What went wrong**: Vitest v1.6.x reports "No test suite found" for all test files when run on Node.js v24. This is a known incompatibility between vitest v1's vm module usage and Node v24's VM changes. Upgrading to vitest v2.x fixes the "No test suite found" crash. However, vitest v2 on Windows breaks `environmentMatchGlobs` path matching: vitest resolves the glob patterns with `path.resolve()` which produces Windows backslash paths (e.g., `D:\Repo\src\store\**`), but micromatch cannot match these because backslashes in a glob are treated as escape characters, not path separators. Test files that relied on `environmentMatchGlobs` for jsdom environment silently fall back to the node environment and fail with "localStorage is not defined".
 
@@ -152,6 +188,8 @@ Each entry: what went wrong → rule that prevents it.
 ---
 
 ## 2026-03-22 — Zustand persist middleware re-writes state after reset, defeating localStorage cleanup
+
+**scope:** project
 
 **What went wrong**: The Zustand `persist` middleware subscribes to all state changes. When `reset()` sets state back to initial values, the middleware immediately writes those initial values to localStorage. The key still exists (with `step: 0`), so any check for key existence (`localStorage.getItem(key) !== null`) would find saved state even after reset. The ResumeBanner appeared on every page load because the key was never actually removed.
 

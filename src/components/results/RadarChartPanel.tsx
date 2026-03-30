@@ -74,10 +74,12 @@ export function RadarChartPanel({ dimensions, level }: RadarChartPanelProps) {
           <PolarGrid />
           <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 12 }} />
           <Radar
-            dataKey="score"
-            fill="#3b82f6"
-            fillOpacity={0.3}
-            stroke="#3b82f6"
+            dataKey="fullMark"
+            stroke="#e5e7eb"
+            strokeWidth={1}
+            fillOpacity={0}
+            fill="none"
+            aria-label="Maximum possible score"
           />
           {targetLevel !== null && (
             <Radar
@@ -89,20 +91,30 @@ export function RadarChartPanel({ dimensions, level }: RadarChartPanelProps) {
               aria-label={benchmarkLabel ?? undefined}
             />
           )}
+          <Radar
+            dataKey="score"
+            fill="#3b82f6"
+            fillOpacity={0.3}
+            stroke="#3b82f6"
+          />
         </RadarChart>
       </ResponsiveContainer>
-      {benchmarkLabel && (
-        <div className="flex items-center justify-center gap-4 text-xs text-gray-500 mt-2">
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 bg-blue-500 rounded-sm opacity-50" />
-            Your scores
-          </span>
+      <div className="flex items-center justify-center gap-4 text-xs text-gray-500 mt-2">
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-3 h-3 bg-blue-500 rounded-sm opacity-50" />
+          Your scores
+        </span>
+        {benchmarkLabel && (
           <span className="flex items-center gap-1">
             <span className="inline-block w-4 h-0 border-t-2 border-dashed border-gray-400" />
             {benchmarkLabel}
           </span>
-        </div>
-      )}
+        )}
+        <span className="flex items-center gap-1">
+          <span className="inline-block w-4 h-0 border-t border-gray-300" />
+          Maximum (100)
+        </span>
+      </div>
     </div>
   );
 }

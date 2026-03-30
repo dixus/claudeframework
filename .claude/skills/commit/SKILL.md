@@ -3,6 +3,9 @@ name: commit
 description: Create well-structured atomic commits with conventional commit messages. Use when ready to commit working changes.
 disable-model-invocation: true
 argument-hint: "[--all]"
+effort: medium
+metadata:
+  note: "When invoked by /ship, runs with sonnet model for cost efficiency"
 ---
 
 Create one or more commits from the current working tree changes.

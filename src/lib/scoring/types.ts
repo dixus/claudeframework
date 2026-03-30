@@ -210,3 +210,32 @@ export interface GlossaryTerm {
   definition: string;
   example?: string;
 }
+
+export interface TimestampedResult {
+  result: AssessmentResult;
+  createdAt: string; // ISO date
+}
+
+export interface ProgressDelta {
+  thetaDelta: number;
+  dimensionDeltas: Record<DimensionKey, number>;
+  levelChanged: boolean;
+  previousLevel: number;
+  currentLevel: number;
+  velocityDelta: number | null;
+  daysBetween: number;
+}
+
+export interface ProgressSummary {
+  assessmentCount: number;
+  trend: "improving" | "stable" | "declining";
+  fastestImproving: { dimension: DimensionKey; delta: number } | null;
+  mostRegressed: { dimension: DimensionKey; delta: number } | null;
+  levelTransitions: number;
+  timelinePoints: {
+    date: string;
+    theta: number;
+    level: number;
+    dimensions: Record<DimensionKey, number>;
+  }[];
+}

@@ -1,11 +1,19 @@
 ---
 name: audit
-description: Audit and fix vulnerable dependencies. Use periodically or when security alerts flag a dependency.
+description: Audit dependencies for vulnerabilities and scan for committed secrets. Use periodically or when security alerts flag a dependency.
 disable-model-invocation: true
+effort: medium
 ---
+
 Check for and fix vulnerable dependencies.
 
 Steps:
+
+0. **Secret scan** (runs before dependency audit):
+   1. Check if `gitleaks` is available: `which gitleaks || gitleaks version`
+   2. If available, run: `gitleaks detect --verbose --redact`
+   3. Report any findings as CRITICAL severity — committed secrets must be rotated
+   4. If gitleaks not installed, note "gitleaks not available — secret scan skipped" and continue
 1. Detect the package manager by looking for lockfiles in the project root:
    - `package-lock.json` or `npm-shrinkwrap.json` → npm
    - `yarn.lock` → yarn

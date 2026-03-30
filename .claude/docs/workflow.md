@@ -1,6 +1,6 @@
 # Workflow Guide
 
-Generated and maintained by `/doc`. Last updated: 2026-03-20.
+Generated and maintained by `/doc`. Last updated: 2026-03-25.
 
 ---
 
@@ -54,17 +54,20 @@ Use manual mode when you want to inspect and steer between steps — e.g., revie
 
 ```
 /ship <feature>
-    │
-    ├── Step 0: branch setup              creates feat/<spec-name>
-    ├── Step 1: clarifying questions       single batch, only interruption
-    ├── Subagent A: spec          [opus]   writes specs/<name>.md
-    ├── Subagent B: implement     [opus]   writes source, runs verify
-    ├── Subagent C: review        [opus]   writes reviews/<name>-review.md
-    ├── Subagent D: fix           [sonnet] applies fixes → loop back to C (max 3)
-    ├── Step 5: smoke test        [sonnet] Docker stack + smoke_test.py
-    ├── Step 5d: final verify gate         typecheck → lint → tests → build
-    ├── Subagent F: commit        [sonnet] atomic commits on feature branch
-    └── Step 7: finalize                   merge/PR/leave on branch (your choice)
+    |
+    +-- Step 0: branch setup              creates feat/<spec-name>
+    +-- Step 1: clarifying questions       single batch, only interruption
+    +-- Step 1b: historical patterns       reads metrics-pipeline.csv for recurring issues
+    +-- Subagent A: spec          [opus]   writes specs/<name>.md
+    +-- Subagent B: implement     [opus]   writes source, runs verify
+    +-- Subagent C: review        [opus]   writes reviews/<name>-review.md
+    +-- Subagent D: fix           [varies] loops review/fix (max 3 cycles)
+    +-- Step 4b: lesson graduation         graduates mature lessons -> CLAUDE.md
+    +-- Step 4c: integration check [opus]  cross-phase glue review (phased only)
+    +-- Step 5: final verify gate          typecheck -> lint -> tests -> build
+    +-- Subagent E: commit        [sonnet] atomic commits on feature branch
+    +-- Step 7: finalize                   merge/PR/leave on branch (your choice)
+    +-- Post-merge cleanup                 delete branches, mark spec completed
 ```
 
 Each subagent gets a **clean context window** — the spec file, review file, and git diff are the handoff mechanism. The orchestrator never reads code files directly.
@@ -123,16 +126,22 @@ A fix can introduce a new bug, especially when multiple issues are fixed in sequ
 
 ### Final verify gate in `/ship`
 
-After smoke tests pass, the full verify suite runs one last time before committing. Smoke test fixes or late-stage changes can introduce regressions that the earlier review/fix loop didn't catch. This gate prevents broken code from being committed.
+After the review/fix loop passes, the full verify suite runs one last time before committing. Late-stage changes from the fix cycle can introduce regressions that the earlier review/fix loop did not catch. This gate prevents broken code from being committed.
+
+### Historical pattern analysis in `/ship`
+
+Before writing the spec, `/ship` reads `.claude/metrics-pipeline.csv` to find recurring issue categories from past features in the same area. If prior features had validation or edge-case issues, the spec subagent receives extra guidance to write more detailed coverage in those areas. This makes the framework learn from its own history.
 
 ### Model routing in `/ship`
 
 Not every pipeline step needs the most powerful model. `/ship` routes each subagent to the appropriate model:
 
-| Step                     | Model      | Why                                                                     |
-| ------------------------ | ---------- | ----------------------------------------------------------------------- |
-| Spec, Implement, Review  | **opus**   | Deep reasoning — architecture, requirements analysis, multi-lens review |
-| Fix, Smoke tests, Commit | **sonnet** | Execution-heavy — targeted fixes guided by explicit instructions        |
+| Step                    | Model      | Why                                                                     |
+| ----------------------- | ---------- | ----------------------------------------------------------------------- |
+| Spec, Implement, Review | **opus**   | Deep reasoning — architecture, requirements analysis, multi-lens review |
+| Fix (pass with fixes)   | **sonnet** | Execution-heavy — targeted fixes guided by explicit instructions        |
+| Fix (needs rework)      | **opus**   | Critical issues need deeper reasoning                                   |
+| Commit                  | **sonnet** | Mechanical — staging and message composition                            |
 
 This saves ~40% of token cost on a typical `/ship` run without quality risk. The thinking-heavy steps stay on opus; the mechanical steps use sonnet.
 
@@ -143,6 +152,7 @@ The pipeline has hard limits to prevent infinite loops:
 - **Review/fix loop**: max 3 cycles. If the same issues keep recurring, escalate to the user — the problem is in the spec or architecture, not the fix.
 - **Smoke test fix loop**: max 3 attempts. On failure, restores the original smoke test file and escalates.
 - **Verify failures**: max 2 fix attempts per gate. Stops and reports blockers rather than looping.
+- **Recurring issue detection**: `/3_fix` tracks issues across review cycles. If the same issue appears in 2+ cycles, it escalates rather than attempting another fix.
 
 ### Permission hook (`.claude/hooks/auto-approve.js`)
 
@@ -269,7 +279,9 @@ Subagents          → focused subtasks (investigation, review, test run)
 Agent Teams        → 3+ distinct workstreams that benefit from peer-to-peer coordination
 ```
 
-**Agent Teams** (experimental, enable with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) add a shared task board and direct peer-to-peer messaging between teammate instances. Use when: parallel exploration, cross-domain review (security + perf + tests affecting each other), or research tasks needing multiple perspectives synthesised before building. **Avoid** for same-file edits, simple tasks, or debugging — coordination overhead dominates. Sweet spot: 3–4 teammates.
+**Agent Teams** (experimental, enable with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) add a shared task board and direct peer-to-peer messaging between teammate instances. Use when: parallel exploration, cross-domain review (security + perf + tests affecting each other), or research tasks needing multiple perspectives synthesised before building. **Avoid** for same-file edits, simple tasks, or debugging — coordination overhead dominates. Sweet spot: 3-5 teammates.
+
+**Agent Teams practical tips**: assign agents by domain directory (not feature slice) to avoid file conflicts. Use a shared numbered task queue so teammates claim tasks without duplication.
 
 ### Quality pass after implementation
 
@@ -281,7 +293,7 @@ For large-scale migrations across many files, use `/batch` instead of hand-editi
 
 ## Instincts
 
-`.claude/context/instincts.md` contains short, high-priority rules that apply in every session — things like "read before editing", "no speculative code", "never skip typecheck". They are loaded automatically by all skills and override default behaviour. Edit this file to add project-specific instincts that Claude keeps violating despite being told.
+`.claude/rules/instincts.md` contains short, high-priority rules that apply in every session — things like "read before editing", "no speculative code", "never skip typecheck". They are loaded automatically by all skills and override default behaviour. Edit this file to add project-specific instincts that Claude keeps violating despite being told.
 
 ---
 
@@ -294,6 +306,7 @@ For large-scale migrations across many files, use `/batch` instead of hand-editi
 | Claude making same mistake repeatedly  | `/clear` + better prompt                            |
 | Exploring a large area of the codebase | Use a subagent (`"investigate X using a subagent"`) |
 | Context getting long mid-task          | `/compact Focus on <topic>`                         |
+| Quick side question                    | `/btw` — answered without entering context history  |
 
 ---
 
@@ -353,17 +366,44 @@ At each course-correction, update the spec in `.claude/specs/` before continuing
 
 ## Knowledge base loop
 
+The framework has three knowledge-acquisition skills that chain together:
+
 ```
-Find a useful blog post or repo
-    │
+/scout              searches the web + GitHub for new patterns and repos
+    │                   writes report → references/blogs/scout-<date>.md
+    │                   queues articles → registry (queued)
+    │                   queues repos → registry (queued-repo)
     ▼
-Paste content into .claude/references/blogs/ or repos/
-    │
+/harvest <url>      clones a repo, inventories its .claude/ setup
+    │                   classifies each artifact: new / enhancement / duplicate
+    │                   writes proposals → reviews/learn-proposals.md
+    │                   writes report → references/repos/<slug>/harvest-report.md
     ▼
-/learn  ←── extracts insights → updates context/ → runs /doc
-    │
+/learn              processes all unprocessed references (blogs + repos)
+    │                   extracts insights → updates context/
+    │                   reviews affected skills → proposes improvements
+    ▼
+/apply-proposals    applies accepted proposals to skill/rule files
+    │                   validates diffs, syntax-checks, updates statuses
+    │                   auto-defers stale proposals
     ▼
 All future sessions automatically benefit
 ```
 
+You can also use each skill independently:
+
+- Drop a blog post into `references/blogs/` and run `/learn`
+- Run `/learn <url>` to fetch and ingest a URL directly
+- Run `/harvest <repo-url>` on any repo you find interesting
+- Run `/apply-proposals` to review and apply accepted proposals to skill/rule files
+
 The context files in `.claude/context/` are read by `/0_spec` and `/1_implement` automatically, so accumulated knowledge influences every spec and implementation without any manual prompting.
+
+### Lesson scoping
+
+Lessons in `.claude/context/lessons.md` are tagged with `scope: framework` or `scope: project`:
+
+- **framework** — universal rules that apply in any project (e.g., "never use `|| null` for falsy-zero checks"). These can graduate to CLAUDE.md `## Learned Rules` via `/ship` Step 4b.
+- **project** — rules specific to this codebase's tech stack or architecture (e.g., "Radix Tooltip needs a Provider wrapper in jsdom"). These stay in `lessons.md` and are stripped by `/deploy` when distributing the framework.
+
+This prevents project-specific lessons from polluting the framework when deployed to other repos.

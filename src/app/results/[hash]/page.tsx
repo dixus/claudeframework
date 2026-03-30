@@ -86,7 +86,7 @@ export default async function SavedResultsPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
-        <ResultsPageClient result={result} />
+        <ResultsPageClient result={result} email={row.email ?? null} />
       </div>
     </main>
   );

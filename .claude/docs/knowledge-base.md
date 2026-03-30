@@ -1,22 +1,48 @@
 # Knowledge Base
 
 Auto-updated by `/learn` → `/doc` when new references are processed.
-Last updated: 2026-03-02 (batch 4 — awesome-claude-code).
+Last updated: 2026-03-25.
 
-This file summarises what has been learned from collected references. Full distilled content lives in `.claude/context/`.
+Insights from references are routed directly to skill and rule changes via proposals in `.claude/reviews/learn-proposals.md`. No intermediate knowledge files — findings become concrete edits.
 
 ---
 
-## Context files
+## Active context files
 
-| File | Topic | Last updated |
-|---|---|---|
-| [`claude-code-workflow.md`](../context/claude-code-workflow.md) | Claude Code workflow best practices | 2026-03-02 |
-| [`saas-architecture-patterns.md`](../context/saas-architecture-patterns.md) | SaaS architecture patterns | 2026-03-02 (seeded) |
+| File                                  | Topic                                                                                      | Last updated |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ | ------------ |
+| [`lessons.md`](../context/lessons.md) | Corrections and patterns captured across sessions (scope-tagged: `framework` or `project`) | 2026-03-25   |
 
 ---
 
 ## Processed references
+
+### 2026-03-25
+
+**references/blogs/scout-2026-03-25.md**
+Source: /scout web research + official Anthropic docs
+
+Key insights extracted:
+
+- .claude/agents/ directory is now a first-class feature (YAML frontmatter, 14 fields)
+- 12 new hook events (v2.1.50-v2.1.83): CwdChanged, FileChanged, WorktreeCreate/Remove, SubagentStart/Stop
+- TaskOutput deprecated; effort levels simplified to low/medium/high only
+- Skill authoring best practices: 5000 token limit, progressive disclosure
+
+---
+
+### 2026-03-23
+
+**references/blogs/scout-2026-03-23.md**
+Source: /scout web research + official Anthropic docs
+
+Key insights extracted:
+
+- New CLI flags and frontmatter (v2.1.78-v2.1.81): --bare, maxTurns, disallowedTools, allowRead
+- Agent Skills specification (official canonical fields)
+- Plugin and distribution patterns
+
+---
 
 ### 2026-03-02
 
@@ -24,6 +50,7 @@ This file summarises what has been learned from collected references. Full disti
 Source: Web research — code.claude.com/docs, f22labs, boristane, infoq
 
 Key insights extracted:
+
 - Context window is the primary constraint — all practices serve it
 - Explore → Plan → Implement → Commit is the proven 4-phase workflow
 - `/2_review` must always run in a fresh session to avoid bias
@@ -38,6 +65,7 @@ Key insights extracted:
 Source: Reza Rezvani / Medium — "The New Claude Code's Auto-Memory Feature"
 
 Key insights extracted:
+
 - Memory hierarchy: Organization policy → CLAUDE.md (git) → ~/.claude/CLAUDE.md → MEMORY.md (200 lines)
 - MEMORY.md captures "what" (commands, paths, patterns) automatically; CLAUDE.md captures "why" (written by humans)
 - MEMORY.md is local-only at `~/.claude/projects/<project>/memory/` — never committed
@@ -53,6 +81,7 @@ Key insights extracted:
 Source: Heeki Park / Medium — "Using spec-driven development with Claude Code"
 
 Key insights extracted:
+
 - Three levels: spec-first (write spec then code), spec-anchored (keep spec alive through evolution), spec-as-source (human edits spec only, AI regenerates code)
 - spec-anchored is the practical target: update the spec whenever you course-correct
 - Upfront planning reduces wholesale rewrites; most follow-up interactions become small tweaks
@@ -65,6 +94,7 @@ Key insights extracted:
 Source: Nick Tune / Medium — "Hook-driven dev workflows with Claude Code"
 
 Key insights extracted:
+
 - Hooks can enforce a full state-machine workflow: planning → developing → reviewing → committing
 - Write the workflow engine in real code with 100% test coverage; hooks are just the bridge to Claude
 - Particularly valuable for legacy or unfamiliar codebases where you can't own git hooks
@@ -76,6 +106,7 @@ Key insights extracted:
 Source: Reza Rezvani / Medium — "It Took Me 7 Months to Stop Fighting Claude Code"
 
 Key insights extracted:
+
 - CLAUDE.md pruning rule: for each line, ask "would removing this cause Claude to make mistakes?" If not, cut it
 - Task decomposition threshold: if a task takes a senior engineer more than one focused session, decompose it
 - Accuracy drops noticeably beyond ~15 file modifications in a single context
@@ -92,6 +123,7 @@ Key insights extracted:
 Source: Reza Rezvani / Medium — "From Subagents to Agent Teams: Claude Code's Multi-Agent Leap"
 
 Key insights extracted:
+
 - Subagents = hub-and-spoke; Agent Teams = peer-to-peer with shared task board and direct inter-agent messaging
 - Three-tier decision ladder: single session → subagents → agent teams (use simplest that works)
 - Agent Teams enabled with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (experimental)
@@ -106,6 +138,7 @@ Key insights extracted:
 Source: Joe Njenga / Medium — "How I'm Using Claude Code (New) /simplify & /batch"
 
 Key insights extracted:
+
 - `/simplify` (Claude Code v2.1.63+): check git diff → launch 3 parallel agents (code reuse, code quality, efficiency review) → apply all fixes in one pass
 - Catches: dead code, commented-out blocks, redundant logic, code smells, CLAUDE.md violations
 - `/batch`: large-scale parallel migrations — enter plan mode, build per-file work units, run each in isolated git worktree with built-in verification before opening PR
@@ -117,6 +150,7 @@ Key insights extracted:
 Source: Youssef Hosni / Level Up Coding — "Level Up Your Claude Code with This CLAUDE.md"
 
 Key insights extracted:
+
 - CLAUDE.md is a behavioral contract — encodes HOW to work, not WHAT to build; transforms reactive tool into disciplined collaborator
 - Most impactful CLAUDE.md sections: Workflow Orchestration (plan-first), Subagent Strategy (one task per subagent), Self-Improvement Loop (capture lessons after corrections), Verification Before Done ("would a staff engineer approve this?"), Demand Elegance (ask for more elegant approach on non-trivial changes), Autonomous Bug Fixing (investigate independently, fix root causes)
 - Core principles: Simplicity First, No Laziness (root causes not patches), Minimal Impact (only touch what's necessary)
@@ -128,6 +162,7 @@ Key insights extracted:
 Source: Code Coup / Medium — "Claude Code Permission Hook: Uninterrupted Coding Without the Risk"
 
 Key insights extracted:
+
 - Permission Hook = third model between manual approval and --dangerously-skip-permissions
 - Three tiers: Tier 1 fast-approve (Read, Write, Edit, Grep, WebFetch, TodoWrite, Task, all MCP tools), Tier 2 fast-deny (rm -rf /, force push, mkfs, fork bombs), Tier 3 LLM-cached analysis (~$1/5000 decisions, 168h cache)
 - Wired via `PermissionRequest` hook in settings.json; device-level (~/.claude/settings.json) or project-level (.claude/settings.local.json)
@@ -141,6 +176,7 @@ Key insights extracted:
 Source: Habib Mrad / Medium — "Claude Code: Practical Best Practices for Agentic Coding" (Dec 2025)
 
 Key insights extracted:
+
 - **Agentic TDD loop**: write test → confirm red → implement to green; closed feedback loop, eliminates ~80% of debugging
 - **Visual iteration**: provide screenshots/mocks as spec input; perceptual feedback significantly improves UI output quality
 - **Autonomy isolation**: distinguish exploratory mode (high supervision) vs execution mode (high autonomy); "autonomy is safe when blast radius is controlled" — sandbox with containers + disabled network for reversible tasks
@@ -155,6 +191,7 @@ Key insights extracted:
 Source: hesreallyhim/awesome-claude-code (2026-03-02)
 
 Key insights extracted:
+
 - **Hook implementation standards**: read JSON from stdin (not argv); success → `{continue: true, suppressOutput: true}`; error → `{continue: true, additionalContext: "..."}` for Claude auto-fix; block → `exit(2)` in PreToolUse; hooks run in parallel so design for independence
 - **Hook event types**: PreToolUse (can block), PostToolUse (feedback/fix), UserPromptSubmit (before prompt processing)
 - **Project tooling → hook suggestions**: TypeScript → type-check hook; Prettier → auto-format; ESLint → lint + fix; git → secret scanner
@@ -167,19 +204,21 @@ Key insights extracted:
 
 ## Pending references
 
-_None — drop files into `.claude/references/` and run `/learn`_
+_None — drop files into `.claude/references/` and run `/learn`, or run `/harvest <repo-url>` to analyze a repo_
 
 ---
 
 ## Suggested references to collect
 
 For Claude Code framework:
+
 - trailofbits/claude-code-config — opinionated production `settings.json`, statusline, CLAUDE.md template
 - trailofbits/skills — security/audit skill library, well-structured examples
 - disler/claude-code-hooks-mastery — deep dive on all 8 hook events, sub-agents, meta-agents
 - ChrisWiles/claude-code-showcase — full project config with hooks + GitHub Actions
 
 For SaaS platform development:
+
 - T3 Stack / create-t3-app architecture patterns
 - Next.js + Supabase SaaS starter patterns
 - Auth patterns: Clerk, Auth.js, NextAuth

@@ -3,6 +3,7 @@ name: continue
 description: Resume work from a handoff file. Use at the start of a new session to pick up where a previous session left off.
 disable-model-invocation: true
 argument-hint: "[handoff-file]"
+effort: low
 ---
 Restore context from a handoff file and prepare to resume work.
 
