@@ -10,11 +10,8 @@
  *                          Task, NotebookEdit
  * Tier 2 — auto-deny:     known destructive Bash patterns
  * Tier 3 — auto-approve:  Bash commands not matching deny patterns
- * Tier 4 — pass through:  anything else (falls back to normal prompt)
- *
- * Note: Edit/Write are NOT auto-approved here — they are handled by
- * PreToolUse hooks (protect-secrets.js, allow-claude-edits.js) which
- * provide file-level granularity.
+ * Tier 4 — auto-approve:  Edit/Write on safe .claude/ subdirectories
+ * Tier 5 — pass through:  anything else (falls back to normal prompt)
  */
 
 const ALWAYS_ALLOW_TOOLS = new Set([
@@ -27,6 +24,43 @@ const ALWAYS_ALLOW_TOOLS = new Set([
   "Task",
   "NotebookEdit",
 ]);
+
+// Safe .claude/ subdirectories that can be auto-approved for Edit/Write
+const SAFE_CLAUDE_SEGMENTS = [
+  "skills",
+  "agents",
+  "rules",
+  "context",
+  "references",
+  "docs",
+  "specs",
+  "reviews",
+  "input",
+  "handoffs",
+  "plans",
+  "commands",
+];
+
+const SAFE_CLAUDE_ROOT_FILES = [
+  "todo.md",
+  "metrics-pipeline.csv",
+  "metrics-scout.csv",
+  "learn-proposals.md",
+];
+
+function isSafeClaudePath(filePath) {
+  const norm = filePath.replace(/\\/g, "/").toLowerCase();
+  const idx = norm.lastIndexOf("/.claude/");
+  if (idx === -1) return false;
+  const relative = norm.slice(idx + "/.claude/".length);
+  for (const seg of SAFE_CLAUDE_SEGMENTS) {
+    if (relative.startsWith(seg + "/") || relative === seg) return true;
+  }
+  for (const f of SAFE_CLAUDE_ROOT_FILES) {
+    if (relative === f) return true;
+  }
+  return false;
+}
 
 const ALWAYS_DENY_PATTERNS = [
   /rm\s+-rf\s+\/(?:\s|$)/, // rm -rf /
@@ -95,7 +129,18 @@ async function main() {
     return;
   }
 
-  // Tier 4: pass through (Edit, Write, and anything else — let PreToolUse hooks decide)
+  // Tier 4: Edit/Write on safe .claude/ paths — auto-approve
+  if ((tool === "Edit" || tool === "Write") && input.tool_input) {
+    const filePath = input.tool_input.file_path || "";
+    if (filePath && isSafeClaudePath(filePath)) {
+      process.stdout.write(
+        JSON.stringify({ continue: true, suppressOutput: true }),
+      );
+      return;
+    }
+  }
+
+  // Tier 5: pass through (everything else — falls back to normal prompt)
   process.stdout.write(JSON.stringify({ continue: true }));
 }
 

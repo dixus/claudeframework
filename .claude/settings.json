@@ -34,10 +34,6 @@
           {
             "type": "command",
             "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/protect-secrets.js"
-          },
-          {
-            "type": "command",
-            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/allow-claude-edits.js"
           }
         ]
       }
