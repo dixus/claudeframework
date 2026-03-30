@@ -209,8 +209,14 @@ Print: `⏳ Spawned <N> parallel implement agents in isolated worktrees`
 
 ### Step 3P-d — Wait and collect results (orchestrator)
 
-Wait for all background agents to complete. For each agent, read its returned summary and record:
+Wait for background agents to complete. **Do not wait passively** — agent notifications can be delayed.
 
+**Active monitoring:** While waiting for agents that haven't returned yet:
+1. After 90 seconds of silence, check each pending worktree: `ls -la <worktree-path>/src/` to see if expected files exist
+2. Print a progress update: `⏳ Unit <N> (<domain>): <N>/<total> expected files written, still running...`
+3. If ALL expected EXCLUSIVE files for an agent exist in its worktree AND 3+ minutes have elapsed since spawn, **proceed to Step 3P-e immediately** — copy the files without waiting for the agent's return message. The post-merge verify (3P-g) will catch any issues. Print: `⚡ Unit <N> (<domain>): all files present, proceeding without waiting for agent return`
+
+For agents that DO return normally, read their summary and record:
 - Files changed (verify they match the EXCLUSIVE list — flag any scope violations)
 - Verify suite status
 - Blockers reported
