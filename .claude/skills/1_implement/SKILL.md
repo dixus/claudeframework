@@ -64,9 +64,7 @@ Steps:
    - This prevents the recurring pattern: "changed helper, forgot 6 call sites, broke unrelated tests"
 10. Follow existing code patterns — match the style, naming conventions, and architecture of surrounding code
 11. Do not add comments, docstrings, or extra error handling beyond what the spec requires
-12. After all changes are made, run the project's verify commands in this order (read them from CLAUDE.md, skip any not listed).
-    **Verify scope:** If the subagent prompt includes a "SCOPE CONSTRAINT" with a verify scope override (e.g., "only run typecheck and tests"), follow that override instead of running the full suite. This is used by parallel worktree agents where build/lint are deferred to post-merge verify.
-    Default (no override):
+12. After all changes are made, run the project's verify commands in this order (read them from CLAUDE.md, skip any not listed):
     a. Typecheck (e.g. `tsc --noEmit` or equivalent)
     b. Lint
     c. Tests
