@@ -28,7 +28,7 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## The solution
 
-20 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
+22 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
@@ -138,6 +138,7 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 
 | Skill                 | Purpose                                                                      |
 | --------------------- | ---------------------------------------------------------------------------- |
+| `/decompose`          | Break a concept doc or product brief into independent PRDs, then ship each   |
 | `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit        |
 | `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                |
 | `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis |
@@ -163,11 +164,12 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 
 | Skill       | Purpose                                                                          |
 | ----------- | -------------------------------------------------------------------------------- |
-| `/learn`    | Process blog posts and repos into the knowledge base; propose skill improvements |
-| `/scout`    | Search the web for new Claude Code patterns and suggest framework optimizations  |
-| `/doc`      | Regenerate `.claude/docs/` from current skills and context                       |
-| `/handoff`  | Capture session state before `/clear`                                            |
-| `/continue` | Resume from a handoff file in a new session                                      |
+| `/learn`           | Process blog posts and repos into the knowledge base; propose skill improvements |
+| `/scout`           | Search the web for new Claude Code patterns and suggest framework optimizations  |
+| `/apply-proposals` | Apply accepted proposals from learn-proposals.md to skill/rule files             |
+| `/doc`             | Regenerate `.claude/docs/` from current skills and context                       |
+| `/handoff`         | Capture session state before `/clear`                                            |
+| `/continue`        | Resume from a handoff file in a new session                                      |
 
 All skills are **technology-agnostic** — they read project commands from `CLAUDE.md`, so they work with Node, Python, Rust, Go, or any other stack.
 
@@ -256,7 +258,7 @@ This means the framework gets stricter, more project-aware, and more precise wit
 
 ```
 .claude/
-  skills/          ← 20 skills defining the full pipeline
+  skills/          ← 22 skills defining the full pipeline
   agents/          ← subagent personas (code-reviewer, explorer)
   rules/           ← auto-loaded instructions (like CLAUDE.md shards)
   context/         ← curated knowledge read by all skills

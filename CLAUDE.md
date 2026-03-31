@@ -51,6 +51,7 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 
 | Skill                 | Purpose                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `/decompose`          | Break a concept doc or product brief into independent PRDs, then ship each through the pipeline                     |
 | `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit. `--dry-run` runs spec only and reports scope |
 | `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                                                       |
 | `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis                                        |
@@ -100,7 +101,7 @@ This section is optional. If omitted, all skills use the defaults shown below. T
 
 | Path                   | Purpose                                          |
 | ---------------------- | ------------------------------------------------ |
-| `skills/`              | 21 skill definitions (the framework itself)      |
+| `skills/`              | 22 skill definitions (the framework itself)      |
 | `agents/`              | Subagent personas (code-reviewer, explorer)      |
 | `rules/`               | Auto-loaded instructions (like CLAUDE.md shards) |
 | `context/`             | Reference knowledge read by skills on demand     |
