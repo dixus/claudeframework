@@ -103,9 +103,10 @@ Read the returned summary. Do not read the spec file itself.
 
 If the spec subagent returned a "Decisions made by Claude" section with any decisions:
 
-1. Print the decisions to the user, prefixed with: "The spec made these decisions autonomously. Please confirm or override:"
-2. List each decision as a numbered item
-3. Wait for user confirmation before proceeding to Step 3
+1. Separate decisions by severity: **(high)** vs **(medium)** / **(low)**
+2. **Auto-accept** all (medium) and (low) decisions — print them as "Auto-accepted decisions (medium/low):" for visibility, but do not wait for confirmation
+3. If any **(high)** decisions exist, print them prefixed with: "The spec made these HIGH-priority decisions that need your input:" — list each as a numbered item and wait for user confirmation before proceeding
+4. If no (high) decisions exist, proceed directly to Step 3 without interruption
 
 If no decisions were made (or the section is empty), skip to Step 3.
 
