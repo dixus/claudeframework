@@ -1,8 +1,96 @@
 # Skills Reference
 
-Generated and maintained by `/doc`. Last updated: 2026-03-25.
+Generated and maintained by `/doc`. Last updated: 2026-04-01.
 
 Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology-agnostic — they read project commands from `CLAUDE.md` rather than hardcoding tools.
+
+---
+
+## `/decompose`
+
+**Purpose**: Break a concept document, draft, or product brief into independent PRDs that each feed into `/ship`.
+
+**When to use**: When input in `.claude/input/` contains multiple features, a big-picture vision, or a concept too large for a single `/ship` run. Run this before `/fleet`.
+
+**Input**: Files in `.claude/input/` — documents, images, screenshots, PDFs, markdown. Optional `$ARGUMENTS` as a name or focus hint.
+
+**Output**: Individual PRDs in `.claude/input/<feature-name>.md` + a decomposition manifest in `.claude/specs/decomposition-<name>.md`.
+
+**What it does**:
+
+1. Reads all files in `.claude/input/`, `CLAUDE.md`, and `.claude/context/` to build a mental model of the concept
+2. **Identifies feature boundaries** — independent units of work that have a single purpose, can be implemented and tested in isolation, and touch mostly different files
+3. **Dependency analysis** — builds a graph with three edge types: independent, soft dependency (benefits from ordering), hard dependency (must be sequenced). Groups independent features at the same level.
+4. **Surfaces ambiguities** — asks clarifying questions about scope conflicts, priority, dependencies, and missing context before writing PRDs. Skipped if unambiguous.
+5. Writes a **self-contained PRD** per feature with: problem, requirements, out of scope, user stories, acceptance criteria, expected files (new + modified), technical hints, and asset references
+6. Archives original input to `.claude/input/archive/` (copies assets referenced by PRDs instead of moving)
+7. Writes a **decomposition manifest** to `.claude/specs/decomposition-<name>.md` with the dependency graph, feature table, and next-step commands
+8. Reports: feature count, dependency summary, size estimates (S/M/L), and suggested next step
+
+**Key design decisions**:
+
+- Each PRD lists `## Expected files` — specific paths for new and modified files. This is critical: `/fleet` uses these for conflict analysis.
+- PRDs cross-reference siblings in their "Out of scope" section so boundaries are explicit.
+- PRDs are concise — they feed into `/0_spec` which expands them into full specs.
+
+**Usage**:
+
+```
+/decompose
+/decompose payment system
+```
+
+**After running**: Review the manifest at `.claude/specs/decomposition-<name>.md`, then run `/fleet` to ship in parallel or `/ship <feature>` one at a time.
+
+---
+
+## `/fleet`
+
+**Purpose**: Ship decomposed PRDs in parallel with conflict-aware batching, isolated worktrees, and sequential merging.
+
+**When to use**: After `/decompose` has produced a decomposition manifest with multiple pending features. Replaces running `/ship` manually for each feature.
+
+**Input**: Optional decomposition name (matches `.claude/specs/decomposition-<name>.md`). Flags: `--dry-run`, `--max-parallel N` (default: 5), `--batch-only` (run batch 1 only).
+
+**Output**: All features merged to `main`, decomposition manifest updated, metrics appended to `.claude/metrics-pipeline.csv`.
+
+**What it does**:
+
+1. Loads the decomposition manifest, filters to `pending` features
+2. **Collects file claims** from existing specs (`## Affected files` + `## New files`). If specs don't exist yet, offers to generate them via `/ship --dry-run` in parallel.
+3. **Conflict analysis** — the core algorithm:
+   - **Direct overlap**: intersects file claim sets between every feature pair
+   - **Heuristic detection**: catches six indirect conflict patterns — barrel/index files, migration ordering, shared type definitions, config files (`package.json`, `tsconfig.json`, etc.), shared state (`store/*.ts`), and route registration files
+   - **Dependency overlay**: hard dependencies force serialization; soft dependencies prefer adjacent batches
+4. **Batch partitioning** — topological sort by hard dependencies, then greedy graph coloring by file conflicts. Features with the same color run in parallel. Respects `--max-parallel`.
+5. Prints the **execution plan** with batch tables showing file counts and conflict reasons. Asks: run all / batch 1 only / adjust / dry-run only.
+6. **Batch execution loop** — for each batch:
+   - Launches all features in a single message with parallel Agent calls, each using `isolation: "worktree"` and `/ship --no-finalize`
+   - Prints status as each agent completes
+   - Merges completed branches to `main` sequentially (`git merge --no-ff`)
+   - On merge conflict (should be rare): aborts merge, defers feature to triage
+   - Failed features don't block the batch
+7. **Final integration verify** — runs full verify suite on `main` after all batches
+8. **Failure triage** — presents failed features with retry / skip / investigate options
+9. **Fleet report** — summary table with per-feature outcome, files, review cycles. Appends one metrics row per feature.
+
+**Key design decisions**:
+
+- Fleet is a thin orchestrator — it never reads code, only manifests and spec metadata
+- Each `/ship` runs with `--no-finalize` so fleet controls all merges centrally
+- Merge conflicts are caught and deferred, not silent — the batch plan is optimistic but the merge step is safe
+- Next batch branches from the updated `main` (includes all successfully merged features from prior batches)
+
+**Usage**:
+
+```
+/fleet
+/fleet payment-system
+/fleet --dry-run
+/fleet --batch-only --max-parallel 3
+```
+
+**After running**: Check the decomposition manifest for any failed/skipped features. Run `/fleet` again to retry pending features.
 
 ---
 

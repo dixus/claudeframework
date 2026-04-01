@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working in this repository.
 
 ## This repo
 
-**Claude Code Development Framework** — a reusable `.claude/` directory with 20 skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline with built-in learning.
+**Claude Code Development Framework** — a reusable `.claude/` directory with 23 skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline with built-in learning.
 
 The `src/` directory contains the **AI Maturity Score** demo app — a working example of the framework applied to a real Next.js/TypeScript project.
 
@@ -52,6 +52,7 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 | Skill                 | Purpose                                                                                                             |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `/decompose`          | Break a concept doc or product brief into independent PRDs, then ship each through the pipeline                     |
+| `/fleet`              | Ship decomposed PRDs in parallel — conflict analysis, batched worktrees, concurrent `/ship` runs, merge to main    |
 | `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit. `--dry-run` runs spec only and reports scope |
 | `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                                                       |
 | `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis                                        |
@@ -97,11 +98,15 @@ This section is optional. If omitted, all skills use the defaults shown below. T
 | `delta_review_escalation_pct` | 50 |
 -->
 
+## Documentation rules
+
+- **Changelog required.** When adding or changing skills/features in `.claude/docs/README.md`, always append a row to the `## Changelog` table at the bottom with the current date and a one-line description of what changed.
+
 ## `.claude/` directory layout
 
 | Path                   | Purpose                                          |
 | ---------------------- | ------------------------------------------------ |
-| `skills/`              | 22 skill definitions (the framework itself)      |
+| `skills/`              | 23 skill definitions (the framework itself)      |
 | `agents/`              | Subagent personas (code-reviewer, explorer)      |
 | `rules/`               | Auto-loaded instructions (like CLAUDE.md shards) |
 | `context/`             | Reference knowledge read by skills on demand     |

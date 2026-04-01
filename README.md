@@ -28,7 +28,7 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## The solution
 
-22 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
+23 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
@@ -70,10 +70,17 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 **4. Ship it:**
 
 ```
+# Single feature:
 /ship add user authentication
+
+# Multiple features in parallel:
+/decompose                    # break concept into PRDs
+/fleet                        # parallel /ship with conflict-aware batching
 ```
 
 `/ship` orchestrates the entire pipeline automatically — spec (from your input docs), implement, review, fix loop, lesson graduation, and commit — each phase in a clean subagent. After the spec is written, processed input files move to `.claude/archive/`.
+
+`/fleet` takes decomposed PRDs, analyzes file conflicts across features, groups non-conflicting features into parallel batches, runs `/ship` for each in isolated worktrees, and merges results back to main conflict-free.
 
 ### Or run phases manually
 
@@ -129,6 +136,7 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 - Lesson graduation — proven corrections become permanent rules in `CLAUDE.md`
 - Metrics tracking — appends pipeline stats to `.claude/metrics-pipeline.csv` after every run
 - **Dry-run mode** — `/ship --dry-run <feature>` runs only the spec phase, reports scope and complexity, then stops. No branch, no implementation, no commits. Review the spec before committing to a full pipeline run.
+- **No-finalize mode** — `/ship --no-finalize <feature>` runs the full pipeline but skips the merge step. Used by `/fleet` to manage merges centrally.
 
 ---
 
@@ -139,7 +147,8 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 | Skill                 | Purpose                                                                      |
 | --------------------- | ---------------------------------------------------------------------------- |
 | `/decompose`          | Break a concept doc or product brief into independent PRDs, then ship each   |
-| `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit        |
+| `/fleet`              | Ship decomposed PRDs in parallel — conflict analysis, batched worktrees, merge to main |
+| `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit (`--no-finalize`) |
 | `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                |
 | `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis |
 | `/2_review [spec]`    | 9-lens code review with severity classification and spec completeness check  |
@@ -258,7 +267,7 @@ This means the framework gets stricter, more project-aware, and more precise wit
 
 ```
 .claude/
-  skills/          ← 22 skills defining the full pipeline
+  skills/          ← 23 skills defining the full pipeline
   agents/          ← subagent personas (code-reviewer, explorer)
   rules/           ← auto-loaded instructions (like CLAUDE.md shards)
   context/         ← curated knowledge read by all skills
