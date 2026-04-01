@@ -2,9 +2,9 @@
 
 | URL                                                                                  | Title                                     | Type    | Status      | Date       |
 | ------------------------------------------------------------------------------------ | ----------------------------------------- | ------- | ----------- | ---------- |
-| https://code.claude.com/docs/en/changelog                                            | Claude Code Changelog                     | article | fetched     | 2026-03-29 |
-| https://github.com/anthropics/skills                                                 | Anthropic Skills Repository               | repo    | fetched     | 2026-03-29 |
-| https://agentskills.io/specification                                                 | Agent Skills Specification                | article | fetched     | 2026-03-29 |
+| https://code.claude.com/docs/en/changelog                                            | Claude Code Changelog                     | article | fetched     | 2026-04-01 |
+| https://github.com/anthropics/skills                                                 | Anthropic Skills Repository               | repo    | fetched     | 2026-04-01 |
+| https://agentskills.io/specification                                                 | Agent Skills Specification                | article | fetched     | 2026-04-01 |
 | https://code.claude.com/docs/en/sub-agents                                           | Custom Subagents Documentation            | article | fetched     | 2026-03-25 |
 | https://code.claude.com/docs/en/best-practices                                       | Claude Code Best Practices                | article | fetched     | 2026-03-25 |
 | https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices     | Skill Authoring Best Practices            | article | fetched     | 2026-03-25 |
@@ -43,3 +43,12 @@
 | https://github.com/Lum1104/Understand-Anything                                       | Codebase Knowledge Graph Skill            | repo    | queued-repo | 2026-03-29 |
 | https://github.com/shakacode/claude-code-commands-skills-agents                      | ShakaCode Commands/Skills/Agents          | repo    | queued-repo | 2026-03-29 |
 | https://github.com/ComposioHQ/awesome-claude-skills                                  | ComposioHQ Awesome Claude Skills          | repo    | queued-repo | 2026-03-29 |
+| https://code.claude.com/docs/en/hooks                                                | Claude Code Hooks Reference               | article | fetched     | 2026-04-01 |
+| https://github.com/obra/superpowers                                                  | Superpowers Agentic Skills Framework      | repo    | fetched     | 2026-04-01 |
+| https://dev.to/cleverhoods/claudemd-best-practices-from-basic-to-adaptive-9lm        | CLAUDE.md Maturity Levels (L0-L6)         | article | fetched     | 2026-04-01 |
+| https://paddo.dev/blog/claude-code-hidden-swarm/                                     | Claude Code Hidden Multi-Agent System     | article | fetched     | 2026-04-01 |
+| https://www.morphllm.com/claude-code-best-practices                                  | Claude Code Best Practices 2026 (Morph)   | article | queued      | 2026-04-01 |
+| https://levelup.gitconnected.com/a-powerful-framework-for-mastering-claude-code-533a4b19c600 | Framework for Mastering Claude Code | article | queued      | 2026-04-01 |
+| https://medium.com/data-science-collective/sub-agent-vs-agent-team-in-claude-code-pick-the-right-pattern-in-60-seconds-e856e5b4e5cc | Sub-agent vs Agent Team Decision Guide | article | queued | 2026-04-01 |
+| https://github.com/skills-directory/skill-codex                                      | Skill Codex (Codex delegation)            | repo    | queued-repo | 2026-04-01 |
+| https://github.com/htdt/godogen                                                      | Godot 4 Game Builder Skills               | repo    | queued-repo | 2026-04-01 |

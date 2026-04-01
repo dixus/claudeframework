@@ -360,15 +360,60 @@ Framework default: no paths (universal activation). Document pattern in /doc out
 
 ---
 
-## Summary (updated 2026-03-29)
+## Proposals — 2026-04-01
+
+### Skill: create-hook
+
+**What:** Add `PermissionDenied` hook event, `prompt`/`agent` hook handler types, and `defer` permission decision to the reference
+**Why:** v2.1.89 added `PermissionDenied` hook event (fires after auto mode classifier denials) and `defer` permission decision (pause tool call, resume with `-p --resume`). v2.1.63 added `prompt` and `agent` hook handler types. Also discovered `WorktreeCreate`/`WorktreeRemove`, `ConfigChange`, and `TeammateIdle` events from the comprehensive hooks reference. Users creating hooks via `/create-hook` need the full set of options.
+**Source:** scout-2026-04-01 — https://code.claude.com/docs/en/changelog (v2.1.89) + https://code.claude.com/docs/en/hooks
+**Source tier:** T1
+**Status:** pending
+**Diff:**
+```
+old: Hook event list missing several events; hook types only mention command/http
+
+new: Add to event reference:
+- PermissionDenied (v2.1.89) — fires after auto mode classifier denies a tool call
+- WorktreeCreate / WorktreeRemove — fires on worktree lifecycle events
+- ConfigChange — fires when configuration files change during a session
+- TeammateIdle — fires when an agent team teammate is about to go idle
+
+Add to hook handler types:
+- prompt: Send prompt to Claude for single-turn LLM evaluation
+- agent: Spawn a subagent to verify conditions before returning a decision
+
+Add to PreToolUse permissionDecision values:
+- "defer": Pause at tool call, resume later with `-p --resume`
+```
+
+---
+
+### Skill: ship
+
+**What:** Add `MCP_CONNECTION_NONBLOCKING=true` to `--bare` CI guidance
+**Why:** v2.1.89 added this env var to skip MCP connection wait in `-p` mode. Combined with `--bare`, this makes CI runs faster by not waiting for MCP servers that aren't needed in headless mode.
+**Source:** scout-2026-04-01 — https://code.claude.com/docs/en/changelog (v2.1.89)
+**Source tier:** T1
+**Status:** pending
+**Diff:**
+```
+old: E) Run headless in CI — use `claude --bare -p "/ship <feature>"`
+
+new: E) Run headless in CI — use `MCP_CONNECTION_NONBLOCKING=true claude --bare -p "/ship <feature>"` (skips hooks/LSP/MCP wait)
+```
+
+---
+
+## Summary (updated 2026-04-01)
 
 | Priority | Status   | Count | Proposals                                                                                                                                     |
 | -------- | -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | High     | accepted | 3     | `maxTurns` on `/3_fix` ✅; `maxTurns` on ship fix subagent ✅; `--bare` in `/ship`                                                            |
 | High     | rejected | 1     | `disallowedTools` on `/2_review` ❌ (not supported in skills)                                                                                  |
-| High     | pending  | 1     | Simplify hook with `if` field                                                                                                                 |
+| High     | pending  | 2     | Simplify hook with `if` field; new hook events+types+defer in `/create-hook`                                                                  |
 | Medium   | accepted | 5     | Gitleaks in `/audit` ✅; confidence tagging `/2_review` ✅; effort on 13 skills ✅; hook events in `/create-hook` ✅; `maxTurns` subagent ✅       |
-| Medium   | pending  | 5     | Worktree in `/ship`; Plan mode note; agent team `/ship`; parallel lenses `/2_review`; focused-fix `/debug`; `paths:` frontmatter              |
+| Medium   | pending  | 6     | Worktree in `/ship`; Plan mode note; agent team `/ship`; parallel lenses `/2_review`; focused-fix `/debug`; `paths:` frontmatter; `MCP_CONNECTION_NONBLOCKING` in `/ship` CI |
 | Low      | pending  | 2     | Compliance score in `/scout`; `--deep` flag for `/audit`                                                                                      |
 
 ## Not proposed (considered and rejected)
