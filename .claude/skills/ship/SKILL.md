@@ -2,7 +2,7 @@
 name: ship
 description: Orchestrate the full spec → implement → review → fix → commit pipeline. Use when shipping a complete feature end-to-end.
 disable-model-invocation: true
-argument-hint: <feature description> [--dry-run]
+argument-hint: <feature description> [--dry-run] [--no-finalize]
 model: claude-opus-4-6
 effort: high
 ---
@@ -10,6 +10,8 @@ effort: high
 Orchestrate the full spec-to-commit pipeline for the feature described in $ARGUMENTS or in `.claude/input/`.
 
 **`--dry-run` mode:** If $ARGUMENTS contains `--dry-run`, run only Steps 1–2 (questions + spec), then print a scope report and stop. No branch, no implementation, no commits. Use this to preview complexity and scope before committing to a full pipeline run.
+
+**`--no-finalize` mode:** If $ARGUMENTS contains `--no-finalize`, run the full pipeline (spec → implement → review → fix → commit) but **skip Step 7 (Finalize)**. The feature stays on its branch with all commits applied and checks passing, but is not merged to main. Used by `/fleet` to manage merges centrally.
 
 **Architecture:** The main session is a thin orchestrator only — it never reads code files or accumulates implementation context. Each phase runs in a dedicated subagent with a clean context. The spec file, review file, and git diff are the handoff mechanism between phases.
 
@@ -245,6 +247,8 @@ Launch a subagent (model: **sonnet**) with:
 ---
 
 ## Step 7 — Finalize (orchestrator)
+
+**Skip this step entirely if `--no-finalize` is set** — proceed directly to Final report.
 
 Ask the user: "Branch `feat/<spec-name>` is ready and all checks pass. How do you want to finalize?
 A) Merge to main now (`git merge` + `push`)
