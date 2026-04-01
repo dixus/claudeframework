@@ -37,7 +37,7 @@ Analyze the concept and identify **independent features** — units of work that
 For each candidate feature, note:
 - A short name (kebab-case, suitable for filenames)
 - Which parts of the concept it covers
-- Which codebase areas it likely touches
+- Which specific files it will likely create or modify (list paths — `/fleet` uses these for conflict analysis)
 - Any dependencies on other features from this decomposition
 
 ---
@@ -117,6 +117,12 @@ Observable conditions that confirm the feature is done. Write them as testable s
 - "When X happens, Y is visible"
 - "API returns Z when called with W"
 
+## Expected files
+
+List the files this feature will likely create or modify. Used by `/fleet` for conflict analysis — be specific:
+- **New:** `src/components/FeatureName.tsx`, `src/lib/featureName.ts`, ...
+- **Modified:** `src/app/layout.tsx`, `src/types.ts`, ...
+
 ## Technical hints
 
 Optional notes about:
@@ -174,19 +180,14 @@ Write `.claude/specs/decomposition-<name>.md` with:
 | 2 | <name>  | `.claude/input/<name>.md` | soft(1) | pending |
 | ...
 
-## Pipeline commands
-
-Run each feature through the standard pipeline:
+## Next step
 
 \`\`\`bash
-# Feature 1 (no dependencies — start here)
-/ship <feature-1-name>
+# Ship all features in parallel:
+/fleet <decomposition-name>
 
-# Feature 2 (independent of 1 — can run after or in parallel)
-/ship <feature-2-name>
-
-# Feature 3 (depends on 1 — run after Feature 1 ships)
-/ship <feature-3-name>
+# Or ship one at a time:
+/ship <feature-name>
 \`\`\`
 ```
 
@@ -214,4 +215,7 @@ Print a summary:
 
 Size estimates: **S** = 1-3 files, **M** = 4-7 files, **L** = 8+ files. These are rough — `/ship --dry-run` gives precise counts.
 
-Then ask: "Ready to start shipping? Pick a feature or I'll begin with the first independent one."
+Then ask: "Ready to ship? Options:
+A) `/fleet` — ship all features in parallel with conflict-aware batching
+B) `/fleet --dry-run` — generate specs and show the batch plan first
+C) `/ship <feature>` — ship features one at a time in dependency order"
