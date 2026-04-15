@@ -26,6 +26,7 @@ Examples: `✓ Step 2 — Spec complete. 7 files, 3 new.` · `✓ Step 3 — Imp
 ```
 Main session (orchestrator — reads summaries only)
   ├── Step 0: branch setup              →  creates feat/<spec-name> (or stays on current branch)
+  ├── Step 0b: ticket resolution        →  optional — loads work item from Azure DevOps (if MCP tools available)
   ├── Step 1b: historical patterns      →  reads metrics-pipeline.csv → builds spec guidance
   ├── Subagent A: spec          [opus]  →  writes .claude/specs/<name>.md (informed by patterns)
   ├── Step 2b: decision review          →  reads spec "Decisions made by Claude" → user approval
@@ -37,7 +38,8 @@ Main session (orchestrator — reads summaries only)
   ├── Step 4c: integration check [opus] →  cross-phase glue review (phased only)
   ├── Step 5: final verify              →  typecheck → lint → tests → build
   ├── Subagent E: commit        [sonnet]→  atomic commits on feature branch
-  └── Step 6: merge + push              →  merges feat/<spec-name> → main
+  ├── Step 6b: DevOps feedback          →  optional — posts branch + commits to work item
+  └── Step 7: merge + push              →  merges feat/<spec-name> → main, closes work item
 ```
 
 ---
@@ -48,20 +50,50 @@ Main session (orchestrator — reads summaries only)
 
 Before doing anything else:
 
-1. Check the current branch with `git branch --show-current`
-2. If already on a feature branch (not `main` or `master`), **stay on it** — this is the working branch. Note its name. Do NOT switch to main to create a new branch. Create a checkpoint from the current HEAD: `git branch checkpoint/<spec-name>`
-3. If on `main` or `master`, run: `git checkout -b feat/<spec-name>` where `<spec-name>` is derived from $ARGUMENTS or the most recently modified file in `.claude/input/`. Then create checkpoint: `git branch checkpoint/<spec-name>`
-4. Confirm the branch and note its name — all subsequent subagent commits will land here
+1. **Read project branch conventions:** Check if `.claude/rules/branch-management.md` exists. If it does, read it and note the branch naming convention — this determines how the branch is named in step 4 below.
+2. Check the current branch with `git branch --show-current`
+3. If already on a feature branch (not `main` or `master`), **stay on it** — this is the working branch. Note its name. Try to parse a ticket ID from it if the project's convention includes one (see `branch-management.md`). Do NOT switch to main to create a new branch. Create a checkpoint from the current HEAD: `git branch checkpoint/<spec-name>`
+4. If on `main` or `master` **and** the project requires a ticket-based branch name (per `branch-management.md`), set `branch_pending = true` — defer branch creation until after Step 1 where ticket metadata is collected. If no project convention exists, run: `git checkout -b feat/<spec-name>` where `<spec-name>` is derived from $ARGUMENTS or the most recently modified file in `.claude/input/`. Then create checkpoint: `git branch checkpoint/<spec-name>`
+5. Confirm the branch (or note that it is pending) — all subsequent subagent commits will land here
+
+---
+
+## Step 0b — Ticket resolution (orchestrator, optional)
+
+**Skip this step if the `ado_get_work_item` MCP tool is not available.** The framework works fully without Azure DevOps integration.
+
+If $ARGUMENTS contains a numeric ticket ID (e.g. `/ship 1234` → ticket ID `1234`), resolve the ticket using this fallback chain:
+
+1. **Local input file first:** Glob for `.claude/input/{id}*` or `.claude/input/*{id}*`. If a file is found, read it and use its content as the feature description.
+
+2. **Azure DevOps lookup:** If no local file was found, call `ado_get_work_item({ id: <ticketId> })`. If the work item is found:
+   - Use its **title** as the short description
+   - Use its **description** + **acceptanceCriteria** as the feature description for the spec
+   - Use its **type** for branch naming (per `branch-management.md`, if the convention maps work item types to branch types)
+   - Infer the branch-name module segment from the work item's `areaPath` or title keywords (per `branch-management.md`, if the convention includes a module segment)
+   - Set `ticket_resolved = true` — Step 1 can skip asking for ticket metadata
+   - Optionally update the work item state: `ado_update_work_item_state({ id, state: "Active" })` if that state exists in the project's workflow
+
+3. **Always read ticket comments:** If `ado_get_work_item_comments` is available, call `ado_get_work_item_comments({ id: <ticketId> })`. Comments often contain decisions, context, or requirements from other developers that are NOT in the description. Include relevant comment content in `ticket_context` for the spec subagent.
+
+4. **Fallback:** If both lookups fail, proceed to Step 1 and ask the user for ticket metadata as usual.
+
+Store the resolved ticket data (id, title, type, description, acceptanceCriteria, comments) in a `ticket_context` variable for use in subsequent steps.
 
 ---
 
 ## Step 1 — Front-load questions (orchestrator)
 
-Read only CLAUDE.md and `.claude/input/` to understand the feature scope.
-Ask all clarifying questions in a **single batch** before launching any subagent. Use selectable options where possible.
+Read only CLAUDE.md, `.claude/rules/branch-management.md` (if it exists), and `.claude/input/` to understand the feature scope and project conventions.
+
+**Ticket metadata (mandatory if `branch-management.md` requires it):** If `ticket_resolved` is true (from Step 0b), skip the ticket metadata questions — use the resolved data instead. Otherwise, include the ticket metadata questions required by the project's `branch-management.md` at the start of the batch.
+
+Then ask any other clarifying questions in the **same batch**. Use selectable options where possible.
 Wait for answers. This is the only user interruption before commit.
 
-If requirements are fully unambiguous, skip to Step 1b.
+**Deferred branch creation:** If `branch_pending` was set in Step 0, create the branch now using the collected ticket metadata, following the pattern defined in `branch-management.md`. Then create checkpoint: `git branch checkpoint/<spec-name>`.
+
+If requirements are fully unambiguous **and** you are already on a correctly named branch, skip the questions and proceed to Step 1b.
 
 ---
 
@@ -246,11 +278,23 @@ Launch a subagent (model: **sonnet**) with:
 
 ---
 
+## Step 6b — DevOps feedback (orchestrator, optional)
+
+**Skip this step if no ticket was resolved in Step 0b** (i.e. `ticket_context` is empty) **or** if the `ado_add_work_item_comment` MCP tool is not available.
+
+If a ticket was resolved from Azure DevOps:
+
+1. **Post a development comment** on the work item: `ado_add_work_item_comment({ id: <ticketId>, comment: "Branch: <working-branch>\nCommits: <commit-hashes-and-messages>\nSpec: .claude/specs/<name>.md" })`. This links the work item to the code changes.
+
+2. Do NOT update the work item state here — that happens in Step 7 after a successful push/merge.
+
+---
+
 ## Step 7 — Finalize (orchestrator)
 
 **Skip this step entirely if `--no-finalize` is set** — proceed directly to Final report.
 
-Ask the user: "Branch `feat/<spec-name>` is ready and all checks pass. How do you want to finalize?
+Ask the user: "Branch `<working-branch>` is ready and all checks pass. How do you want to finalize?
 A) Merge to main now (`git merge` + `push`)
 B) Open a PR (show me the GitHub PR URL)
 C) Leave on branch — I'll handle it manually
@@ -260,9 +304,10 @@ Execute the chosen option. If A: `git checkout main && git merge --no-ff <curren
 
 ### Post-merge cleanup (runs after A or after a PR is merged)
 
-1. **Delete feature branches**: `git branch -d feat/<spec-name>` and `git branch -d checkpoint/<spec-name>` (if it exists). Do not delete if the merge hasn't happened yet.
+1. **Delete feature branches**: `git branch -d <working-branch>` and `git branch -d checkpoint/<spec-name>` (if it exists). Do not delete if the merge hasn't happened yet.
 2. **Mark spec as completed**: prepend `status: completed` to the spec's YAML frontmatter (or add a `## Status: completed` line at the top if the spec has no frontmatter). This makes it easy to distinguish shipped specs from in-progress ones.
 3. **Clean up phase manifest**: if `.claude/specs/<name>-phases.md` exists, mark all phases as `done` (they should already be, but this is a consistency safeguard).
+4. **DevOps state update (optional):** If a ticket was resolved from Azure DevOps (Step 0b) and the `ado_update_work_item_state` MCP tool is available, call `ado_update_work_item_state({ id: <ticketId>, state: "<closed-state>" })` to close the work item. The exact closed-state value depends on the project's workflow (common: `Closed`, `Resolved`, `Done`) — use the one configured in the project.
 
 ---
 
