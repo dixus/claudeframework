@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "azure-devops": {
+      "command": "node",
+      "args": [".claude/mcp-servers/azure-devops/dist/index.js"],
+      "env": {
+        "AZURE_DEVOPS_ORG": "your-org",
+        "AZURE_DEVOPS_PROJECT": "your-project"
+      }
+    }
+  }
+}
