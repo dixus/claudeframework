@@ -184,6 +184,47 @@ All skills are **technology-agnostic** — they read project commands from `CLAU
 
 ---
 
+## Azure DevOps integration (optional)
+
+The framework ships with an optional MCP (Model Context Protocol) server that gives Claude Code read + write access to Azure DevOps work items. When configured, `/ship <ticketId>` automatically loads the ticket from DevOps — no manual copy & paste. When not configured, everything works as before; the MCP integration is simply skipped.
+
+### What it enables
+
+| Pipeline step | Without MCP | With MCP |
+|---|---|---|
+| **Ticket resolution** | User provides feature description manually | Auto-loads title + description + acceptance criteria + all comments from the work item |
+| **Branch naming** | User answers questions | Auto-derived from ticket metadata per `.claude/rules/branch-management.md` |
+| **After commit** | Nothing | Branch + commits posted as a comment on the work item |
+| **After push** | Nothing | Work item state set to closed |
+| **`/commit` on ticket branch** | Standard conventional commit | Appends ` #<ticketId>` if the branch name matches the project's convention |
+
+### Setup (one-time per developer)
+
+1. Update `.mcp.json` at the repo root — replace `your-org` and `your-project` with your Azure DevOps organisation and project
+2. Create a PAT at `https://dev.azure.com/<your-org>/_usersSettings/tokens` with **Work Items > Read & Write** scope
+3. Create `.claude/mcp-servers/azure-devops/.env` (gitignored):
+   ```
+   AZURE_DEVOPS_PAT=your-token-here
+   ```
+4. Build the server:
+   ```bash
+   cd .claude/mcp-servers/azure-devops
+   npm install
+   npm run build
+   ```
+5. Reload VS Code (`Ctrl+Shift+P` → *Developer: Reload Window*)
+
+Each developer maintains their own `.env`. Without a PAT the MCP server simply doesn't start and the framework falls back to the non-MCP path.
+
+### Available tools (5)
+
+Read — `ado_get_work_item`, `ado_search_work_items`, `ado_get_work_item_comments`
+Write — `ado_update_work_item_state`, `ado_add_work_item_comment`
+
+See [`.claude/mcp-servers/azure-devops/README.md`](.claude/mcp-servers/azure-devops/README.md) for full documentation.
+
+---
+
 ## Pipeline guardrails
 
 The framework doesn't just run phases — it enforces quality at every step. All numeric thresholds are configurable in `CLAUDE.md` under `## Framework thresholds`:
@@ -274,6 +315,7 @@ This means the framework gets stricter, more project-aware, and more precise wit
     instincts.md   ← universal rules loaded every session
     lessons.md     ← corrections inbox (graduates to CLAUDE.md)
   hooks/           ← lifecycle hooks (auto-approve, safety guards)
+  mcp-servers/     ← optional MCP servers (e.g. Azure DevOps integration)
   docs/            ← generated documentation
   references/      ← drop zone for blog posts and repos (+ harvested repos)
   specs/           ← generated feature specs
