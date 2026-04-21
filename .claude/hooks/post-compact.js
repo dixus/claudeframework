@@ -77,6 +77,16 @@ async function main() {
   if (branch) {
     context.push(`## Git state`);
     context.push(`Branch: ${branch}`);
+
+    // Parse ticket metadata from branch name (supports <id>.<type>.<scope>.<desc> and <id>.<desc>)
+    const ticketFull = branch.match(/^(\d+)\.(Bug|Improvement|Feature)\.([^.]+)\.(.+)$/);
+    const ticketFallback = !ticketFull && branch.match(/^(\d+)\.(.+)$/);
+    if (ticketFull) {
+      context.push(`Ticket: #${ticketFull[1]} (${ticketFull[2]}, ${ticketFull[3]})`);
+    } else if (ticketFallback) {
+      context.push(`Ticket: #${ticketFallback[1]}`);
+    }
+
     if (status) {
       context.push(`Uncommitted changes:\n${status}`);
     }
