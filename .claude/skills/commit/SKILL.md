@@ -28,14 +28,15 @@ $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everyt
 
 **If a single concern** (or `--all` was passed):
 
-- Proceed to pre-commit checks (step 4)
+- Proceed to the next step
 
-4. **Read project branch conventions (optional):** Check if `.claude/rules/branch-management.md` exists. If it does, read it to understand project-specific branch naming and commit message conventions. Then:
+4. **Read project commit conventions:** Check if `.claude/rules/branch-management.md` exists. If it does, read it to understand project-specific branch naming and commit message conventions. Then:
    - Run `git branch --show-current` to get the current branch name
-   - Attempt to parse the branch name according to the convention documented there, to extract a ticket/issue identifier
-   - If a ticket ID is found, note it for use in the commit message (step 8 below)
+   - Attempt to parse the branch name according to the documented convention to extract a ticket/issue identifier (e.g. regex `^(\d+)\.(Bug|Improvement|Feature)\.([^.]+)\.(.+)$` extracts ticket ID from segment 1)
+   - If the full pattern does not match, try a fallback pattern `^(\d+)\.(.+)$` to extract at least the ticket number
+   - If a ticket ID is found, note it for use in the commit message (step 8)
    - If no ticket ID can be parsed **and** the project rules require one, ask the user for the ticket ID before proceeding
-   - If no `branch-management.md` exists, skip this step entirely — use standard conventional commits
+   - If no `branch-management.md` exists, skip this step
 
 5. **Backlog check**: if the commit message references a task/PRD identifier (e.g. `PRD-17`, `TASK-5`), search for a backlog or tracker file in `.claude/input/` that contains that identifier as a heading. If found and the heading does not already have a ✅ marker, add ✅ to the heading and include the file in the commit. Skip this step if no backlog file exists.
 
@@ -73,7 +74,15 @@ $ARGUMENTS is optional. Pass `--all` to skip the diff analysis and commit everyt
    | `ci` | 🚀 | CI/CD pipeline changes |
    | `revert` | ⏪️ | Reverts a previous commit |
 
-   **Ticket suffix (optional):** If a ticket ID was extracted in step 4, append ` #<ticketId>` to the end of the first line. Ensure `#` is NOT at the start of any line (git treats leading `#` as a comment). If the project's `branch-management.md` defines a different commit-message format, follow that format instead.
+   **Project-specific ticket suffix:** If a ticket ID was extracted in step 4, append ` #<ticketId>` to the end of the commit message. Ensure the `#` is NOT at the start of the message (git treats leading `#` as a comment). The final format becomes:
+
+   ```
+   <emoji> <type>(<scope>): <short description> #<ticketId>
+   ```
+
+   Example: `✨ feat(ui): add loading spinner to search results #1234`
+
+   If the project's `branch-management.md` defines a different commit message format, follow that format instead.
 
 9. Create the commit:
 
