@@ -194,8 +194,8 @@ The framework ships with an optional MCP (Model Context Protocol) server that gi
 |---|---|---|
 | **Ticket resolution** | User provides feature description manually | Auto-loads title + description + acceptance criteria + all comments from the work item |
 | **Branch naming** | User answers questions | Auto-derived from ticket metadata per `.claude/rules/branch-management.md` |
-| **After commit** | Nothing | Branch + commits posted as a comment on the work item |
-| **After push** | Nothing | Work item state set to closed |
+| **After commit** | Nothing | Non-obvious context posted as a comment (only when needed — not boilerplate) |
+| **After push** | Nothing | Work item state transitioned (e.g. → Resolved / Development finished) |
 | **`/commit` on ticket branch** | Standard conventional commit | Appends ` #<ticketId>` if the branch name matches the project's convention |
 
 ### Setup (one-time per developer)
