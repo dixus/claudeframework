@@ -216,10 +216,10 @@ The framework ships with an optional MCP (Model Context Protocol) server that gi
 
 Each developer maintains their own `.env`. Without a PAT the MCP server simply doesn't start and the framework falls back to the non-MCP path.
 
-### Available tools (5)
+### Available tools (8)
 
-Read — `ado_get_work_item`, `ado_search_work_items`, `ado_get_work_item_comments`
-Write — `ado_update_work_item_state`, `ado_add_work_item_comment`
+Read — `ado_get_work_item`, `ado_get_work_item_with_context`, `ado_search_work_items`, `ado_get_work_item_comments`
+Write — `ado_create_work_item`, `ado_update_work_item`, `ado_update_work_item_state`, `ado_link_work_items`, `ado_add_work_item_comment`
 
 See [`.claude/mcp-servers/azure-devops/README.md`](.claude/mcp-servers/azure-devops/README.md) for full documentation.
 

@@ -18,6 +18,11 @@ export class AzureDevOpsClient {
       "Basic " + Buffer.from(`:${config.pat}`).toString("base64");
   }
 
+  /** Build the API URL for a work item (used for relation links). */
+  workItemUrl(id: number): string {
+    return `${this.baseUrl}/wit/workitems/${id}`;
+  }
+
   private async request<T>(
     path: string,
     options: RequestInit = {},
@@ -85,6 +90,24 @@ export class AzureDevOpsClient {
   ): Promise<AdoCommentsResponse> {
     return this.request<AdoCommentsResponse>(
       `/wit/workitems/${id}/comments?api-version=7.1-preview.4&$top=${top}`,
+    );
+  }
+
+  /** Create a new work item. */
+  async createWorkItem(
+    type: string,
+    operations: Array<{ op: string; path: string; value: unknown }>,
+  ): Promise<AdoWorkItemResponse> {
+    const encodedType = encodeURIComponent(type);
+    return this.request<AdoWorkItemResponse>(
+      `/wit/workitems/$${encodedType}?api-version=7.1`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json-patch+json",
+        },
+        body: JSON.stringify(operations),
+      },
     );
   }
 

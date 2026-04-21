@@ -1,4 +1,5 @@
 import TurndownService from "turndown";
+import { marked } from "marked";
 import type {
   AdoRelation,
   AdoWorkItemResponse,
@@ -16,10 +17,30 @@ const turndown = new TurndownService({
   bulletListMarker: "-",
 });
 
+marked.setOptions({
+  gfm: true,
+  breaks: true, // single newline → <br> — matches how devs write ADO comments
+});
+
 /** Convert HTML to Markdown, handling null/undefined gracefully. */
 function htmlToMarkdown(html: string | undefined | null): string {
   if (!html) return "";
   return turndown.turndown(html).trim();
+}
+
+/**
+ * Convert Markdown to HTML for Azure DevOps write fields (description,
+ * acceptanceCriteria, comments). Azure DevOps stores these as HTML and renders
+ * raw markdown syntax as literal text, so callers pass Markdown and we convert.
+ *
+ * Pass-through: if the input already looks like HTML (starts with `<`), leave it
+ * alone — lets callers drop in raw HTML when they need control (tables, images).
+ */
+export function markdownToHtml(md: string | undefined | null): string {
+  if (!md) return "";
+  const trimmed = md.trim();
+  if (trimmed.startsWith("<")) return trimmed;
+  return (marked.parse(trimmed) as string).trim();
 }
 
 /** Parse a semicolon-separated tags string into an array. */

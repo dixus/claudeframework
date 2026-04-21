@@ -61,6 +61,17 @@ export interface WorkItemSummary {
   state: string;
 }
 
+/** Work Item with resolved context (linked items inlined). */
+export interface WorkItemWithContext {
+  main: WorkItem;
+  parent?: WorkItem;
+  children: WorkItem[];
+  related: WorkItem[];
+  duplicates: WorkItem[];
+  /** Comments on the main work item (only when includeComments=true). */
+  comments?: WorkItemComment[];
+}
+
 /** Work Item comment. */
 export interface WorkItemComment {
   id: number;

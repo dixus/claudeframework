@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { AzureDevOpsClient } from "../client.js";
 import { mapWorkItem, mapWorkItemSummary, mapComment } from "../mapper.js";
+import type { WorkItem, WorkItemWithContext } from "../types.js";
 
 export function registerReadTools(
   server: McpServer,
@@ -11,13 +12,86 @@ export function registerReadTools(
   // ── ado_get_work_item ───────────────────────────────────────────────
   server.tool(
     "ado_get_work_item",
-    "Fetch a single Azure DevOps work item by ID. Returns title, description, acceptance criteria, type, state, assignee, tags, relations (parent/child/related/duplicates) and artifact links (branches, PRs, commits). HTML fields are converted to Markdown.",
+    "Fetch a single Azure DevOps work item by ID. Returns title, description, acceptance criteria, type, state, assignee, tags, relations (parent/child/related/duplicates) and artifact links (branches, PRs, commits). HTML fields are converted to Markdown. For full context including the resolved content of linked items, prefer ado_get_work_item_with_context.",
     { id: z.number().int().positive().describe("Work item ID") },
     async ({ id }) => {
       const raw = await client.getWorkItem(id);
       const workItem = mapWorkItem(raw);
       return {
         content: [{ type: "text" as const, text: JSON.stringify(workItem, null, 2) }],
+      };
+    },
+  );
+
+  // ── ado_get_work_item_with_context ──────────────────────────────────
+  server.tool(
+    "ado_get_work_item_with_context",
+    "Fetch a work item AND inline its linked items (parent, children, related, duplicates) in a single call. Use this when starting work on a ticket — resolved related tickets often describe what is already implemented (with branch names in their artifact links). Comments can be included optionally. Only follows links one level deep to keep responses bounded.",
+    {
+      id: z.number().int().positive().describe("Work item ID"),
+      includeComments: z.boolean().default(false).describe("Also fetch comments on the main work item (often contain implementation hints on resolved tickets)"),
+    },
+    async ({ id, includeComments }) => {
+      const rawMain = await client.getWorkItem(id);
+      const main = mapWorkItem(rawMain);
+
+      // Collect IDs of all linked work items (one level deep)
+      const linkedIds = main.relations
+        .map((r) => r.id)
+        .filter((wid): wid is number => typeof wid === "number" && wid !== id);
+
+      const uniqueIds = [...new Set(linkedIds)];
+      const linkedItems: WorkItem[] = uniqueIds.length
+        ? (await client.getWorkItems(uniqueIds)).map(mapWorkItem)
+        : [];
+
+      // Index by ID for lookup
+      const byId = new Map(linkedItems.map((wi) => [wi.id, wi]));
+
+      // Bucket the items by relation kind (use the relation order from main)
+      const parents: WorkItem[] = [];
+      const children: WorkItem[] = [];
+      const related: WorkItem[] = [];
+      const duplicates: WorkItem[] = [];
+
+      for (const rel of main.relations) {
+        if (rel.id === undefined) continue;
+        const item = byId.get(rel.id);
+        if (!item) continue;
+        switch (rel.kind) {
+          case "parent":
+            parents.push(item);
+            break;
+          case "child":
+            children.push(item);
+            break;
+          case "related":
+            related.push(item);
+            break;
+          case "duplicate":
+          case "duplicate-of":
+            duplicates.push(item);
+            break;
+          // predecessor/successor/affects/affected-by/other → ignored at top level
+          // (still visible via main.relations)
+        }
+      }
+
+      const context: WorkItemWithContext = {
+        main,
+        parent: parents[0], // a work item has at most one parent
+        children,
+        related,
+        duplicates,
+      };
+
+      if (includeComments) {
+        const commentsRaw = await client.getComments(id, 50);
+        context.comments = commentsRaw.comments.map(mapComment);
+      }
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(context, null, 2) }],
       };
     },
   );
