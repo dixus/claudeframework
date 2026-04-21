@@ -36,6 +36,15 @@
             "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/protect-secrets.js"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/validate-commit-msg.js"
+          }
+        ]
       }
     ],
     "PostToolUse": [
