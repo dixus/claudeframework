@@ -3,7 +3,7 @@ name: fleet
 description: Ship decomposed PRDs in parallel. Analyzes file conflicts, groups into batches, runs /ship in isolated worktrees, merges results. Use after /decompose.
 disable-model-invocation: true
 argument-hint: decomposition-name --dry-run --max-parallel N --batch-only
-model: claude-opus-4-6
+model: claude-opus-4-7
 effort: high
 ---
 
@@ -32,7 +32,7 @@ Fleet orchestrator (this skill)
   │     └── Advance to next batch
   ├── Step 5: final integration verify
   ├── Step 6: failure triage
-  └── Step 7: fleet report + metrics
+  └── Step 7: fleet report
 ```
 
 ---
@@ -265,7 +265,7 @@ Apply the user's choice for each failed feature.
 
 ---
 
-## Step 7 — Fleet report + metrics
+## Step 7 — Fleet report
 
 Print a summary:
 
@@ -288,16 +288,6 @@ Print a summary:
 
 **Merge commits on main:** <list>
 ```
-
-Append one row **per feature** to `.claude/metrics-pipeline.csv` (same format as `/ship`), with `fleet` noted in the spec field suffix (e.g., `scoring-engine [fleet]`).
-
-Extract structured fields from each agent's return summary:
-- `files_changed` — from "files changed count"
-- `review_cycles` — from "review cycles count"
-- `outcome` — from "outcome" (shipped / escalated / aborted)
-- `commits` — count of commit hashes returned
-
-For fields the agent summary doesn't include (`issues_found`, `issues_critical`, `issues_major`, `issue_categories`), read them from the feature's review file at `.claude/reviews/<feature-name>-review.md` if it exists. If the review file doesn't exist (e.g., the feature was aborted before review), use `0` for counts and empty for categories.
 
 Update the decomposition manifest with final statuses for all features.
 

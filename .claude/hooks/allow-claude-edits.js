@@ -32,7 +32,6 @@ const SAFE_SEGMENTS = [
 // Also allow specific files in .claude/ root
 const SAFE_ROOT_FILES = [
   "todo.md",
-  "metrics-pipeline.csv",
   "metrics-scout.csv",
   "learn-proposals.md",
 ];

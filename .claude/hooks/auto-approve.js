@@ -43,7 +43,6 @@ const SAFE_CLAUDE_SEGMENTS = [
 
 const SAFE_CLAUDE_ROOT_FILES = [
   "todo.md",
-  "metrics-pipeline.csv",
   "metrics-scout.csv",
   "learn-proposals.md",
 ];
