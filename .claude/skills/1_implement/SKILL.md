@@ -3,7 +3,7 @@ name: 1_implement
 description: Implement a feature from a spec file in .claude/specs/. Use after a spec is written and approved.
 disable-model-invocation: true
 argument-hint: <spec-name>
-model: claude-opus-4-6
+model: claude-fable-5-1
 effort: high
 ---
 
@@ -33,15 +33,15 @@ Steps:
    Status: in-progress
    Scope:
    - <spec requirement covered in this phase>
-   Validation criteria:
-   - <criterion from spec that applies to this phase>
+   Contract items:
+   - <ids from the spec's ## Contract that this phase must satisfy, e.g. C1, C2>
 
    ## Phase 2 — <title>
    Status: pending
    Scope:
    - <spec requirement covered in this phase>
-   Validation criteria:
-   - <criterion from spec that applies to this phase>
+   Contract items:
+   - <ids from the spec's ## Contract that this phase must satisfy, e.g. C1, C2>
 
    ## Artifact coverage
    Every file from the spec's "Affected files" + "New files" must appear in exactly one phase above.
@@ -52,9 +52,14 @@ Steps:
    **Phase reconciliation (mandatory when creating or resuming a phase manifest):**
    Before proceeding, cross-reference the spec's "Affected files" + "New files" lists against all phases in the manifest. Every spec artifact must be assigned to exactly one phase. If any artifact is missing from all phases, add it to the appropriate phase or create an additional phase for it. The "Unassigned" block in the manifest must be empty — if it is not, stop and resolve before continuing. This prevents silent scope loss where entire subsystems (e.g. frontend) are dropped during decomposition.
 
-   When in phased mode, all subsequent steps (9-18) apply only to the current phase's scope and validation criteria — do not flag later-phase items as missing.
+   Apply the same reconciliation to the contract: **every id in the spec's `## Contract` must be assigned to exactly one phase.** An unassigned contract id is the same class of silent scope loss as an unassigned file — the criterion would never be gated by any phase.
+
+   When in phased mode, all subsequent steps (9-18) apply only to the current phase's scope and its assigned contract items — do not flag later-phase items as missing. The step-14 gate runs only the `verify` commands of this phase's contract ids.
 
 9. After approval, implement each step in order, marking todos as you go. For each logical unit of code added, apply the TDD loop: (a) write the test cases from the spec's "Test cases" section, (b) run the tests to confirm they **fail** (red) — if the test runner cannot find the test file at all, that counts as red; do not skip this step, (c) implement the code, (d) run tests again to confirm they **pass** (green). Do not defer tests to the end. Do not proceed to the next unit until the current unit is green.
+   9a. **Test strategy — same commit as code** — read the spec's `## Test strategy` section before starting. If the classification is `test-required`, the tests MUST land in the **same commit** as the production code they cover. No red/green separation at the commit level, no follow-up "add tests" commit. The TDD loop above still runs locally (red → green) — the same-commit rule is about *git history*, not about skipping the red step.
+   **Every new test must contain at least one real assertion.** `Assert.True(true)`, `Assert.False(false)`, `expect(true).toBe(true)`, `expect(1).toBe(1)`, and `Assert.IsNotNull(null)`-style lies are NOT real assertions — they are vacuous and will be called out by `2_review`. A real assertion checks an observable outcome against an expected value derived from the test's Act step. Arrange- or Act-only tests with no assertion are not acceptable.
+   If the spec's classification is `test-recommended`, tests are encouraged but not mandatory — if the change is a pure refactor with no behaviour change, shipping without new tests is acceptable as long as the existing test suite still passes. If the classification is `no-test-needed:<category>`, no new tests are expected; skip the TDD loop for this unit.
    9b. **Impact check** — before modifying a shared function's signature (adding/removing/renaming params, changing return type), run an impact analysis first:
    - Grep for all call sites of the function across the codebase
    - Grep for all test mocks that patch it (`patch("...function_name")`, `vi.mock`)
@@ -62,6 +67,7 @@ Steps:
    - Update ALL call sites and mocks in the same step — do not leave stale call sites for a later step
    - If the blast radius is large (>10 call sites), pause and flag to the user before proceeding
    - This prevents the recurring pattern: "changed helper, forgot 6 call sites, broke unrelated tests"
+   9c. **Contract bindings must resolve** — every test named by a `verify` command in the spec's `## Contract` has to exist by the time the step-14 gate runs. A `verify` whose filter or spec path matches **zero** tests is worse than no binding at all: on some runners it exits 0 and reports green while proving nothing. So when you create the tests for a contract item, run that item's `verify` command once immediately — for `type: e2e` items against the environment its `env` field names, with the local stack running for `env: local` — and confirm both: (a) it selects a non-zero number of tests, and (b) it fails before the implementation exists and passes after. This is the red-first rule from step 9 applied to the binding itself, and it is the only way to catch a zero-match filter — the step-14 gate cannot tell one apart from a real pass.
 10. Follow existing code patterns — match the style, naming conventions, and architecture of surrounding code
 11. Do not add comments, docstrings, or extra error handling beyond what the spec requires
 12. After all changes are made, run the project's verify commands in this order (read them from CLAUDE.md, skip any not listed):
@@ -71,14 +77,23 @@ Steps:
     d. Build (if a build command is listed)
 13. Fix any failures — if a verify step still fails after two fix attempts, stop and report the blocker to the user. Do not loop indefinitely.
     13b. Write the blocker to `.claude/blockers/<spec-name>.md` with: which verify step failed, the exact error message, what was already attempted, and suggested next action for the user.
-14. Validation criteria gate: read the spec's "Validation criteria" section. For each criterion, confirm it can be observed in the current implementation. If any criterion cannot be confirmed, treat it as a failure and fix it before proceeding.
+14. **Contract gate**: read the spec's `## Contract` section. For each item:
+
+- Item has a non-null `verify` → **run the command** (from its `cwd` if set, otherwise the repo root). Exit 0 means the criterion is met; a non-zero exit is a failure — fix it and re-run. Do not mark an item met because the code "looks right": the exit code is the only evidence that counts here. For `type: e2e` items, run against the environment the item's `env` field names, and before any `env: local` run probe that the local stack is up (the project's health check from CLAUDE.md, `/healthcheck`, or a reachability check on the URL the test targets) — an unreachable stack is a blocker to report (step 13b), not a failed criterion.
+- Item is `manual` → confirm the criterion is observable in the implementation by reading the code, exactly as the older prose `Validation criteria` gate did. Record it as `manual — confirmed by inspection`.
+
+  Report one line per item (`C1 ✓ · C2 ✓ · C3 manual · C4 ✗`) in your step-18 summary so `/ship` can surface it without re-running anything.
+
+  If a `verify` still fails after two fix attempts, stop and write the blocker (step 13b). **Editing the spec's Contract so that it passes is never a valid fix** — not relaxing a criterion, not widening a filter, not flipping an item to `manual`. If a criterion turns out to be wrong or unachievable, that is a scope change: report it as a blocker and let the user decide.
+
+  If the spec has no `## Contract` section (legacy spec written before the contract format), fall back to the previous behaviour: read the spec's `Validation criteria` section and, for each criterion, confirm it can be observed in the current implementation. If any criterion cannot be confirmed, treat it as a failure and fix it before proceeding.
     14b. **Artifact inventory check** — extract every file path from the spec's "Affected files" + "New files" sections. If in phased mode, filter to only the files assigned to the current phase. Run `git diff --name-only` (against the branch point or checkpoint) and compare:
 
 - For each spec file assigned to this phase, confirm it appears in the changeset
 - If any assigned file was **not touched**, this is a scope gap — stop and resolve before proceeding:
   a. Implement the missing file now (return to step 9), OR
   b. If the file genuinely belongs in a later phase, move it in the phase manifest and document why
-- This check is **mandatory** — do not skip it. It catches silent scope loss where entire subsystems (e.g. frontend UI) pass validation criteria (all APIs work) while being completely unimplemented.
+- This check is **mandatory** — do not skip it. It catches silent scope loss where entire subsystems (e.g. frontend UI) pass the contract gate (all APIs work) while being completely unimplemented.
 
   14c. **Spec requirements checklist** — walk every bullet in the spec's "Requirements" section. For each requirement, confirm it is implemented in the current code. Mark each as ✅ done or ❌ missing. If any requirement is ❌, treat it as a scope gap and resolve before proceeding (return to step 9). This is the same check `/2_review` performs in its spec completeness lens — running it here catches drift one hop earlier and reduces review/fix cycles.
 
@@ -95,7 +110,7 @@ Steps:
       d. Do NOT aim for perfection — ignore minor style nits. The goal is zero critical/major findings in `/2_review`.
 16. Quality pass (optional): run `/simplify` to catch code smells, dead code, and CLAUDE.md violations before handing off to `/2_review`. Skip if the change is fewer than 5 lines.
 17. If the implementation touches multiple distinct concerns (e.g. engine logic + UI component + tests), suggest splitting into atomic commits: one commit per concern, using conventional commit format (`✨ feat:`, `✅ test:`, etc.)
-18. Report which files were changed and summarize what was implemented.
+18. Report which files were changed and summarize what was implemented. The returned summary MUST include a line `Tests added: N` where N is the number of net-new test **functions** in the diff — count whatever the stack uses to declare a test: new `it(` / `test(` calls, `[Fact]` / `[Theory]` attributes, `def test_` functions, `@Test` annotations. If an exact grep is impractical on a very large diff, report `Tests added: ~N` to flag the number as an estimate. When the spec's classification was `no-test-needed`, the line reads `Tests added: 0 (no-test-needed:<category>)` so the review subagent can cross-check the declared category against what actually landed.
 
 **ACTION REQUIRED — do not end your response without doing this:**
 
