@@ -678,9 +678,9 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 **What it does**:
 
 1. Detects OS (Windows → junctions via `mklink /J`, Linux/Mac → symlinks via `ln -s`)
-2. For each shared directory (`skills/`, `agents/`, `rules/`, `commands/`): backs up the existing copy and creates a symlink/junction back to the framework repo
+2. For each shared directory (`skills/`, `agents/`, `rules/`, `scripts/`): backs up the existing copy and creates a symlink/junction back to the framework repo
 3. Leaves project-specific directories local (`context/`, `specs/`, `reviews/`, `input/`, `references/`, `hooks/`, `handoffs/`, `docs/`)
-4. Ensures all local directories exist, cleans up stale files
+4. Ensures all local directories exist, strips project-scoped lessons from a copied `lessons.md`, copies `lesson-cycle.md` and creates `lessons-archive/` so the lesson tooling works in the target, cleans up stale files
 
 **Usage**:
 

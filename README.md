@@ -39,19 +39,20 @@ Claude Code is powerful but context-hungry. Without structure:
 Option A — **Symlink** (recommended): keeps all projects in sync with one source of truth.
 
 ```bash
-git clone https://github.com/holgerimbery/claude-code-framework.git ~/claude-code-framework
-ln -s ~/claude-code-framework/.claude/skills your-project/.claude/skills
-ln -s ~/claude-code-framework/.claude/hooks your-project/.claude/hooks
-ln -s ~/claude-code-framework/.claude/context your-project/.claude/context
+git clone https://github.com/dixus/claudeframework.git ~/claudeframework
+ln -s ~/claudeframework/.claude/skills  your-project/.claude/skills
+ln -s ~/claudeframework/.claude/agents  your-project/.claude/agents
+ln -s ~/claudeframework/.claude/rules   your-project/.claude/rules
+ln -s ~/claudeframework/.claude/scripts your-project/.claude/scripts
 ```
 
-Project-specific directories (`input/`, `specs/`, `reviews/`, `handoffs/`) stay local — only the shared framework pieces are symlinked. Update the framework once, every project gets the latest skills.
+Only the shared framework pieces are linked. Project-specific directories (`context/` with the project's lessons, `hooks/`, `input/`, `specs/`, `reviews/`, `handoffs/`, `settings.json`) stay local. Update the framework once, every project gets the latest skills. On Windows, or to let the framework do the linking for you (junctions, backups, lesson-cycle files), run `/deploy <path-to-your-project>` from this repo instead.
 
 Option B — **Copy**: full ownership, diverge freely.
 
 ```bash
-git clone https://github.com/holgerimbery/claude-code-framework.git
-cp -r claude-code-framework/.claude your-project/
+git clone https://github.com/dixus/claudeframework.git
+cp -r claudeframework/.claude your-project/
 ```
 
 **2. Update `CLAUDE.md`** in your project root with your tech stack, commands, and architecture.
@@ -78,7 +79,7 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 /fleet                        # parallel /ship with conflict-aware batching
 ```
 
-`/ship` orchestrates the entire pipeline automatically — spec (from your input docs), implement, review, fix loop, lesson graduation, and commit — each phase in a clean subagent. After the spec is written, processed input files move to `.claude/archive/`.
+`/ship` orchestrates the entire pipeline automatically — spec (from your input docs), implement, review, fix loop, lesson graduation, contract gate, changelog, and commit — each phase in a clean subagent. After the spec is written, processed input files move into an `archive/` directory next to them (e.g. `.claude/input/archive/`).
 
 `/fleet` takes decomposed PRDs, analyzes file conflicts across features, groups non-conflicting features into parallel batches, runs `/ship` for each in isolated worktrees, and merges results back to main conflict-free.
 
@@ -209,8 +210,8 @@ The framework ships with an optional MCP (Model Context Protocol) server that gi
 |---|---|---|
 | **Ticket resolution** | User provides feature description manually | Auto-loads title + description + acceptance criteria + all comments from the work item |
 | **Branch naming** | User answers questions | Auto-derived from ticket metadata per `.claude/rules/branch-management.md` |
-| **After commit** | Nothing | Non-obvious context posted as a comment (only when needed — not boilerplate) |
-| **After push** | Nothing | Work item state transitioned (e.g. → Resolved / Development finished) |
+| **After commit** | Nothing | Derived fields synced from the changelog (if the project defines them), non-obvious context posted as a comment (only when needed — not boilerplate), `changelog/<branch>.md` attached to the work item |
+| **After push** | Nothing | Work item state transitioned to the project's development-complete state (e.g. → Resolved) |
 | **`/commit` on ticket branch** | Standard conventional commit | Appends ` #<ticketId>` if the branch name matches the project's convention |
 
 ### Setup (one-time per developer)
