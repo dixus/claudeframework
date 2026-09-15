@@ -30,9 +30,9 @@ Short, high-priority rules that apply in every session regardless of project or 
 
 ## Self-improvement
 
-- **Capture corrections.** After any user correction, add the lesson to `.claude/context/lessons.md` — what went wrong, the rule that prevents it, and a `scope:` tag (`framework` for universal rules, `project` for codebase-specific ones). When in doubt, use `project`.
-- **Lessons are temporary.** `lessons.md` is an inbox, not an archive. Lessons that prove themselves get graduated into one-line rules in CLAUDE.md `## Learned Rules`. Graduation happens automatically via `/ship` (Step 4b) and `/commit` (when > 20 entries). Do not manually accumulate lessons indefinitely.
-- **Read lessons on start.** Check `.claude/context/lessons.md` at the start of any session that resembles a past correction.
+- **Capture corrections.** After any user correction, add the lesson to `.claude/context/lessons.md` — what went wrong, the rule that prevents it, a `scope:` tag (`framework` for universal rules, `project` for codebase-specific ones), and a mandatory `class:` with an error-class id from the taxonomy in `.claude/context/lesson-cycle.md` (never `unclassified`; if no class fits, propose a taxonomy change instead). When in doubt about scope, use `project`.
+- **Lessons are temporary.** `lessons.md` is an inbox, not an archive: it holds only the open cycle (a calendar month, header line in the file). Lessons that prove themselves get graduated into one-line rules in CLAUDE.md `## Learned Rules` via `/ship` (Step 4b). At cycle close — manual, `node .claude/scripts/lesson-cycle.mjs --mode close` — the remaining entries move losslessly to `.claude/context/lessons-archive/` (see `lesson-cycle.md`). Do not manually accumulate lessons indefinitely.
+- **Read lessons on start.** Check `.claude/context/lessons.md` at the start of any session that resembles a past correction. That file holds only the open cycle; the closed cycles live in `.claude/context/lessons-archive/` and are the larger body of experience — grep them by keyword or by `class:` when the inbox turns up nothing. Archived does not mean obsolete: a lesson is archived because its cycle ended, not because it stopped being true.
 - **Prefer root causes.** Fix the underlying mistake pattern, not just the symptom.
 
 ## Communication

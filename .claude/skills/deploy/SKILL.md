@@ -17,11 +17,12 @@ Replace shared framework directories in a target project with junctions pointing
 
 **Shared (symlinked)** — maintained in Framework, identical across all projects:
 
-| Dir       | Contents                             |
-| --------- | ------------------------------------ |
-| `skills/` | All 21 skill definitions             |
-| `agents/` | Subagent personas                    |
-| `rules/`  | Auto-loaded instructions (instincts) |
+| Dir        | Contents                                              |
+| ---------- | ----------------------------------------------------- |
+| `skills/`  | All 26 skill definitions                              |
+| `agents/`  | Subagent personas                                     |
+| `rules/`   | Auto-loaded instructions (instincts)                  |
+| `scripts/` | Framework tooling (`lesson-cycle.mjs` + its tests)    |
 
 **Local (never symlinked)** — project-specific, stay as regular directories:
 
@@ -38,7 +39,6 @@ Replace shared framework directories in a target project with junctions pointing
 | `worktrees/`           | Git worktree state                 |
 | `settings.json`        | Project-specific settings          |
 | `settings.local.json`  | Local overrides                    |
-| `metrics-pipeline.csv` | Ship pipeline run log              |
 | `metrics-scout.csv`    | Scout/harvest run log              |
 
 ## Steps
@@ -51,7 +51,7 @@ Replace shared framework directories in a target project with junctions pointing
 
 3. **Detect framework root.** The framework repo root is the working directory where this skill is invoked. Store as `$FRAMEWORK_ROOT`. Verify `$FRAMEWORK_ROOT/.claude/skills/` exists.
 
-4. **For each shared directory** (`skills`, `agents`, `rules`):
+4. **For each shared directory** (`skills`, `agents`, `rules`, `scripts`):
 
    a. Check if `<target>/.claude/<dir>` is already a symlink/junction pointing to the correct source:
    - On Windows: `cmd.exe //c "dir <target>\.claude\" | grep <dir>` and look for `<JUNCTION>` marker
@@ -71,7 +71,7 @@ Replace shared framework directories in a target project with junctions pointing
 
 5. **Ensure local directories exist.** For each local directory (`context`, `specs`, `reviews`, `input`, `references`, `hooks`, `handoffs`, `docs`), create it if missing: `mkdir -p <target>/.claude/<dir>`
 
-6. **Strip project-scoped lessons.** If `<target>/.claude/context/lessons.md` exists, read it and remove all entries that have `scope: project` or no scope tag (legacy entries are project-scoped by default). Keep only `scope: framework` entries. This prevents project-specific lessons from the Framework repo from leaking into target projects.
+6. **Strip project-scoped lessons + carry the lesson-cycle files.** If `<target>/.claude/context/lessons.md` exists, read it and remove all entries that have `scope: project` or no scope tag (legacy entries are project-scoped by default). Keep only `scope: framework` entries, and keep the `<!-- lesson-cycle: … -->` header line if present. This prevents project-specific lessons from the Framework repo from leaking into target projects. Then copy `$FRAMEWORK_ROOT/.claude/context/lesson-cycle.md` (error-class taxonomy + cycle definition) into `<target>/.claude/context/` and create `<target>/.claude/context/lessons-archive/` if missing — the symlinked `3_fix` skill and `rules/instincts.md` point at that file, so without the copy the pointer dangles in target projects. The `scripts/` junction (step 4) makes `node .claude/scripts/lesson-cycle.mjs` available in the target; the script resolves the repo root from the current working directory, so it operates on the target project's lessons when run from the target root.
 
 7. **Clean up stale files.** If `<target>/.claude/context/instincts.md` exists as a regular file (not via the `rules/` symlink), delete it — `rules/instincts.md` is now provided through the symlink and having both causes duplication.
 
@@ -87,7 +87,7 @@ Target: <target-path>
 | skills/     | linked → Framework ✓      |
 | agents/     | linked → Framework ✓      |
 | rules/      | linked → Framework ✓      |
-| commands/   | linked → Framework ✓      |
+| scripts/    | linked → Framework ✓      |
 | context/    | local (kept as-is) ✓      |
 | specs/      | local (kept as-is) ✓      |
 | ...         | ...                       |
