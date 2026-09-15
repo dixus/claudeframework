@@ -3,7 +3,7 @@ name: decompose
 description: Break a concept document, draft, or product brief into independent PRDs that each feed into /ship. Use when input contains multiple features or a big-picture vision.
 disable-model-invocation: true
 argument-hint: [concept name or description]
-model: claude-opus-4-6
+model: claude-opus-4-7
 effort: high
 ---
 

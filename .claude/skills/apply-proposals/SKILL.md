@@ -3,7 +3,7 @@ name: apply-proposals
 description: Review and apply accepted proposals from learn-proposals.md to skill and rule files. Closes the scout→learn→apply loop. Use after reviewing proposals and marking them as accepted.
 disable-model-invocation: true
 argument-hint: "[--all | --proposal <number>]"
-model: claude-opus-4-6
+model: claude-opus-4-7
 effort: high
 ---
 

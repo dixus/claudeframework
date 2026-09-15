@@ -3,7 +3,7 @@ name: harvest
 description: Clone and analyze a Git repo's Claude Code setup. Discovers adoptable skills, hooks, agents, and patterns, then generates adoption proposals. Use after /scout finds interesting repos, or directly with a repo URL.
 disable-model-invocation: true
 argument-hint: "<repo-url> [--clean] [--deep]"
-model: claude-opus-4-6
+model: claude-opus-4-7
 effort: high
 ---
 

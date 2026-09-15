@@ -3,7 +3,7 @@ name: scout
 description: Search the web for new Claude Code patterns, release notes, and community skills. Use periodically to check for framework optimization opportunities.
 disable-model-invocation: true
 argument-hint: "[--quick]"
-model: claude-opus-4-6
+model: claude-opus-4-7
 effort: high
 ---
 
