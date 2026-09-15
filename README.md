@@ -1,6 +1,6 @@
 # Claude Code Development Framework
 
-By [Holger Kreissl](https://github.com/hkreissl)
+By [Holger Kreissl](https://github.com/dixus)
 
 A reusable `.claude/` directory that turns Claude Code into a disciplined software engineering pipeline. Drop it into any project, any tech stack. One command — `/ship` — takes a feature from requirements to committed code.
 
