@@ -3,7 +3,7 @@
 > A structured, safe, and technology-agnostic development workflow for Claude Code.
 > Designed for production-grade projects — especially SaaS platforms.
 
-Generated and maintained by `/doc`. Last updated: 2026-04-01.
+Generated and maintained by `/doc`. Last updated: 2026-09-15.
 
 ---
 
@@ -52,10 +52,10 @@ This framework solves all of these systematically.
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | [`/decompose`](skills-reference.md#decompose)     | Break a concept doc into independent PRDs that each feed into `/ship`                                     |
 | [`/fleet`](skills-reference.md#fleet)             | Ship decomposed PRDs in parallel — conflict analysis, batched worktrees, merge to main                    |
-| [`/ship`](skills-reference.md#ship)               | Full pipeline orchestrator — spec -> implement -> review -> fix -> commit (`--dry-run`, `--no-finalize`)  |
-| [`/0_spec`](skills-reference.md#0_spec)           | Translating requirements into a structured spec                                                           |
-| [`/1_implement`](skills-reference.md#1_implement) | Implementing a spec with plan approval and TDD                                                            |
-| [`/2_review`](skills-reference.md#2_review)       | 9-lens code review against spec (fresh session)                                                           |
+| [`/ship`](skills-reference.md#ship)               | Full pipeline orchestrator — spec -> implement -> review -> fix -> commit (`--dry-run`, `--no-finalize`, `--fast`/`--full`) |
+| [`/0_spec`](skills-reference.md#0_spec)           | Translating requirements into a structured spec with a machine-checkable `## Contract`                    |
+| [`/1_implement`](skills-reference.md#1_implement) | Implementing a spec with plan approval, TDD, and the contract gate                                        |
+| [`/2_review`](skills-reference.md#2_review)       | 10-lens code review against spec, per-item contract verdict (fresh session)                               |
 | [`/3_fix`](skills-reference.md#3_fix)             | Fixing review issues by severity with circuit breaker                                                     |
 | [`/test`](skills-reference.md#test)               | Full verify suite — report only, no fixes                                                                 |
 
@@ -64,8 +64,11 @@ This framework solves all of these systematically.
 | Skill                                             | When to use                                                                        |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | [`/commit`](skills-reference.md#commit)           | Creating atomic commits with conventional messages and multi-concern detection     |
+| [`/changelog`](skills-reference.md#changelog)     | Write the per-ticket `changelog/<branch>.md` (Summary, Manual Steps) outside `/ship` |
 | [`/debug`](skills-reference.md#debug)             | Diagnosing and fixing a failing test, type error, or runtime error                 |
 | [`/impact`](skills-reference.md#impact)           | Blast radius analysis — find all call sites, test mocks, and consumers (read-only) |
+| [`/release`](skills-reference.md#release)         | Cut a quarterly release branch, generate notes, tag the cut (gated before push)    |
+| [`/release-notes`](skills-reference.md#release-notes) | Aggregate per-ticket changelogs into `releases/<quarter>.md` for deployers     |
 | [`/smoke`](skills-reference.md#smoke)             | Write and run smoke tests against a Docker stack from a spec                       |
 | [`/audit`](skills-reference.md#audit)             | Finding and fixing vulnerable dependencies                                         |
 | [`/healthcheck`](skills-reference.md#healthcheck) | Scanning Docker container logs for errors, crashes, and warnings                   |
@@ -86,36 +89,45 @@ This framework solves all of these systematically.
 
 ## Lifecycle hooks
 
-Four hooks are registered in `.claude/settings.json` to enforce quality automatically:
+Five hooks are registered in `.claude/settings.json` across four events, to enforce quality automatically:
 
-| Hook                 | Event               | Matcher       | What it does                                                                                     |
-| -------------------- | ------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
-| `auto-approve.js`    | `PermissionRequest` | `*`           | 3-tier auto-approve: safe tools approved, destructive patterns blocked, ambiguous passed through |
-| `protect-secrets.js` | `PreToolUse`        | `Edit\|Write` | Blocks writes to sensitive files (`.env`, `*.pem`, `*.key`, credentials, etc.) via exit code 2   |
-| `auto-format.js`     | `PostToolUse`       | `Edit\|Write` | Auto-formats files after edits (Prettier for JS/TS/CSS/JSON/MD, ruff for Python)                 |
-| `post-compact.js`    | `PostCompact`       | (all)         | Re-injects pipeline state (active spec, review, handoff, git branch) after context compaction    |
+| Hook                     | Event               | Matcher       | What it does                                                                                     |
+| ------------------------ | ------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
+| `auto-approve.js`        | `PermissionRequest` | `*`           | 3-tier auto-approve: safe tools approved, destructive patterns blocked, ambiguous passed through |
+| `protect-secrets.js`     | `PreToolUse`        | `Edit\|Write` | Blocks writes to sensitive files (`.env`, `*.pem`, `*.key`, credentials, etc.) via exit code 2   |
+| `validate-commit-msg.js` | `PreToolUse`        | `Bash`        | Rejects a `git commit` whose message carries no `#<ticketId>` (and not in leading position, which git treats as a comment) |
+| `auto-format.js`         | `PostToolUse`       | `Edit\|Write` | Auto-formats files after edits (Prettier for JS/TS/CSS/JSON/MD, ruff for Python)                 |
+| `post-compact.js`        | `PostCompact`       | (all)         | Re-injects pipeline state (active spec, review, handoff, git branch) after context compaction    |
+
+A sixth script, `allow-claude-edits.js`, ships in `.claude/hooks/` but is **not registered** in `settings.json` — register it as a `PermissionRequest` hook only if you want the `.claude/`-path allowlist without the full `auto-approve.js`.
 
 ## Directory layout
 
 ```
 .claude/
   docs/           <- you are here (generated by /doc)
-  skills/         <- 23 skill definitions (the framework itself)
+  skills/         <- 26 skill definitions (the framework itself)
   agents/         <- subagent personas (code-reviewer, explorer)
+  agent-memory/   <- per-agent persistent notes
   rules/          <- auto-loaded instructions (instincts.md — high-priority session rules)
+  scripts/        <- framework tooling (lesson-cycle.mjs + tests)
   context/        <- curated knowledge read by skills on demand
+    lessons.md         <- open-cycle inbox of corrections
+    lesson-cycle.md    <- error-class taxonomy + cycle definition
+    lessons-archive/   <- closed cycles + graduated lessons (lossless)
   references/     <- drop zone: blog posts, repos, and harvested repos
     blogs/
     repos/
     index.md
     scout-registry.md
-  hooks/          <- lifecycle hook scripts (4 hooks)
-  specs/          <- generated feature specs
+  hooks/          <- lifecycle hook scripts (6 scripts, 5 registered)
+  commands/       <- slash commands that are not full skills
+  mcp-servers/    <- local MCP servers (azure-devops)
+  specs/          <- generated feature specs (+ phase manifests)
   reviews/        <- generated review reports + learn-proposals.md
-  input/          <- raw requirements (archived after spec)
-  archive/        <- processed input files
+  input/          <- raw requirements (archived into a sibling archive/ after spec)
+  blockers/       <- unresolved verify failures written by /1_implement
   handoffs/       <- session state files (gitignored)
-  metrics-pipeline.csv  <- /ship pipeline run log (append-only)
   metrics-scout.csv     <- /scout and /harvest run log (append-only)
 ```
 
@@ -129,6 +141,11 @@ Four hooks are registered in `.claude/settings.json` to enforce quality automati
 
 | Date       | Change                                                                                          |
 | ---------- | ----------------------------------------------------------------------------------------------- |
+| 2026-09-15 | `## Contract` replaces prose validation criteria; `/ship` Step 5 executes it as a gate; `## Test strategy` classification with `no-test-needed` whitelist |
+| 2026-09-15 | `/ship`: fast path + complexity classifier (`--fast`/`--full`), PRD-mode, tracker feedback with derived fields, changelog attachment upload |
+| 2026-09-15 | Lesson cycle: `class:` taxonomy (`lesson-cycle.md`), monthly archive, tool-driven graduation (`.claude/scripts/lesson-cycle.mjs`) |
+| 2026-09-15 | Added `/changelog`, `/release`, `/release-notes`; removed `metrics-pipeline.csv` and the historical-pattern step |
+| 2026-09-15 | Azure DevOps MCP: attachment download/upload, comment update/delete                             |
 | 2026-04-01 | Added `/decompose` and `/fleet` skills for parallel multi-feature shipping with conflict analysis |
 | 2026-04-01 | Added `--no-finalize` flag to `/ship` for fleet integration                                     |
 | 2026-04-01 | Synced root README.md with `/fleet`, `/decompose`, skill count (23)                             |

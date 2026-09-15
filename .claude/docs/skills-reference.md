@@ -1,6 +1,6 @@
 # Skills Reference
 
-Generated and maintained by `/doc`. Last updated: 2026-04-01.
+Generated and maintained by `/doc`. Last updated: 2026-09-15.
 
 Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology-agnostic — they read project commands from `CLAUDE.md` rather than hardcoding tools.
 
@@ -52,7 +52,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 **Input**: Optional decomposition name (matches `.claude/specs/decomposition-<name>.md`). Flags: `--dry-run`, `--max-parallel N` (default: 5), `--batch-only` (run batch 1 only).
 
-**Output**: All features merged to `main`, decomposition manifest updated, metrics appended to `.claude/metrics-pipeline.csv`.
+**Output**: All features merged to `main`, decomposition manifest updated.
 
 **What it does**:
 
@@ -72,7 +72,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
    - Failed features don't block the batch
 7. **Final integration verify** — runs full verify suite on `main` after all batches
 8. **Failure triage** — presents failed features with retry / skip / investigate options
-9. **Fleet report** — summary table with per-feature outcome, files, review cycles. Appends one metrics row per feature.
+9. **Fleet report** — summary table with per-feature outcome, files, review cycles.
 
 **Key design decisions**:
 
@@ -100,34 +100,39 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 **When to use**: When shipping a complete feature end-to-end with minimal manual intervention. Requirements should be in `.claude/input/` or passed as arguments.
 
-**Input**: `$ARGUMENTS` — a feature description. Optional `--dry-run` flag to preview scope without implementing.
+**Input**: `$ARGUMENTS` — a work-item ID (`/ship 1234`), a PRD reference (`/ship 02a-foundation`), or a free-text feature description. Flags: `--dry-run` (questions + spec only), `--no-finalize` (no push, no state change — used by `/fleet`), `--auto-finalize` (skip the confirmation gate), `--fast` / `--full` (override the complexity classifier).
 
-**Output**: Merged feature branch with atomic commits, pipeline metrics appended to `.claude/metrics-pipeline.csv`.
+**Output**: Feature branch pushed to origin with atomic commits, a per-ticket `changelog/<branch>.md`, and — if a tracker is configured — the work item moved to its development-complete state. `/ship` never merges to the main branch itself; merges go through reviewed PRs.
 
 **What it does**:
 
-1. Creates a `feat/<spec-name>` branch (skipped in `--dry-run`)
-2. Front-loads all clarifying questions in a single batch — the only user interruption
-3. **Historical pattern analysis** (Step 1b) — reads `metrics-pipeline.csv` for recurring issue categories in this feature area, passes guidance to spec subagent
-4. Launches a **spec subagent** (opus) — writes `.claude/specs/<name>.md`
-5. **Complexity gate**: stops if file count exceeds threshold (default: 10)
-6. _Dry-run exit_: if `--dry-run`, prints a scope report and stops here
-7. Launches an **implement subagent** (opus) — writes source, runs verify
-8. Launches a **review subagent** (opus in worktree) — writes `.claude/reviews/<name>-review.md`
-9. If issues found, launches a **fix subagent** (sonnet for major, opus for critical) — loops review/fix up to 3 cycles
-10. **Lesson graduation** (Step 4b) — promotes mature lessons from `lessons.md` to `CLAUDE.md` rules
-11. **Cross-phase integration check** (Step 4c) — only for phased implementations; verifies data flow, interface contracts, and glue code across phases
-12. Runs a **final verify gate** — typecheck, lint, tests, build
-13. Launches a **commit subagent** (sonnet) — creates atomic conventional commits
-14. Asks how to finalize: merge to main, open a PR, or leave on branch
-15. **Post-merge cleanup** — deletes feature and checkpoint branches, marks spec as completed
-16. Appends a row to `.claude/metrics-pipeline.csv` with run statistics
+1. **Branch setup** (Step 0) — fetches `origin`, stays on the current feature branch or defers branch creation until ticket metadata is known
+2. **Ticket resolution** (Step 0b) — loads the work item, comments, and linked items from the tracker (if an MCP tool is configured); inspects prior work on linked branches/commits; moves the ticket to "in progress". PRD-mode (non-numeric arg) resolves a PRD from `.claude/input/**` and makes no tracker mutations at all.
+3. **Complexity classifier** (Step 0c) — scores the ticket on 4 signals and picks the **fast path** (single implement subagent, no spec/review) or the **full pipeline**
+4. Front-loads all clarifying questions in a single batch — the only user interruption before the finalize gate
+5. Launches a **spec subagent** (opus) — writes `.claude/specs/<name>.md` including the machine-checkable `## Contract`
+6. **Complexity gate**: stops if the **production** file count exceeds the threshold (default: 10) — test files are reported but not counted
+7. **Decision review** (Step 2b) — auto-accepts medium/low decisions, waits for confirmation on `(high)` ones
+8. _Dry-run exit_: if `--dry-run`, prints a scope report and stops here
+9. Launches an **implement subagent** (fable) — writes source and tests, runs verify, runs the contract gate
+10. Launches a **review subagent** (opus) — writes `.claude/reviews/<name>-review.md`, including a per-item contract table
+11. If issues found, launches a **fix subagent** (sonnet for major, opus for critical) — loops review/fix up to 3 cycles
+12. **Lesson graduation** (Step 4b) — moves mature lessons from `lessons.md` to `lessons-archive/graduated.md` and appends the rule to `CLAUDE.md`; reports the lesson-cycle status
+13. **Cross-phase integration check** (Step 4c) — only for phased implementations; verifies data flow, interface contracts, and glue code across phases
+14. **Contract gate + final verify** (Step 5) — runs typecheck/lint/tests/build **and** every `verify` command from the spec's `## Contract`, gating on each exit code. Skipped only when there is no contract (fast path or legacy spec), and then the skip is printed with its reason.
+15. **Changelog entry** (Step 5b) — writes `changelog/<branch>.md` with a summary and a mandatory `## Manual Steps` section (format owned by `/changelog`)
+16. Launches a **commit subagent** (sonnet) — creates atomic conventional commits
+17. **Tracker feedback** (Step 6b/6d) — syncs derived work-item fields from the changelog (manual-steps flag, UAT decision — if the project defines them), posts a comment only when there is non-derivable context, and attaches the changelog to the work item if the tracker supports uploads
+18. **Finalize gate** (Step 7a) — prints a summary with the contract coverage and recommended smoke-tests, then waits for explicit confirmation
+19. **Push + finalize** (Step 7b) — pushes the branch, transitions the ticket to its development-complete state, closes the parent epic if all siblings are done, deletes the checkpoint branch
 
 **Usage**:
 
 ```
-/ship user authentication
+/ship 1234
+/ship 02a-foundation
 /ship add export feature --dry-run
+/ship 1234 --fast
 ```
 
 ---
@@ -149,9 +154,12 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 3. Checks completed work status before assuming dependencies are missing
 4. **Asks 2-3 clarifying questions** (with selectable options) before writing — skips if requirements are unambiguous
 5. Surfaces UI/UX and architectural decisions not in the PRD as explicit questions
-6. Writes the spec with sections: Goal, Requirements, Out of scope, Affected files, New files, **Patterns to mirror**, Implementation notes, **UX concept** (component tree, interaction flows, state/data flow, responsive behavior, accessibility, reuse check), **Validation criteria**, **Test cases**, **Decisions made by Claude**
-7. **Flags complexity**: adds a warning section if total affected + new files exceeds 10, suggesting decomposition
-8. Suggests moving processed files from `input/` to `archive/`
+6. Writes the spec with sections: Goal, Requirements, Out of scope, Affected files, New files, **Patterns to mirror**, Implementation notes, **UX concept** (component tree, interaction flows, state/data flow, responsive behavior, accessibility, reuse check), **Contract**, **Test cases**, **Test strategy**, **Decisions made by Claude**
+7. **Contract**: binds every acceptance criterion to an executable check — a YAML block where each item carries an `id`, a `criterion`, and either a `verify` command (with `cwd` when it does not run from the repo root) or a `manual` reason naming the missing harness. `type: e2e` bindings additionally declare `env: local|deployed`: criteria about behaviour the ticket introduces must be `local` (the change is not deployed at gate time), `deployed` is only for regression guards on already-deployed behaviour. This replaces the older prose-only `Validation criteria` section and is what `/ship` Step 5 actually executes — with a reachability pre-check before `env: local` runs, so a stopped local stack escalates as an infrastructure blocker instead of masquerading as a failed criterion.
+8. **Test strategy**: declares exactly one classification — `test-required`, `test-recommended`, or `no-test-needed:<category>` from a 7-item whitelist. Paths under CLAUDE.md `## Restricted Areas` force `test-required` plus a negative-test hint.
+9. **Self-checks before returning**: rejects a malformed test-strategy label (8b) and a malformed contract (8c — missing or double bindings, `type: manual` colliding with a `verify`, a command without a needed `cwd`, an untraceable requirement, or a bare full-suite `verify` that proves nothing specific)
+10. **Flags complexity**: adds a warning section if total affected + new files exceeds 10, suggesting decomposition
+11. Suggests moving processed files into an `archive/` directory next to them
 
 **Usage**:
 
@@ -160,7 +168,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 /0_spec user authentication
 ```
 
-**After running**: Read the spec before proceeding. Move processed files from `input/` to `archive/`.
+**After running**: Read the spec before proceeding — in particular the `## Contract`, since those bindings are what the pipeline will gate on. Move the processed input files into the `archive/` directory alongside them.
 
 ---
 
@@ -182,13 +190,14 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 6. **Phase management**: creates or resumes a phase manifest (`.claude/specs/<name>-phases.md`) for multi-phase implementations
 7. Implements step by step using the **TDD loop**: write test (from spec's Test cases) -> run to confirm it fails (red) -> implement -> run to confirm it passes (green)
 8. **Impact check**: before modifying shared function signatures, greps for all call sites and test mocks, updates them in the same step
-9. Runs: typecheck -> lint -> tests -> build
-10. Fixes any failures (max 2 attempts, then escalates)
-11. **Validation criteria gate**: confirms every criterion from the spec
-12. **Artifact inventory check**: verifies every spec file was touched in the changeset
-13. **Pre-flight self-review**: reviews own changes against review lenses before handoff
-14. Optionally runs `/simplify` for a quality pass
-15. Suggests atomic commits if multiple concerns were touched
+9. **Contract bindings must resolve**: when creating the tests a contract item's `verify` names, runs that command once immediately to confirm it selects a non-zero number of tests and goes red-then-green. A filter matching zero tests can exit 0 on some runners, and the step-14 gate cannot tell that apart from a real pass.
+10. Runs: typecheck -> lint -> tests -> build
+11. Fixes any failures (max 2 attempts, then escalates — and writes the blocker to `.claude/blockers/<spec>.md`)
+12. **Contract gate**: **runs** each contract item's `verify` command and treats a non-zero exit as a failure; confirms `manual` items by inspection. Editing the contract to make it pass is never a valid fix — an unachievable criterion is a blocker for the user to decide. Legacy specs without a `## Contract` fall back to confirming the prose `Validation criteria`.
+13. **Artifact inventory check**: verifies every spec file was touched in the changeset
+14. **Pre-flight self-review**: reviews own changes against review lenses before handoff
+15. Optionally runs `/simplify` for a quality pass
+16. Suggests atomic commits if multiple concerns were touched; reports `Tests added: N` for the review to cross-check
 
 **Usage**:
 
@@ -213,7 +222,7 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 
 **Output**: `.claude/reviews/<name>-review.md`
 
-**Review criteria** (9 lenses):
+**Review criteria** (10 lenses):
 
 - **Correctness**: does it match the spec? Logic bugs, missing cases?
 - **Code quality**: follows existing patterns? Over-engineered or unnecessarily complex?
@@ -222,12 +231,13 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 - **UX / Minimal impact**: does the change touch only what's necessary? Scope creep? Patches hiding root causes?
 - **PM**: does the change deliver business value? Aligned with spec goal? Anything built that wasn't asked for?
 - **DevOps**: CI/CD implications? Environment variables, build config, or deployment steps affected? Observability gaps?
-- **Spec validation**: if spec has "Validation criteria", can each criterion be confirmed from the diff?
-- **Spec completeness**: walks every requirement, validation criterion, and test case — marks each as implemented / missing / partial. Missing = critical, partial = major.
+- **Contract validation**: gives a verdict **per contract item**, not a global one. This skill has no Bash tool, so it does not execute the `verify` commands (that is `/ship` Step 5) — it checks that each binding is real: `✓ bound` when the named test exists and its assertions actually cover the criterion, `✗ unbound` (**major**) when it names a missing test, a filter that matches nothing, or a test asserting something else, and `manual` when the item declares one — flagging **minor** if the stated reason has since become false. Legacy specs without a `## Contract` fall back to checking the prose `Validation criteria`.
+- **Spec completeness**: walks every requirement, contract item, and test case — marks each as implemented / missing / partial. Missing = critical, partial = major. Kept distinct from Contract validation to avoid double-counting: unimplemented is a completeness ❌, implemented-but-unproven is an `✗ unbound`.
+- **Test strategy**: records the spec's `Classification:` label and plausibility-checks it against the diff — missing tests for `test-required`, vacuous assertions, or a `no-test-needed` category the changed files contradict. **Soft warnings only** — never escalates the verdict.
 
 **Review modes**:
 
-- **Full review mode** (first cycle): reads all changed files, evaluates all 9 lenses
+- **Full review mode** (first cycle): reads all changed files, evaluates all 10 lenses
 - **Delta review mode** (subsequent cycles): only re-checks previous issues and code touched by fixes; escalates to full review if fix diff is too large
 
 **Verdict rules**:
@@ -263,11 +273,11 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 5. **Scope gate**: only touches files mentioned in the Issues section
 6. Runs: typecheck -> lint -> tests -> build
 7. Fixes any verify failures (max 2 attempts)
-8. **Validation criteria check**: confirms every criterion still passes after fixes
+8. **Contract re-check**: re-runs every contract item's `verify` command — the fixes may have broken a criterion that was green before. Catching it here costs one re-run; letting `/ship` Step 5 catch it costs a whole review/fix cycle.
 9. **Self-check against review items**: re-reads each affected file to verify the fix actually resolves the issue
-10. **Spec-anchored check**: if fixes diverged from the spec, updates the spec
-11. **Self-improvement gate**: writes recurrence-prevention lessons to `lessons.md`
-12. Reports what was fixed, what was skipped, spec changes, and recurrence-prevention suggestions
+10. **Spec-anchored check**: if fixes diverged from the spec, **does not touch the spec** — the spec is ground truth. The divergence is documented in the report and flagged for the user; only the user may approve a spec change. This explicitly covers the `## Contract`: widening a filter, repointing a `verify` at a broader suite, or flipping an item to `manual` is a spec change disguised as a fix.
+11. **Self-improvement gate**: writes recurrence-prevention lessons to `lessons.md` with a mandatory `class:` from the taxonomy in `lesson-cycle.md`
+12. Reports what was fixed, what was skipped, any flagged spec divergence, the per-item contract status, and recurrence-prevention suggestions
 
 **Usage**:
 
@@ -454,6 +464,89 @@ Each skill is defined in `.claude/skills/<name>/SKILL.md`. Skills are technology
 /debug
 /debug "TypeError: Cannot read properties of undefined"
 /debug src/lib/scoring/engine.test.ts
+```
+
+---
+
+## `/changelog`
+
+**Purpose**: Write or refresh the per-ticket changelog `changelog/<branch>.md` — the single source of truth for what a ticket changed and which manual deployment steps it needs.
+
+**When to use**: Before committing or pushing work on a ticket branch when you are **not** running `/ship` (which writes the changelog itself in Step 5b). Without it, the manual-steps flag on the work item, the tracker comment, and the release notes all silently stay empty.
+
+**Input**: Optional spec name (PRD-mode — one changelog per PRD on a shared epic branch).
+
+**Output**: `changelog/<branch>.md` with `## Summary`, a mandatory `## Manual Steps` section (default `_None._`), and `## Changed files`.
+
+**What it does**:
+
+1. Resolves the ticket from the branch name (convention from `branch-management.md`; asks if it cannot)
+2. Collects the changed files from `git diff origin/<main>...HEAD` plus uncommitted changes
+3. Inspects the diff against the manual-steps triggers (schema changes without automatic migration, routing/gateway config, cache flushes, per-environment settings, feature flags, external dependencies) and writes one bullet per step — when in doubt, writes the step
+4. Writes the file idempotently (overwrite, never append)
+5. Names the derived actions the user still has to perform standalone: the tracker's manual-steps flag and the mirroring comment
+
+**Usage**:
+
+```
+/changelog
+/changelog prd07-document-upload
+```
+
+---
+
+## `/release`
+
+**Purpose**: Cut a quarterly release branch with generated notes and a tag.
+
+**When to use**: Once per quarter, on top of the per-ticket `/ship` pipeline.
+
+**Input**: `$ARGUMENTS` — the quarter (e.g. `2026-Q2`). Flags: `--dry-run`, `--tag <name>`, `--no-tag`, `--since <ref>`.
+
+**Output**: A `Q<N>-Release-<YYYY>` branch cut from the main branch, `releases/<quarter>.md`, and an annotated tag on the cut commit (default tag name = branch name).
+
+**What it does**:
+
+1. Validates state — clean tree, on the main branch, up to date with origin, target branch and tag do not exist yet
+2. Cuts the release branch
+3. Generates the release notes by calling `/release-notes` internally and commits the file on the release branch
+4. Tags the cut commit
+5. Pushes branch + tag — behind a confirmation gate, nothing is pushed without an explicit yes
+
+**Note**: Triggering build/release pipelines stays a manual next step listed in the final report. Hotfix branches follow `<ticket>-on-<release-branch>` and merge into the release branch, not the main branch.
+
+**Usage**:
+
+```
+/release 2026-Q2
+/release 2026-Q2 --dry-run
+```
+
+---
+
+## `/release-notes`
+
+**Purpose**: Aggregate per-ticket changelogs into one quarterly document for the people who deploy the release.
+
+**When to use**: Called internally by `/release`. Can be re-run standalone to refresh the notes after more tickets land.
+
+**Input**: `$ARGUMENTS` — the quarter. Flags: `--since <git-ref>`, `--dry-run`.
+
+**Output**: `releases/<quarter>.md`
+
+**What it does**:
+
+1. Reads every `changelog/<branch>.md` added in the given git range (default: since the previous release file's recorded range end)
+2. Extracts each file's `## Manual Steps` section — the steps the automatic release pipeline does **not** perform
+3. Groups the result by module, lists all tickets in an appendix, and writes the quarterly file idempotently
+
+**Why it matters**: the per-ticket changelog is the single source of truth for manual deployment steps. A tracker flag, the comment posted by `/ship` Step 6b, and this file are all derived from it, so they cannot drift.
+
+**Usage**:
+
+```
+/release-notes 2026-Q2
+/release-notes 2026-Q2 --since v2026.04.0 --dry-run
 ```
 
 ---

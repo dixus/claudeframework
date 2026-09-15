@@ -1,6 +1,6 @@
 # Workflow Guide
 
-Generated and maintained by `/doc`. Last updated: 2026-03-25.
+Generated and maintained by `/doc`. Last updated: 2026-09-15.
 
 ---
 
@@ -50,29 +50,40 @@ Use manual mode when you want to inspect and steer between steps — e.g., revie
 
 ### Automated mode — `/ship`
 
-`/ship <feature>` orchestrates the entire pipeline end-to-end with no manual intervention (one question batch upfront, then hands-off until commit):
+`/ship` orchestrates the entire pipeline end-to-end. There are exactly two user interruptions: one question batch upfront, and the finalize gate before anything is pushed or the ticket changes state.
 
 ```
-/ship <feature>
+/ship <ticket-id | prd | feature>
     |
-    +-- Step 0: branch setup              creates feat/<spec-name>
-    +-- Step 1: clarifying questions       single batch, only interruption
-    +-- Step 1b: historical patterns       reads metrics-pipeline.csv for recurring issues
-    +-- Subagent A: spec          [opus]   writes specs/<name>.md
-    +-- Subagent B: implement     [opus]   writes source, runs verify
+    +-- Step 0:  branch setup              ticket branch from origin/<main>
+    +-- Step 0b: ticket resolution         loads work item from the tracker (if configured)
+    +-- Step 0c: complexity classifier     picks fast path vs. full pipeline
+    |
+    |   [fast path]
+    +-- Subagent F: implement    [fable]   implements directly from the ticket
+    |
+    |   [full pipeline]
+    +-- Step 1:  clarifying questions      single batch, only interruption
+    +-- Subagent A: spec          [opus]   writes specs/<name>.md incl. ## Contract
+    +-- Step 2b: decision review           confirms (high)-risk decisions
+    +-- Subagent B: implement     [fable]  writes source + tests, runs contract gate
     +-- Subagent C: review        [opus]   writes reviews/<name>-review.md
     +-- Subagent D: fix           [varies] loops review/fix (max 3 cycles)
-    +-- Step 4b: lesson graduation         graduates mature lessons -> CLAUDE.md
+    +-- Step 4b: lesson graduation         moves mature lessons -> archive + CLAUDE.md rule
     +-- Step 4c: integration check [opus]  cross-phase glue review (phased only)
-    +-- Step 5: final verify gate          typecheck -> lint -> tests -> build
+    |
+    |   [both paths rejoin]
+    +-- Step 5:  contract gate             verify suite + every Contract verify cmd
+    +-- Step 5b: changelog entry           changelog/<branch>.md incl. Manual Steps
     +-- Subagent E: commit        [sonnet] atomic commits on feature branch
-    +-- Step 7: finalize                   merge/PR/leave on branch (your choice)
-    +-- Post-merge cleanup                 delete branches, mark spec completed
+    +-- Step 6b: tracker feedback          syncs derived fields, then at most one comment
+    +-- Step 7a: finalize gate             summary + contract coverage, waits for yes
+    +-- Step 7b: push + finalize           pushes branch, transitions ticket state
 ```
 
 Each subagent gets a **clean context window** — the spec file, review file, and git diff are the handoff mechanism. The orchestrator never reads code files directly.
 
-Use `/ship` when requirements are clear and you want to go from input to merged code with minimal intervention.
+Use `/ship` when requirements are clear and you want to go from a ticket to a pushed, PR-ready branch with minimal intervention. `/ship` never merges to the main branch itself — merges go through reviewed PRs.
 
 ### Standalone utilities
 
@@ -81,9 +92,11 @@ These are not pipeline steps — use them anytime:
 | Skill       | Purpose                                                                |
 | ----------- | ---------------------------------------------------------------------- |
 | `/test`     | Run the full verify suite and report results (no fixes)                |
-| `/simplify` | Parallel quality review — dead code, code smells, CLAUDE.md violations |
+| `/simplify` | Quality review — reuse, simplification, efficiency, dead code          |
 | `/debug`    | Investigate a specific error or failing test                           |
-| `/batch`    | Large-scale migrations — per-file agents in isolated worktrees         |
+| `/impact`   | Blast radius of a change — call sites, test mocks, consumers           |
+| `/smoke`    | Write and run smoke tests against the Docker stack from a spec         |
+| `/changelog`| Write the per-ticket changelog when not running `/ship`                |
 
 ---
 
@@ -124,13 +137,26 @@ Skipping typecheck is the most common gap — tests pass, build fails on Vercel.
 
 A fix can introduce a new bug, especially when multiple issues are fixed in sequence. `/3_fix` reminds you to run `/2_review` again after fixing.
 
-### Final verify gate in `/ship`
+### Contract gate in `/ship`
 
-After the review/fix loop passes, the full verify suite runs one last time before committing. Late-stage changes from the fix cycle can introduce regressions that the earlier review/fix loop did not catch. This gate prevents broken code from being committed.
+Step 5 has two parts. First the full verify suite runs one last time before committing — late-stage changes from the fix cycle can introduce regressions the review/fix loop did not catch, and this prevents broken code from being committed. Then the **contract gate** runs every `verify` command from the spec's `## Contract` and gates on each exit code.
 
-### Historical pattern analysis in `/ship`
+The distinction matters: a green verify suite proves the codebase is healthy, and says nothing whatsoever about whether *this ticket's* acceptance criteria hold. Before the contract existed, that second question was answered by a model reading prose criteria and forming an opinion — so a "pass" could not be traced to evidence. Binding each criterion to a command that exits 0 only when the criterion holds is what turns the spec from a description into a gate.
 
-Before writing the spec, `/ship` reads `.claude/metrics-pipeline.csv` to find recurring issue categories from past features in the same area. If prior features had validation or edge-case issues, the spec subagent receives extra guidance to write more detailed coverage in those areas. This makes the framework learn from its own history.
+Two rules keep the gate honest:
+
+- **A failing `verify` is never fixed by editing the contract.** Widening a filter, repointing a command at a broader suite, relaxing the criterion, or flipping the item to `manual` are all spec changes disguised as fixes. An unachievable criterion is a scope question for the user, not something the pipeline may quietly resolve.
+- **A skipped gate is always printed with its reason.** The gate is skipped when there is nothing to run — the fast path (no spec) or a legacy spec without a `## Contract`. An unprinted skip is indistinguishable from a green gate, which is exactly the ambiguity this step exists to remove.
+
+Criteria that genuinely cannot be automated are declared `manual` with a reason naming the missing harness. They are not run, and Step 7a reports them at the finalize gate as the part of the ticket no automated check covers — so uncovered scope is visible at the moment the user decides whether to ship, rather than invisible.
+
+### Fast path in `/ship`
+
+Not every ticket deserves a spec, a review and a fix loop. Step 0c scores the resolved ticket on four signals (narrow scope, no new behaviour, no decisions to make, no restricted areas). Three or more → the **fast path**: a single implement subagent works directly from the ticket text and rejoins the pipeline at Step 5. `--fast` and `--full` override the classifier. Without a resolved ticket the classifier never picks the fast path — it needs ticket data to score reliably.
+
+### Lesson cycle and error classes
+
+`lessons.md` holds only the **open cycle** (one calendar month, recorded in the file's first line). Every entry carries a `class:` from the closed taxonomy in `lesson-cycle.md` — the error *mechanism* behind the defect, which is what a rule or skill change should target. `node .claude/scripts/lesson-cycle.mjs --mode report` counts lessons per class and says whether a cycle close is due; `--mode close` archives the cycle losslessly into `lessons-archive/`; graduation (`/ship` Step 4b) moves the entry to `lessons-archive/graduated.md` and appends the one-line rule to CLAUDE.md. Nothing is ever deleted — the tests in `.claude/scripts/tests/` treat a vanished entry as a loss.
 
 ### Model routing in `/ship`
 
@@ -162,7 +188,7 @@ The `PermissionRequest` hook intercepts every permission prompt before it reache
 
 ## Lifecycle hooks
 
-Four hooks are registered in `.claude/settings.json` and run automatically on every relevant event. They enforce quality deterministically — no reliance on Claude following advisory instructions.
+Five hooks are registered in `.claude/settings.json` across four events, and run automatically on every relevant event. They enforce quality deterministically — no reliance on Claude following advisory instructions.
 
 All hooks follow the same technical contract: read JSON from `stdin`, write JSON to `stdout`. They run in parallel and are designed to be independent (no shared state, no execution order assumptions). Scripts live in `.claude/hooks/`.
 
@@ -183,6 +209,12 @@ A 3-tier permission system that replaces manual approval prompts without sacrifi
 Blocks writes to files matching secret/credential patterns before the tool call executes. Matched filenames: `.env`, `.env.*`, `credentials.*`, `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.keystore`, `id_rsa`, `id_ed25519`, `secrets.*`, `.npmrc`, `.pypirc`, `service-account*.json`.
 
 When a match is found, the hook exits with code 2 (blocks the tool call entirely) and writes a diagnostic message to stderr. Non-sensitive files pass through silently.
+
+### `validate-commit-msg.js` (PreToolUse)
+
+**Event**: `PreToolUse` | **Matcher**: `Bash`
+
+Rejects a `git commit` whose message contains no `#<ticketId>` reference, enforcing the convention in `.claude/rules/branch-management.md`. The ticket reference must not lead the message — git treats a leading `#` as a comment and would strip the line. Commits on the main branch and merge commits are exempt.
 
 ### `auto-format.js` (PostToolUse)
 
@@ -287,7 +319,7 @@ Agent Teams        → 3+ distinct workstreams that benefit from peer-to-peer co
 
 After `/1_implement` passes its verification suite, optionally run `/simplify` for an automated parallel quality review (dead code, code smells, CLAUDE.md violations) before handing off to `/2_review`. This catches stylistic issues that tests and typecheck miss.
 
-For large-scale migrations across many files, use `/batch` instead of hand-editing: it enters plan mode, creates per-file work units, and runs each agent in an isolated git worktree with verification built in.
+For work spanning many independent features, use `/decompose` to split it into PRDs and `/fleet` to ship them in parallel — `/fleet` runs each feature in an isolated git worktree and merges the branches sequentially after conflict-aware batching.
 
 ---
 

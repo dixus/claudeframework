@@ -28,7 +28,7 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## The solution
 
-23 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
+26 skills that enforce a **spec → implement → review → fix → test** pipeline, with file-based handoffs between phases, a machine-checkable spec contract that the pipeline executes as a gate, and guardrails that catch scope creep, recurring bugs, and quality regressions automatically.
 
 ---
 
@@ -110,33 +110,45 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 `/ship` is a thin orchestrator that never accumulates implementation context. Each phase runs in a dedicated subagent; **files on disk are the handoff mechanism** between them.
 
 ```
-/ship <feature description>
+/ship <ticket-id | prd | feature description>
     │
-    ├─ 0. Create feature branch
-    ├─ 1. Front-load all questions (single batch)
-    ├─ 1b. Historical pattern analysis        → reads metrics-pipeline.csv → builds spec guidance
-    ├─ 2. ▸ Subagent: /0_spec        [opus]   → writes spec file (informed by patterns)
-    ├─ 3. ▸ Subagent: /1_implement   [opus]   → implements with TDD
-    ├─ 4. ▸ Subagent: /2_review      [opus]   → review report
+    ├─ 0.  Branch setup                        → ticket branch from origin/<main>
+    ├─ 0b. Ticket resolution                   → loads the work item from the tracker (if configured)
+    ├─ 0c. Complexity classifier               → fast path or full pipeline
+    │
+    │   [fast path]
+    ├─ F.  ▸ Subagent: implement    [fable]   → implements directly from the ticket
+    │
+    │   [full pipeline]
+    ├─ 1.  Front-load all questions (single batch)
+    ├─ 2.  ▸ Subagent: /0_spec       [opus]   → writes spec file incl. ## Contract
+    ├─ 3.  ▸ Subagent: /1_implement  [fable]  → implements with TDD, runs the contract gate
+    ├─ 4.  ▸ Subagent: /2_review     [opus]   → review report with per-item contract verdict
     │   └─ Subagent: /3_fix          [sonnet] → fix → re-review (max 3 cycles)
-    ├─ 4b. Lesson graduation                  → matures lessons → CLAUDE.md rules
-    ├─ 4c. Integration check        [opus]   → cross-phase glue review (phased only)
-    ├─ 5. Final verify gate                   → typecheck → lint → tests → build
-    ├─ 6. ▸ Subagent: /commit        [sonnet] → atomic conventional commits
-    └─ 7. Finalize: merge / PR / branch / smoke
+    ├─ 4b. Lesson graduation                   → moves mature lessons → archive + CLAUDE.md rule
+    ├─ 4c. Integration check        [opus]    → cross-phase glue review (phased only)
+    │
+    │   [both paths rejoin]
+    ├─ 5.  Contract gate                       → verify suite + every Contract verify command
+    ├─ 5b. Changelog entry                     → changelog/<branch>.md incl. Manual Steps
+    ├─ 6.  ▸ Subagent: /commit       [sonnet] → atomic conventional commits
+    ├─ 6b. Tracker feedback                    → derived fields + at most one comment
+    ├─ 7a. Finalize gate                       → summary + contract coverage, waits for yes
+    └─ 7b. Push + finalize                     → pushes branch, transitions the ticket
 ```
 
-**Model routing:** Opus for phases that require deep reasoning (spec, implement, review). Sonnet for mechanical phases (fix, commit) — faster and cheaper without sacrificing quality.
+**Model routing:** Opus for phases that require deep reasoning (spec, review, critical fixes). Fable for implementation. Sonnet for mechanical phases (simple fixes, commit) — faster and cheaper without sacrificing quality.
 
 **Built-in guardrails:**
 
-- Complexity gate — stops if >10 files need changing, suggests decomposition
+- **Contract gate** — every acceptance criterion in the spec is bound to a command that exits 0 only when the criterion holds; `/ship` runs them all before committing. A failing check is never fixed by editing the contract.
+- Complexity gate — stops if >10 production files need changing, suggests decomposition
 - Review circuit breaker — escalates after 3 fix cycles without resolution
 - Recurring issue detection — if the same issue appears twice, escalates instead of retrying
-- Lesson graduation — proven corrections become permanent rules in `CLAUDE.md`
-- Metrics tracking — appends pipeline stats to `.claude/metrics-pipeline.csv` after every run
+- Lesson graduation — proven corrections become permanent rules in `CLAUDE.md`; nothing is ever deleted, entries move to an archive
+- **Fast path** — trivial tickets (narrow scope, no new behaviour, no decisions, no restricted areas) skip spec and review; `--fast` / `--full` override the classifier
 - **Dry-run mode** — `/ship --dry-run <feature>` runs only the spec phase, reports scope and complexity, then stops. No branch, no implementation, no commits. Review the spec before committing to a full pipeline run.
-- **No-finalize mode** — `/ship --no-finalize <feature>` runs the full pipeline but skips the merge step. Used by `/fleet` to manage merges centrally.
+- **No-finalize mode** — `/ship --no-finalize <feature>` runs the full pipeline but skips push and state change. Used by `/fleet` to manage merges centrally.
 
 ---
 
@@ -148,10 +160,10 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 | --------------------- | ---------------------------------------------------------------------------- |
 | `/decompose`          | Break a concept doc or product brief into independent PRDs, then ship each   |
 | `/fleet`              | Ship decomposed PRDs in parallel — conflict analysis, batched worktrees, merge to main |
-| `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit (`--no-finalize`) |
-| `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                |
-| `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis |
-| `/2_review [spec]`    | 9-lens code review with severity classification and spec completeness check  |
+| `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit (`--dry-run`, `--no-finalize`, `--fast`/`--full`) |
+| `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`, incl. a machine-checkable `## Contract` |
+| `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, impact analysis, and the contract gate |
+| `/2_review [spec]`    | 10-lens code review with severity classification, per-item contract verdict, and spec completeness check |
 | `/3_fix [review]`     | Fix issues by severity (critical → major → minor) with circuit breaker       |
 | `/test [file]`        | Run typecheck → lint → tests → build (report only, no fixes)                 |
 
@@ -160,6 +172,9 @@ Put anything that describes what you want to build — PRDs, requirement docs, s
 | Skill                 | Purpose                                                                            |
 | --------------------- | ---------------------------------------------------------------------------------- |
 | `/commit`             | Atomic conventional commits with multi-concern detection                           |
+| `/changelog`          | Write the per-ticket `changelog/<branch>.md` (Summary, Manual Steps) outside `/ship` |
+| `/release <quarter>`  | Cut a quarterly release branch, generate notes, tag the cut (gated before push)    |
+| `/release-notes`      | Aggregate per-ticket changelogs into `releases/<quarter>.md`                       |
 | `/debug`              | Diagnose and fix a failing test, type error, or runtime error                      |
 | `/impact <function>`  | Blast radius analysis — find all call sites, test mocks, and consumers (read-only) |
 | `/smoke [spec]`       | Write and run smoke tests against a Docker stack from a spec                       |
@@ -216,10 +231,10 @@ The framework ships with an optional MCP (Model Context Protocol) server that gi
 
 Each developer maintains their own `.env`. Without a PAT the MCP server simply doesn't start and the framework falls back to the non-MCP path.
 
-### Available tools (8)
+### Available tools (13)
 
-Read — `ado_get_work_item`, `ado_get_work_item_with_context`, `ado_search_work_items`, `ado_get_work_item_comments`
-Write — `ado_create_work_item`, `ado_update_work_item`, `ado_update_work_item_state`, `ado_link_work_items`, `ado_add_work_item_comment`
+Read — `ado_get_work_item`, `ado_get_work_item_with_context`, `ado_search_work_items`, `ado_get_work_item_comments`, `ado_download_attachments`
+Write — `ado_create_work_item`, `ado_update_work_item`, `ado_update_work_item_state`, `ado_link_work_items`, `ado_add_work_item_comment`, `ado_update_work_item_comment`, `ado_delete_work_item_comment`, `ado_upload_attachment`
 
 See [`.claude/mcp-servers/azure-devops/README.md`](.claude/mcp-servers/azure-devops/README.md) for full documentation.
 
@@ -238,15 +253,17 @@ The framework doesn't just run phases — it enforces quality at every step. All
 | **Pre-flight self-review** | `/1_implement` | Checks 6 lenses before handing off to review                                                    |
 | **Phase support**          | `/1_implement` | Splits large features into multi-phase implementation                                           |
 | **Delta review**           | `/2_review`    | Cycle 2+ only reviews changes since last fix                                                    |
-| **9-lens review**          | `/2_review`    | Correctness, code quality, security, tests, UX, PM, DevOps, spec validation, spec completeness  |
+| **Contract**               | `/0_spec`      | Every acceptance criterion bound to a `verify` command (or an honest `manual` reason)           |
+| **Test strategy**          | `/0_spec`      | Every spec declares `test-required` / `test-recommended` / `no-test-needed:<category>`          |
+| **Contract gate**          | `/1_implement`, `/3_fix`, `/ship` | Runs every `verify` command and gates on the exit code; editing the contract is never a fix |
+| **10-lens review**         | `/2_review`    | Correctness, code quality, security, tests, UX, PM, DevOps, contract validation, spec completeness, test strategy |
 | **Spec completeness**      | `/2_review`    | Walks every requirement from the spec; missing = critical, partial = major                      |
 | **Circuit breaker**        | `/3_fix`       | Escalates recurring issues instead of retrying                                                  |
-| **Lessons capture**        | `/3_fix`       | Writes preventive rules to `context/lessons.md`                                                 |
-| **Lesson graduation**      | `/ship`        | Matures proven lessons into permanent one-line rules in `CLAUDE.md`                             |
+| **Lessons capture**        | `/3_fix`       | Writes preventive rules to `context/lessons.md`, classified by error mechanism                  |
+| **Lesson graduation**      | `/ship`        | Moves proven lessons to the archive and appends a one-line rule to `CLAUDE.md`                  |
 | **Integration check**      | `/ship`        | After all phases complete, verifies data flow, interface contracts, and glue code across phases |
-| **Spec sync**              | `/3_fix`       | Updates spec if fixes diverged from requirements                                                |
-| **Metrics**                | `/ship`        | Tracks files changed, review cycles, issues, area, and issue categories per feature             |
-| **Historical patterns**    | `/ship`        | Reads metrics history; auto-refines spec depth in areas with recurring review friction          |
+| **Spec anchoring**         | `/3_fix`       | Never edits the spec; divergence is documented and left to the user                             |
+| **Fast path**              | `/ship`        | Trivial tickets skip spec and review after a 4-signal classifier                                |
 
 All numeric thresholds have sensible defaults but can be tuned per project. Add a `## Framework thresholds` section to your `CLAUDE.md` to override any of them:
 
@@ -256,6 +273,7 @@ All numeric thresholds have sensible defaults but can be tuned per project. Add 
 | `review_fix_max_cycles`       | 3       | Max review → fix iterations before `/ship` escalates                       |
 | `lesson_graduation_age_days`  | 14      | Days before a lesson graduates from inbox to permanent CLAUDE.md rule      |
 | `delta_review_escalation_pct` | 50      | % of original diff size that triggers escalation from delta to full review |
+| `contract_manual_max_pct`     | 40      | Share of `manual` contract items above which the finalize gate warns       |
 
 If the section is omitted, all defaults apply — zero configuration required.
 
@@ -269,36 +287,34 @@ The framework has two learning channels that reinforce each other:
 
 ```
 /3_fix captures a correction
-    → writes to context/lessons.md (inbox)
+    → writes to context/lessons.md (inbox), tagged with scope + error class
     → all future sessions read this on startup
 
 After 14+ days, /ship graduates proven lessons:
     → one-line rule appended to CLAUDE.md (permanent)
-    → lesson removed from inbox
+    → full entry moved to context/lessons-archive/graduated.md (never deleted)
     → every future session enforces the rule automatically
 ```
 
-### Channel 2: Pattern-based learning (metrics → spec refinement)
+### Channel 2: Error-class cycle (lessons → mechanisms → skill changes)
 
 ```
-/ship completes → appends metrics row (area, review cycles, issue categories)
+Every lesson carries a class: from a closed taxonomy (lesson-cycle.md)
     ↓
-Next /ship in same area → reads metrics-pipeline.csv
+node .claude/scripts/lesson-cycle.mjs --mode report → lessons per class, close due?
     ↓
-Detects: "api features average 2.8 review cycles, recurring: validation, edge-cases"
+Once a month a human closes the cycle → entries archived losslessly per cycle
     ↓
-Passes pattern context to /0_spec → spec adds explicit validation rules + edge case sections
+Classes that keep filling up point at a mechanism, not a defect
     ↓
-Better spec → fewer review issues → metrics improve over time
+Fix the mechanism: a rule, a skill step, a hook — not the single symptom
 ```
 
-This is a **self-improving loop**: the framework doesn't just remember _rules_ — it recognizes _patterns_ across runs and automatically produces more detailed specs in areas that historically cause review friction.
+The unit of improvement is the **error class**, not the individual mistake: "test does not prove what it claims", "silent semantic regression for untouched callers", "incomplete sweep", "guard fails open" and so on. Counting per class shows which mechanisms the pipeline keeps producing — that is what a rule, a skill change, or a hook should target.
 
-**Instincts** (`.claude/context/instincts.md`) are universal rules loaded every session: read before editing, no speculative code, never skip typecheck, plan mode for 3+ step tasks.
+**Instincts** (`.claude/rules/instincts.md`) are universal rules loaded every session: read before editing, no speculative code, never skip typecheck, plan mode for 3+ step tasks.
 
-**Lessons** (`.claude/context/lessons.md`) are the inbox — corrections captured during review cycles. They graduate into permanent `CLAUDE.md` rules once proven over time.
-
-**Metrics** are split into two files: `.claude/metrics-pipeline.csv` (pipeline run data, read by `/ship` to guide spec depth) and `.claude/metrics-scout.csv` (scout and harvest run data).
+**Lessons** (`.claude/context/lessons.md`) are the inbox for the open cycle — corrections captured during review cycles. Closed cycles live in `.claude/context/lessons-archive/`; archived does not mean obsolete.
 
 This means the framework gets stricter, more project-aware, and more precise with every feature shipped.
 
@@ -308,13 +324,16 @@ This means the framework gets stricter, more project-aware, and more precise wit
 
 ```
 .claude/
-  skills/          ← 23 skills defining the full pipeline
+  skills/          ← 26 skills defining the full pipeline
   agents/          ← subagent personas (code-reviewer, explorer)
   rules/           ← auto-loaded instructions (like CLAUDE.md shards)
-  context/         ← curated knowledge read by all skills
     instincts.md   ← universal rules loaded every session
-    lessons.md     ← corrections inbox (graduates to CLAUDE.md)
-  hooks/           ← lifecycle hooks (auto-approve, safety guards)
+  scripts/         ← framework tooling (lesson-cycle.mjs + tests)
+  context/         ← curated knowledge read by all skills
+    lessons.md         ← corrections inbox for the open cycle (graduates to CLAUDE.md)
+    lesson-cycle.md    ← error-class taxonomy + cycle definition
+    lessons-archive/   ← closed cycles + graduated lessons (lossless)
+  hooks/           ← lifecycle hooks (auto-approve, safety guards, commit-message validation)
   mcp-servers/     ← optional MCP servers (e.g. Azure DevOps integration)
   docs/            ← generated documentation
   references/      ← drop zone for blog posts and repos (+ harvested repos)
@@ -322,7 +341,6 @@ This means the framework gets stricter, more project-aware, and more precise wit
   reviews/         ← review reports + learn proposals
   input/           ← drop zone for PRDs, wireframes, sketches, requirement docs
   handoffs/        ← session state files (gitignored)
-  metrics-pipeline.csv  ← /ship pipeline run log (append-only)
   metrics-scout.csv     ← /scout and /harvest run log (append-only)
 ```
 
@@ -410,15 +428,7 @@ npm run build      # Production build
 
 ## Metrics
 
-`/ship` appends one row to `.claude/metrics-pipeline.csv` after every pipeline run:
-
-```
-date,spec,area,files_changed,review_cycles,issues_found,issues_critical,issues_major,issue_categories,commits,outcome
-2026-03-15,user-auth,auth,8,1,3,0,2,validation,2,shipped
-2026-03-17,file-upload,api,12,2,7,1,4,validation;edge-cases,3,shipped
-```
-
-This is append-only — open in any spreadsheet or `column -t -s, .claude/metrics-pipeline.csv` to spot trends like rising review cycles or recurring issue categories. Scout and harvest metrics are tracked separately in `.claude/metrics-scout.csv`.
+`/scout` and `/harvest` append one row per run to `.claude/metrics-scout.csv` (append-only — open in any spreadsheet). Pipeline quality is tracked through the lesson cycle instead of a per-run CSV: `node .claude/scripts/lesson-cycle.mjs --mode report` prints lessons per error class and whether a cycle close is due.
 
 ---
 
@@ -428,6 +438,7 @@ This is append-only — open in any spreadsheet or `column -t -s, .claude/metric
 - [Workflow rationale](.claude/docs/workflow.md)
 - [Skills reference](.claude/docs/skills-reference.md)
 - [Knowledge base](.claude/docs/knowledge-base.md)
+- [Changelog](.claude/docs/README.md#changelog) — one row per framework change, maintained with every skill/feature update
 
 ---
 

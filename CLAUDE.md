@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working in this repository.
 
 ## This repo
 
-**Claude Code Development Framework** — a reusable `.claude/` directory with 23 skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline with built-in learning.
+**Claude Code Development Framework** — a reusable `.claude/` directory with 26 skills, context files, hooks, and documentation that structures Claude Code into a disciplined spec → implement → review → fix → test pipeline with a machine-checkable spec contract and built-in learning.
 
 The `src/` directory contains the **AI Maturity Score** demo app — a working example of the framework applied to a real Next.js/TypeScript project.
 
@@ -53,10 +53,10 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `/decompose`          | Break a concept doc or product brief into independent PRDs, then ship each through the pipeline                     |
 | `/fleet`              | Ship decomposed PRDs in parallel — conflict analysis, batched worktrees, concurrent `/ship` runs, merge to main    |
-| `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit. `--dry-run` runs spec only and reports scope |
-| `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`                                                       |
-| `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, and impact analysis                                        |
-| `/2_review [spec]`    | 9-lens code review with severity classification and spec completeness check                                         |
+| `/ship <feature>`     | Full pipeline orchestrator — spec → implement → review → fix → commit. `--dry-run` runs spec only; `--fast`/`--full` override the complexity classifier |
+| `/0_spec <feature>`   | Write a structured spec from requirements in `.claude/input/`, including a machine-checkable `## Contract`          |
+| `/1_implement <spec>` | Implement with mandatory plan approval, TDD enforcement, impact analysis, and the contract gate                     |
+| `/2_review [spec]`    | 10-lens code review with severity classification, per-item contract verdict, and spec completeness check           |
 | `/3_fix [review]`     | Fix issues by severity (critical → major → minor) with circuit breaker                                              |
 | `/test [file]`        | Run typecheck → lint → tests → build (report only, no fixes)                                                        |
 
@@ -65,6 +65,9 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 | Skill                 | Purpose                                                                            |
 | --------------------- | ---------------------------------------------------------------------------------- |
 | `/commit`             | Atomic conventional commits with multi-concern detection                           |
+| `/changelog`          | Write the per-ticket `changelog/<branch>.md` (Summary, Manual Steps) outside `/ship` |
+| `/release <quarter>`  | Cut a quarterly release branch, generate notes, tag the cut (gated before push)    |
+| `/release-notes`      | Aggregate per-ticket changelogs into `releases/<quarter>.md`                       |
 | `/debug`              | Diagnose and fix a failing test, type error, or runtime error                      |
 | `/impact <function>`  | Blast radius analysis — find all call sites, test mocks, and consumers (read-only) |
 | `/smoke [spec]`       | Write and run smoke tests against a Docker stack from a spec                       |
@@ -89,6 +92,16 @@ IMPORTANT: `src/lib/scoring/` must remain framework-agnostic pure functions — 
 
 This section is optional. If omitted, all skills use the defaults shown below. To customize, uncomment and change any value.
 
+<!--
+complexity_gate_max_files: 10       # production files before spec/implement suggest decomposition
+review_fix_max_cycles: 3            # review → fix iterations before /ship escalates
+lesson_graduation_age_days: 14      # age before a framework-scoped lesson graduates to ## Learned Rules
+delta_review_escalation_pct: 50     # % of the original diff that escalates a delta review to a full review
+contract_manual_max_pct: 40         # share of `manual` contract items above which /ship Step 7a warns
+-->
+
+Lesson-cycle parameters (`cycle_length`, `nudge_entry_threshold`, `archive_dir`) live in `.claude/context/lesson-cycle.md`, not here.
+
 <!-- Uncomment any line to override the default:
 | Threshold | Value |
 |---|---|
@@ -106,16 +119,19 @@ This section is optional. If omitted, all skills use the defaults shown below. T
 
 | Path                   | Purpose                                          |
 | ---------------------- | ------------------------------------------------ |
-| `skills/`              | 23 skill definitions (the framework itself)      |
+| `skills/`              | 26 skill definitions (the framework itself)      |
 | `agents/`              | Subagent personas (code-reviewer, explorer)      |
 | `rules/`               | Auto-loaded instructions (like CLAUDE.md shards) |
-| `context/`             | Reference knowledge read by skills on demand     |
+| `scripts/`             | Framework tooling (`lesson-cycle.mjs` + tests)   |
+| `commands/`            | Slash commands that are not full skills          |
+| `mcp-servers/`         | Optional local MCP servers (Azure DevOps)        |
+| `context/`             | Reference knowledge read by skills on demand; `lessons.md` inbox, `lesson-cycle.md` taxonomy, `lessons-archive/` |
 | `references/`          | Drop zone: paste blog posts and repo files here  |
 | `hooks/`               | Lifecycle hook scripts (e.g. auto-approve.js)    |
 | `docs/`                | Generated framework documentation                |
 | `specs/`               | Generated feature specs                          |
 | `reviews/`             | Review reports                                   |
-| `input/`               | Raw requirements                                 |
+| `input/`               | Raw requirements (archived into a sibling `archive/` after spec) |
+| `blockers/`            | Unresolved verify failures written by `/1_implement` |
 | `handoffs/`            | Session state files (gitignored)                 |
-| `metrics-pipeline.csv` | Ship pipeline run log (append-only)              |
 | `metrics-scout.csv`    | Scout/harvest run log (append-only)              |
