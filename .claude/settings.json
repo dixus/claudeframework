@@ -12,7 +12,19 @@
       "TodoWrite(*)",
       "NotebookEdit(*)",
       "Agent(*)",
-      "Skill(*)"
+      "Skill(*)",
+      "Edit(.claude/input/**)",
+      "Edit(.claude/specs/**)",
+      "Edit(.claude/reviews/**)",
+      "Edit(.claude/context/**)",
+      "Write(.claude/input/**)",
+      "Write(.claude/specs/**)",
+      "Write(.claude/reviews/**)",
+      "Write(.claude/context/**)",
+      "Read(.claude/input/**)",
+      "Read(.claude/specs/**)",
+      "Read(.claude/reviews/**)",
+      "Read(.claude/context/**)"
     ]
   },
   "hooks": {

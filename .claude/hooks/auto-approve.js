@@ -101,10 +101,15 @@ async function main() {
   const tool = input.tool_name || "";
   const command = (input.tool_input && input.tool_input.command) || "";
 
+  // Dual-format for cross-version Claude Code compatibility:
+  //   - legacy: `decision: { behavior: "allow" }`
+  //   - modern: `permissionDecision: "allow"` (matches PreToolUse convention)
+  // Setting both keeps the hook working regardless of which format the host accepts.
   const allow = {
     hookSpecificOutput: {
       hookEventName: "PermissionRequest",
       decision: { behavior: "allow" },
+      permissionDecision: "allow",
     },
     suppressOutput: true,
   };
@@ -114,6 +119,8 @@ async function main() {
       hookSpecificOutput: {
         hookEventName: "PermissionRequest",
         decision: { behavior: "deny", message: reason, interrupt: false },
+        permissionDecision: "deny",
+        permissionDecisionReason: reason,
       },
     };
   }
