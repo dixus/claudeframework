@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve, join } from "node:path";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { AzureDevOpsClient } from "../client.js";
@@ -149,6 +151,45 @@ export function registerReadTools(
       const comments = raw.comments.map(mapComment);
       return {
         content: [{ type: "text" as const, text: JSON.stringify(comments, null, 2) }],
+      };
+    },
+  );
+
+  // ── ado_download_attachments ─────────────────────────────────────────
+  server.tool(
+    "ado_download_attachments",
+    "Download all file attachments from an Azure DevOps work item to disk. Files are saved to .claude/input/{workItemId}/ by default. Returns metadata (name, path, size, contentType) for each downloaded file.",
+    {
+      workItemId: z.number().int().positive().describe("Work item ID to download attachments from"),
+      outputDir: z.string().optional().describe("Override the default download directory (.claude/input/{workItemId}/)"),
+    },
+    async ({ workItemId, outputDir }) => {
+      const raw = await client.getWorkItem(workItemId);
+      const workItem = mapWorkItem(raw);
+      const attachments = workItem.artifacts.attachments;
+
+      if (attachments.length === 0) {
+        return {
+          content: [{ type: "text" as const, text: `No attachments found on work item #${workItemId}.` }],
+        };
+      }
+
+      const dir = outputDir ?? resolve(process.cwd(), ".claude", "input", String(workItemId));
+      mkdirSync(dir, { recursive: true });
+
+      const results: Array<{ name: string; path: string; size: number; contentType: string }> = [];
+
+      for (let i = 0; i < attachments.length; i++) {
+        const attachment = attachments[i];
+        const { buffer, contentType } = await client.downloadAttachment(attachment.url);
+        const fileName = attachment.name || `attachment-${i}`;
+        const filePath = join(dir, fileName);
+        writeFileSync(filePath, buffer);
+        results.push({ name: fileName, path: filePath, size: buffer.length, contentType });
+      }
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(results, null, 2) }],
       };
     },
   );

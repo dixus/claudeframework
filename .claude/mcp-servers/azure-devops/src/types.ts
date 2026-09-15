@@ -28,6 +28,7 @@ export interface WorkItemArtifacts {
   pullRequests: Array<{ id: number; repoId?: string; url: string }>;
   commits: Array<{ sha: string; repoId?: string; url: string }>;
   builds: Array<{ id: number; url: string }>;
+  attachments: Array<{ name: string; url: string; id: string; size?: number }>;
   other: Array<{ name: string; url: string }>;
 }
 

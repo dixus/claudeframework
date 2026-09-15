@@ -1,3 +1,5 @@
+import { readFileSync, statSync } from "node:fs";
+import { basename, isAbsolute, resolve } from "node:path";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { AzureDevOpsClient } from "../client.js";
@@ -145,10 +147,54 @@ export function registerWriteTools(
     },
   );
 
+  // ── ado_upload_attachment ───────────────────────────────────────────
+  server.tool(
+    "ado_upload_attachment",
+    "Upload a local file as an attachment to an Azure DevOps work item. Reads the file from disk (MCP runs locally), uploads its bytes to the attachments endpoint, and links the resulting attachment to the work item. Prefer this over posting large content as a comment.",
+    {
+      workItemId: z.number().int().positive().describe("Work item ID to attach the file to"),
+      filePath: z.string().min(1).describe("Absolute or workspace-relative path to the local file"),
+      fileName: z.string().optional().describe("Override the attachment file name (defaults to basename of filePath)"),
+      comment: z.string().optional().describe("Optional comment shown next to the attachment in the Azure DevOps UI"),
+    },
+    async ({ workItemId, filePath, fileName, comment }) => {
+      const absPath = isAbsolute(filePath) ? filePath : resolve(process.cwd(), filePath);
+      const stat = statSync(absPath);
+      if (!stat.isFile()) {
+        throw new Error(`Not a file: ${absPath}`);
+      }
+      const content = readFileSync(absPath);
+      const name = fileName ?? basename(absPath);
+
+      const uploaded = await client.uploadAttachment(name, content);
+
+      const raw = await client.updateWorkItem(workItemId, [
+        {
+          op: "add",
+          path: "/relations/-",
+          value: {
+            rel: "AttachedFile",
+            url: uploaded.url,
+            attributes: { comment: comment ?? "" },
+          },
+        },
+      ]);
+      const workItem = mapWorkItem(raw);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Attached "${name}" (${stat.size} bytes) to work item #${workItemId}.\n\nAttachment ID: ${uploaded.id}\nAttachment URL: ${uploaded.url}\n\n${JSON.stringify(workItem.artifacts.attachments, null, 2)}`,
+          },
+        ],
+      };
+    },
+  );
+
   // ── ado_add_work_item_comment ───────────────────────────────────────
   server.tool(
     "ado_add_work_item_comment",
-    "Add a comment to an Azure DevOps work item. Use sparingly — branches, commits, and PRs are already auto-linked via the '#<ticketId>' suffix in commit messages. Only post comments for non-derivable context a reviewer needs (how to run new tests, scope deviation, manual follow-up steps, known caveats, open clarifying questions).",
+    "Add a comment to an Azure DevOps work item. Use sparingly — branches, commits, and PRs are already auto-linked via the '#<ticketId>' suffix in commit messages. Only post comments for non-derivable context a QA/UAT reviewer needs (how to run new tests, scope deviation, manual follow-up steps, known caveats, open clarifying questions).",
     {
       id: z.number().int().positive().describe("Work item ID"),
       comment: z.string().min(1).max(4000).describe("Comment text (Markdown — converted to HTML automatically; raw HTML passes through if input starts with '<')"),
@@ -160,6 +206,49 @@ export function registerWriteTools(
           {
             type: "text" as const,
             text: `Comment added to work item #${id}.\n\nComment ID: ${result.id}`,
+          },
+        ],
+      };
+    },
+  );
+
+  // ── ado_update_work_item_comment ────────────────────────────────────
+  server.tool(
+    "ado_update_work_item_comment",
+    "Update an existing comment on an Azure DevOps work item. Use to fix mistakes in your own comments (typos, wrong facts, corrections) instead of posting a second comment that says 'replaces previous'. Only edit your own comments — editing someone else's comments is unusual and usually wrong; their original wording may be referenced by others.",
+    {
+      id: z.number().int().positive().describe("Work item ID"),
+      commentId: z.number().int().positive().describe("Comment ID (returned by ado_add_work_item_comment or ado_get_work_item_comments)"),
+      comment: z.string().min(1).max(4000).describe("New comment text (Markdown — converted to HTML automatically; raw HTML passes through if input starts with '<'). Fully replaces the previous text."),
+    },
+    async ({ id, commentId, comment }) => {
+      const result = await client.updateComment(id, commentId, markdownToHtml(comment));
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Comment #${result.id} on work item #${id} updated.`,
+          },
+        ],
+      };
+    },
+  );
+
+  // ── ado_delete_work_item_comment ────────────────────────────────────
+  server.tool(
+    "ado_delete_work_item_comment",
+    "Delete a comment from an Azure DevOps work item. Use to remove a comment that was posted in error (wrong ticket, duplicate, accidental). Deletion is permanent — there is no undo. Only delete your own comments unless explicitly authorized; other people's comments may be referenced by ongoing discussion.",
+    {
+      id: z.number().int().positive().describe("Work item ID"),
+      commentId: z.number().int().positive().describe("Comment ID (returned by ado_add_work_item_comment or ado_get_work_item_comments)"),
+    },
+    async ({ id, commentId }) => {
+      await client.deleteComment(id, commentId);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Comment #${commentId} on work item #${id} deleted.`,
           },
         ],
       };

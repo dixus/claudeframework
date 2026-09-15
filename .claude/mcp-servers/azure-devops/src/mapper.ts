@@ -172,6 +172,7 @@ function extractRelations(raw: AdoRelation[] | undefined): {
     pullRequests: [],
     commits: [],
     builds: [],
+    attachments: [],
     other: [],
   };
 
@@ -180,6 +181,17 @@ function extractRelations(raw: AdoRelation[] | undefined): {
   for (const rel of raw) {
     if (rel.rel === "ArtifactLink") {
       assignArtifact(artifacts, rel);
+      continue;
+    }
+    // Attachment
+    if (rel.rel === "AttachedFile") {
+      const name = rel.attributes?.name ?? "";
+      const idMatch = rel.url.match(/\/attachments\/([0-9a-f-]+)/i);
+      const id = idMatch ? idMatch[1] : "";
+      const size = typeof rel.attributes?.resourceSize === "number"
+        ? (rel.attributes.resourceSize as number)
+        : undefined;
+      artifacts.attachments.push({ name, url: rel.url, id, size });
       continue;
     }
     // Work item link
@@ -191,7 +203,7 @@ function extractRelations(raw: AdoRelation[] | undefined): {
         comment: rel.attributes?.comment,
       });
     }
-    // Silently ignore attachments, hyperlinks, etc. — not useful for context
+    // Silently ignore hyperlinks, etc. — not useful for context
   }
 
   return { relations, artifacts };

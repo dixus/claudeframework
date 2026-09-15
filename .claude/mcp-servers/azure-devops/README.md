@@ -2,17 +2,25 @@
 
 MCP (Model Context Protocol) server that gives Claude Code read + write access to Azure DevOps work items. The framework's `/ship` pipeline uses it to auto-load tickets, post development updates, and close work items after push.
 
-## Available tools (5)
+## Available tools (13)
 
 | Tool | Purpose |
 |------|---------|
-| `ado_get_work_item` | Fetch a work item by ID — returns title, description, acceptance criteria, state, relations, artifact links. HTML converted to Markdown. |
+| `ado_get_work_item` | Fetch a work item by ID — returns title, description, acceptance criteria, state, relations, artifact links (incl. attachments). HTML converted to Markdown. |
+| `ado_get_work_item_with_context` | Fetch a work item plus its parent/children/related items, comments, and parsed artifact links (branches, commits, PRs) in one call. `/ship` uses this to find prior work on linked tickets. |
 | `ado_search_work_items` | Search by keyword, optional type/state filter. Returns compact list. |
 | `ado_get_work_item_comments` | Fetch the discussion/comments of a work item. |
-| `ado_update_work_item_state` | Change state (e.g. `Active` → `Closed`). |
-| `ado_add_work_item_comment` | Post a comment (branch names, PR links, dev notes). |
+| `ado_download_attachments` | Download all attachments of a work item to `.claude/input/<id>/` (or a given directory). |
+| `ado_create_work_item` | Create a work item (Markdown description converted to HTML). |
+| `ado_update_work_item` | Update title / description / acceptance criteria / state / assignee. |
+| `ado_update_work_item_state` | Change state (e.g. `Active` → `Resolved`). |
+| `ado_link_work_items` | Link two work items (parent/child, related, …). |
+| `ado_add_work_item_comment` | Post a comment — sparingly, only for non-derivable context (manual steps, how to run new tests, caveats). |
+| `ado_update_work_item_comment` | Edit one of your own comments instead of posting a correction. |
+| `ado_delete_work_item_comment` | Delete a comment posted in error. Permanent. |
+| `ado_upload_attachment` | Upload a local file (e.g. `changelog/<branch>.md`) and link it to the work item. |
 
-Read-only if you prefer: skip `ado_update_work_item_state` and `ado_add_work_item_comment` by not calling them. The PAT scope you generate controls what's actually possible.
+Read-only if you prefer: simply do not call the write tools. The PAT scope you generate controls what's actually possible.
 
 ## Setup (one-time per developer)
 
@@ -101,8 +109,8 @@ If the MCP tools are **not** available, every step falls back gracefully — the
     mapper.ts       # Raw API response → normalized types (HTML → Markdown)
     types.ts
     tools/
-      read.ts       # ado_get_work_item, ado_search_work_items, ado_get_work_item_comments
-      write.ts      # ado_update_work_item_state, ado_add_work_item_comment
+      read.ts       # get, get_with_context, search, comments, download_attachments
+      write.ts      # create, update, update_state, link, add/update/delete comment, upload_attachment
   dist/             # Compiled JS (what actually runs — gitignored, built locally)
 ```
 

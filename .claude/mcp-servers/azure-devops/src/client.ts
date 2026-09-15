@@ -141,6 +141,85 @@ export class AzureDevOpsClient {
       },
     );
   }
+
+  /** Update an existing comment on a work item. */
+  async updateComment(
+    id: number,
+    commentId: number,
+    text: string,
+  ): Promise<{ id: number; text: string }> {
+    return this.request<{ id: number; text: string }>(
+      `/wit/workitems/${id}/comments/${commentId}?api-version=7.1-preview.4`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ text }),
+      },
+    );
+  }
+
+  /** Delete a comment from a work item. Returns true on success (HTTP 204). */
+  async deleteComment(id: number, commentId: number): Promise<true> {
+    const url = `${this.baseUrl}/wit/workitems/${id}/comments/${commentId}?api-version=7.1-preview.4`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: { Authorization: this.authHeader },
+    });
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(
+        `Azure DevOps API ${response.status}: ${response.statusText} — ${body}`,
+      );
+    }
+    return true;
+  }
+
+  /** Download an attachment binary by its full Azure DevOps URL. */
+  async downloadAttachment(
+    url: string,
+  ): Promise<{ buffer: Buffer; contentType: string }> {
+    const response = await fetch(url, {
+      headers: { Authorization: this.authHeader },
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(
+        `Azure DevOps API ${response.status}: ${response.statusText} — ${body}`,
+      );
+    }
+
+    const contentType = response.headers.get("content-type") ?? "application/octet-stream";
+    const arrayBuffer = await response.arrayBuffer();
+    return { buffer: Buffer.from(arrayBuffer), contentType };
+  }
+
+  /**
+   * Upload a binary as an attachment. Returns the attachment id + URL — the
+   * caller still needs to link it to a work item via a relation update.
+   */
+  async uploadAttachment(
+    fileName: string,
+    content: Buffer,
+  ): Promise<{ id: string; url: string }> {
+    const url = `${this.baseUrl}/wit/attachments?fileName=${encodeURIComponent(fileName)}&api-version=7.1`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: this.authHeader,
+        "Content-Type": "application/octet-stream",
+      },
+      body: new Uint8Array(content),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(
+        `Azure DevOps API ${response.status}: ${response.statusText} — ${body}`,
+      );
+    }
+
+    return response.json() as Promise<{ id: string; url: string }>;
+  }
 }
 
 /**
