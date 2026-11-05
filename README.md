@@ -59,7 +59,7 @@ The result in `.claude/settings.json` — pin `ref` to a branch or tag to contro
 }
 ```
 
-Every checkout and every git worktree of the project then gets the same plugin version. Each developer confirms the folder trust dialog once; until then Claude Code ignores project marketplaces without a message. Project-specific directories (`context/` with the project's lessons, `input/`, `specs/`, `reviews/`, `handoffs/`, own hooks, permissions in `settings.json`) stay in the project — plugins cannot grant permissions.
+Every checkout and every git worktree of the project then gets the same plugin version; new framework versions arrive only through `claude plugin update` (see "Developing the framework"). MCP tools from the `azure-devops` plugin are named `mcp__plugin_azure-devops_azure-devops__<tool>` — use that form in permission rules. Each developer confirms the folder trust dialog once; until then Claude Code ignores project marketplaces without a message. Project-specific directories (`context/` with the project's lessons, `input/`, `specs/`, `reviews/`, `handoffs/`, own hooks, permissions in `settings.json`) stay in the project — plugins cannot grant permissions.
 
 Rules: plugins cannot ship always-loaded rule files. The `pipeline` plugin injects `rules/instincts.md` through a SessionStart hook; a project that keeps its own `.claude/rules/instincts.md` uses that file instead.
 
@@ -467,7 +467,13 @@ A `--plugin-dir` plugin replaces the installed plugin of the same name for that 
 1. Make the change in the framework checkout, not in the project — the project only consumes the plugin.
 2. Test it against the project with `claude --plugin-dir <checkout>/plugins/<name>` from the project folder.
 3. Remove everything project-specific (names, hosts, org, conventions); project values belong in the project's own files (`.claude/rules/`, `.claude/azure-devops.json`, CLAUDE.md).
-4. Push to the framework. Projects pinned to a moving `ref` get it with `/plugin marketplace update claudeframework`; projects pinned to a tag get it when the tag moves.
+4. Push to the framework (and move the tag, if projects pin one). Updating the marketplace alone does not update installed plugins — in each project run:
+   ```bash
+   claude plugin marketplace update claudeframework
+   claude plugin update pipeline@claudeframework --scope project
+   claude plugin update azure-devops@claudeframework --scope project
+   ```
+   then restart Claude Code. Alternatively set `"autoUpdate": true` on the `extraKnownMarketplaces` entry (off by default for third-party marketplaces).
 
 **Leak guard (recommended for every maintainer clone):** `node tools/leak-check.mjs --install` adds a pre-push hook that refuses a push when the pushed tree, an added line of a new commit, or a new commit's message/author matches a term from `.git/info/blocklist.txt` — a private, never-committed list (one regex per line). Without that list every push is refused.
 
