@@ -10,6 +10,8 @@ import type {
   WorkItemRelation,
   WorkItemSummary,
 } from "./types.js";
+import { parsePrio, type CandidateWorkItem } from "./candidates.js";
+import type { FlagConfig, PriorityConfig } from "./config.js";
 
 const turndown = new TurndownService({
   headingStyle: "atx",
@@ -210,7 +212,7 @@ function extractRelations(raw: AdoRelation[] | undefined): {
 }
 
 /** Map a raw Azure DevOps work item to our normalized WorkItem. */
-export function mapWorkItem(raw: AdoWorkItemResponse): WorkItem {
+export function mapWorkItem(raw: AdoWorkItemResponse, config: { flags: Record<string, FlagConfig> } = { flags: {} }): WorkItem {
   const fields = raw.fields;
   const htmlLink = raw._links?.html?.href;
   const assignedTo = fields["System.AssignedTo"];
@@ -231,6 +233,7 @@ export function mapWorkItem(raw: AdoWorkItemResponse): WorkItem {
     areaPath: fields["System.AreaPath"] ?? "",
     iterationPath: fields["System.IterationPath"] ?? "",
     url: htmlLink ?? raw.url,
+    ...Object.fromEntries(Object.entries(config.flags).map(([name, flag]) => [name, fields[flag.field] === true])),
     resolvedReason: fields["Microsoft.VSTS.Common.ResolvedReason"] || undefined,
     resolvedBy: resolvedBy?.displayName || undefined,
     relations,
@@ -245,6 +248,26 @@ export function mapWorkItemSummary(raw: AdoWorkItemResponse): WorkItemSummary {
     title: raw.fields["System.Title"] ?? "",
     type: raw.fields["System.WorkItemType"] ?? "",
     state: raw.fields["System.State"] ?? "",
+  };
+}
+
+/** Map a raw work item to a ranking candidate (prio from the configured priority field; none without one). */
+export function mapCandidate(raw: AdoWorkItemResponse, priority?: PriorityConfig): CandidateWorkItem {
+  const prioLabel = priority === undefined ? undefined : raw.fields[priority.field];
+  return {
+    id: raw.id,
+    title: raw.fields["System.Title"] ?? "",
+    type: raw.fields["System.WorkItemType"] ?? "",
+    state: raw.fields["System.State"] ?? "",
+    prio: parsePrio(prioLabel, priority?.values),
+    prioLabel: typeof prioLabel === "string" || typeof prioLabel === "number" ? String(prioLabel) : "",
+    tags: parseTags(raw.fields["System.Tags"]),
+    createdDate: typeof raw.fields["System.CreatedDate"] === "string" ? raw.fields["System.CreatedDate"] : "",
+    assignedTo: raw.fields["System.AssignedTo"]?.displayName ?? "",
+    predecessorIds: (raw.relations ?? [])
+      .filter((relation) => relation.rel === "System.LinkTypes.Dependency-Reverse")
+      .map((relation) => workItemIdFromUrl(relation.url))
+      .filter((id): id is number => id !== undefined),
   };
 }
 

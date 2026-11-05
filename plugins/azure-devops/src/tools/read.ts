@@ -2,14 +2,16 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { AzureDevOpsClient } from "../client.js";
-import { projectDir } from "../client.js";
-import { mapWorkItem, mapWorkItemSummary, mapComment } from "../mapper.js";
+import { projectDir, type AzureDevOpsClient } from "../client.js";
+import type { ServerConfig } from "../config.js";
+import { buildCandidateWiql, rankCandidates } from "../candidates.js";
+import { mapWorkItem, mapWorkItemSummary, mapComment, mapCandidate } from "../mapper.js";
 import type { WorkItem, WorkItemWithContext } from "../types.js";
 
 export function registerReadTools(
   server: McpServer,
   client: AzureDevOpsClient,
+  config: ServerConfig,
 ): void {
 
   // ── ado_get_work_item ───────────────────────────────────────────────
@@ -19,7 +21,7 @@ export function registerReadTools(
     { id: z.number().int().positive().describe("Work item ID") },
     async ({ id }) => {
       const raw = await client.getWorkItem(id);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config);
       return {
         content: [{ type: "text" as const, text: JSON.stringify(workItem, null, 2) }],
       };
@@ -36,7 +38,7 @@ export function registerReadTools(
     },
     async ({ id, includeComments }) => {
       const rawMain = await client.getWorkItem(id);
-      const main = mapWorkItem(rawMain);
+      const main = mapWorkItem(rawMain, config);
 
       // Collect IDs of all linked work items (one level deep)
       const linkedIds = main.relations
@@ -45,7 +47,7 @@ export function registerReadTools(
 
       const uniqueIds = [...new Set(linkedIds)];
       const linkedItems: WorkItem[] = uniqueIds.length
-        ? (await client.getWorkItems(uniqueIds)).map(mapWorkItem)
+        ? (await client.getWorkItems(uniqueIds)).map((raw) => mapWorkItem(raw, config))
         : [];
 
       // Index by ID for lookup
@@ -139,6 +141,57 @@ export function registerReadTools(
     },
   );
 
+  // ── ado_list_candidate_work_items ───────────────────────────────────
+  server.tool(
+    "ado_list_candidate_work_items",
+    `List work items assigned to the PAT owner (with epicId: below that epic, assigned to the PAT owner or unassigned) that nobody has started yet (types ${config.candidates.types.join("/")}, states ${config.candidates.notStartedStates.join("/")}), ranked to pick the next one: ${config.priority ? `${config.priority.field} ascending (none last), then ` : ""}by type (${typeOrder(config)}), then oldest first. Work items carrying an excluded tag, or with a predecessor (Dependency-Reverse link) not yet ${config.candidates.mergedStates.join("/")}, are listed separately with the reason. The query reads at most the oldest 200 matching items; when it hits that cap the output carries "truncated": true and newer tickets are missing from the ranking.`,
+    {
+      top: z.number().int().min(1).max(50).default(10).describe("Max ranked candidates to return (default 10)"),
+      excludeTags: z.array(z.string().min(1)).default(config.candidates.excludedTags).describe(`Tags that exclude a work item, case-insensitive (default: ${config.candidates.excludedTags.join(", ") || "none"})`),
+      epicId: z.number().int().positive().optional().describe("Only tickets below this work item (any depth); then unassigned tickets count too — assignedTo is \"\" for them"),
+    },
+    async ({ top, excludeTags, epicId }) => {
+      let epic: { epicId: number; epicTitle: string; descendants: number } | undefined;
+      let descendantIds: number[] | undefined;
+      if (epicId !== undefined) {
+        descendantIds = await client.getDescendantIds(epicId);
+        const [epicItem] = await client.getWorkItems([epicId], { omitErrors: true });
+        epic = { epicId, epicTitle: epicItem?.fields["System.Title"] ?? "(not found)", descendants: descendantIds.length };
+        if (descendantIds.length === 0) {
+          return { content: [{ type: "text" as const, text: JSON.stringify({ ...epic, candidates: [], total: 0, excluded: [] }, null, 2) }] };
+        }
+      }
+      const wiql = buildCandidateWiql(config.candidates, descendantIds);
+
+      const wiqlCap = 200;
+      const result = await client.queryWiql(wiql, wiqlCap);
+      const truncated = result.workItems.length >= wiqlCap;
+      const candidates = (await client.getWorkItems(result.workItems.map((wi) => wi.id))).map((raw) => mapCandidate(raw, config.priority));
+
+      const predecessorIds = [...new Set(candidates.flatMap((candidate) => candidate.predecessorIds))];
+      const predecessorStates = new Map(
+        // A deleted or unreadable predecessor is omitted, stays unknown and therefore blocks — it must not fail the listing.
+        (await client.getWorkItems(predecessorIds, { omitErrors: true })).map((raw) => [raw.id, raw.fields["System.State"] ?? ""] as [number, string]),
+      );
+      const { ranked, excluded } = rankCandidates(candidates, config.candidates, excludeTags, predecessorStates);
+
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify({ ...epic, candidates: ranked.slice(0, top), total: ranked.length, excluded, ...(truncated ? { truncated: true } : {}) }, null, 2) }],
+      };
+    },
+  );
+
+  // ── ado_whoami ──────────────────────────────────────────────────────
+  server.tool(
+    "ado_whoami",
+    "The Azure DevOps identity the PAT belongs to — the one WIQL calls @Me. Use its uniqueName (email) when assigning a work item to yourself; the git user name need not match an ADO identity.",
+    {},
+    async () => {
+      const user = await client.getAuthenticatedUser();
+      return { content: [{ type: "text" as const, text: JSON.stringify(user, null, 2) }] };
+    },
+  );
+
   // ── ado_get_work_item_comments ──────────────────────────────────────
   server.tool(
     "ado_get_work_item_comments",
@@ -166,7 +219,7 @@ export function registerReadTools(
     },
     async ({ workItemId, outputDir }) => {
       const raw = await client.getWorkItem(workItemId);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config);
       const attachments = workItem.artifacts.attachments;
 
       if (attachments.length === 0) {
@@ -175,7 +228,7 @@ export function registerReadTools(
         };
       }
 
-      const dir = outputDir ?? resolve(projectDir(), ".claude", "input", String(workItemId));
+      const dir = resolve(projectDir(), outputDir ?? join(".claude", "input", String(workItemId)));
       mkdirSync(dir, { recursive: true });
 
       const results: Array<{ name: string; path: string; size: number; contentType: string }> = [];
@@ -194,6 +247,12 @@ export function registerReadTools(
       };
     },
   );
+}
+
+/** Candidate types in rank order, for the tool description. */
+function typeOrder(config: ServerConfig): string {
+  const rank = config.candidates.typeRank;
+  return Object.keys(rank).sort((left, right) => rank[left] - rank[right]).join(" before ") || "any";
 }
 
 /** Escape single quotes in WIQL values to prevent injection. */

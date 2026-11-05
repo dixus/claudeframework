@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);
+import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -73,12 +73,12 @@ var require_code = __commonJS({
         return item === "" || item === '""';
       }
       get str() {
-        var _a3;
-        return (_a3 = this._str) !== null && _a3 !== void 0 ? _a3 : this._str = this._items.reduce((s, c2) => `${s}${c2}`, "");
+        var _a4;
+        return (_a4 = this._str) !== null && _a4 !== void 0 ? _a4 : this._str = this._items.reduce((s, c2) => `${s}${c2}`, "");
       }
       get names() {
-        var _a3;
-        return (_a3 = this._names) !== null && _a3 !== void 0 ? _a3 : this._names = this._items.reduce((names, c2) => {
+        var _a4;
+        return (_a4 = this._names) !== null && _a4 !== void 0 ? _a4 : this._names = this._items.reduce((names, c2) => {
           if (c2 instanceof Name)
             names[c2.str] = (names[c2.str] || 0) + 1;
           return names;
@@ -224,8 +224,8 @@ var require_scope = __commonJS({
         return `${prefix}${ng.index++}`;
       }
       _nameGroup(prefix) {
-        var _a3, _b;
-        if (((_b = (_a3 = this._parent) === null || _a3 === void 0 ? void 0 : _a3._prefixes) === null || _b === void 0 ? void 0 : _b.has(prefix)) || this._prefixes && !this._prefixes.has(prefix)) {
+        var _a4, _b2;
+        if (((_b2 = (_a4 = this._parent) === null || _a4 === void 0 ? void 0 : _a4._prefixes) === null || _b2 === void 0 ? void 0 : _b2.has(prefix)) || this._prefixes && !this._prefixes.has(prefix)) {
           throw new Error(`CodeGen: prefix "${prefix}" is not allowed in this scope`);
         }
         return this._names[prefix] = { prefix, index: 0 };
@@ -258,12 +258,12 @@ var require_scope = __commonJS({
         return new ValueScopeName(prefix, this._newName(prefix));
       }
       value(nameOrPrefix, value) {
-        var _a3;
+        var _a4;
         if (value.ref === void 0)
           throw new Error("CodeGen: ref must be passed in value");
         const name = this.toName(nameOrPrefix);
         const { prefix } = name;
-        const valueKey = (_a3 = value.key) !== null && _a3 !== void 0 ? _a3 : value.ref;
+        const valueKey = (_a4 = value.key) !== null && _a4 !== void 0 ? _a4 : value.ref;
         let vs = this._values[prefix];
         if (vs) {
           const _name = vs.get(valueKey);
@@ -581,8 +581,8 @@ var require_codegen = __commonJS({
         return this;
       }
       optimizeNames(names, constants) {
-        var _a3;
-        this.else = (_a3 = this.else) === null || _a3 === void 0 ? void 0 : _a3.optimizeNames(names, constants);
+        var _a4;
+        this.else = (_a4 = this.else) === null || _a4 === void 0 ? void 0 : _a4.optimizeNames(names, constants);
         if (!(super.optimizeNames(names, constants) || this.else))
           return;
         this.condition = optimizeExpr(this.condition, names, constants);
@@ -686,17 +686,17 @@ var require_codegen = __commonJS({
         return code;
       }
       optimizeNodes() {
-        var _a3, _b;
+        var _a4, _b2;
         super.optimizeNodes();
-        (_a3 = this.catch) === null || _a3 === void 0 ? void 0 : _a3.optimizeNodes();
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNodes();
+        (_a4 = this.catch) === null || _a4 === void 0 ? void 0 : _a4.optimizeNodes();
+        (_b2 = this.finally) === null || _b2 === void 0 ? void 0 : _b2.optimizeNodes();
         return this;
       }
       optimizeNames(names, constants) {
-        var _a3, _b;
+        var _a4, _b2;
         super.optimizeNames(names, constants);
-        (_a3 = this.catch) === null || _a3 === void 0 ? void 0 : _a3.optimizeNames(names, constants);
-        (_b = this.finally) === null || _b === void 0 ? void 0 : _b.optimizeNames(names, constants);
+        (_a4 = this.catch) === null || _a4 === void 0 ? void 0 : _a4.optimizeNames(names, constants);
+        (_b2 = this.finally) === null || _b2 === void 0 ? void 0 : _b2.optimizeNames(names, constants);
         return this;
       }
       get names() {
@@ -1299,21 +1299,21 @@ var require_errors = __commonJS({
     function extendErrors({ gen, keyword, schemaValue, data, errsCount, it: it2 }) {
       if (errsCount === void 0)
         throw new Error("ajv implementation error");
-      const err = gen.name("err");
+      const err2 = gen.name("err");
       gen.forRange("i", errsCount, names_1.default.errors, (i) => {
-        gen.const(err, (0, codegen_1._)`${names_1.default.vErrors}[${i}]`);
-        gen.if((0, codegen_1._)`${err}.instancePath === undefined`, () => gen.assign((0, codegen_1._)`${err}.instancePath`, (0, codegen_1.strConcat)(names_1.default.instancePath, it2.errorPath)));
-        gen.assign((0, codegen_1._)`${err}.schemaPath`, (0, codegen_1.str)`${it2.errSchemaPath}/${keyword}`);
+        gen.const(err2, (0, codegen_1._)`${names_1.default.vErrors}[${i}]`);
+        gen.if((0, codegen_1._)`${err2}.instancePath === undefined`, () => gen.assign((0, codegen_1._)`${err2}.instancePath`, (0, codegen_1.strConcat)(names_1.default.instancePath, it2.errorPath)));
+        gen.assign((0, codegen_1._)`${err2}.schemaPath`, (0, codegen_1.str)`${it2.errSchemaPath}/${keyword}`);
         if (it2.opts.verbose) {
-          gen.assign((0, codegen_1._)`${err}.schema`, schemaValue);
-          gen.assign((0, codegen_1._)`${err}.data`, data);
+          gen.assign((0, codegen_1._)`${err2}.schema`, schemaValue);
+          gen.assign((0, codegen_1._)`${err2}.data`, data);
         }
       });
     }
     exports.extendErrors = extendErrors;
     function addError(gen, errObj) {
-      const err = gen.const("err", errObj);
-      gen.if((0, codegen_1._)`${names_1.default.vErrors} === null`, () => gen.assign(names_1.default.vErrors, (0, codegen_1._)`[${err}]`), (0, codegen_1._)`${names_1.default.vErrors}.push(${err})`);
+      const err2 = gen.const("err", errObj);
+      gen.if((0, codegen_1._)`${names_1.default.vErrors} === null`, () => gen.assign(names_1.default.vErrors, (0, codegen_1._)`[${err2}]`), (0, codegen_1._)`${names_1.default.vErrors}.push(${err2})`);
       gen.code((0, codegen_1._)`${names_1.default.errors}++`);
     }
     function returnErrors(it2, errs) {
@@ -1475,8 +1475,8 @@ var require_applicability = __commonJS({
     }
     exports.shouldUseGroup = shouldUseGroup;
     function shouldUseRule(schema, rule) {
-      var _a3;
-      return schema[rule.keyword] !== void 0 || ((_a3 = rule.definition.implements) === null || _a3 === void 0 ? void 0 : _a3.some((kwd) => schema[kwd] !== void 0));
+      var _a4;
+      return schema[rule.keyword] !== void 0 || ((_a4 = rule.definition.implements) === null || _a4 === void 0 ? void 0 : _a4.some((kwd) => schema[kwd] !== void 0));
     }
     exports.shouldUseRule = shouldUseRule;
   }
@@ -1864,14 +1864,14 @@ var require_keyword = __commonJS({
     }
     exports.macroKeywordCode = macroKeywordCode;
     function funcKeywordCode(cxt, def) {
-      var _a3;
+      var _a4;
       const { gen, keyword, schema, parentSchema, $data, it: it2 } = cxt;
       checkAsyncKeyword(it2, def);
       const validate2 = !$data && def.compile ? def.compile.call(it2.self, schema, parentSchema, it2) : def.validate;
       const validateRef = useKeyword(gen, keyword, validate2);
       const valid = gen.let("valid");
       cxt.block$data(valid, validateKeyword);
-      cxt.ok((_a3 = def.valid) !== null && _a3 !== void 0 ? _a3 : valid);
+      cxt.ok((_a4 = def.valid) !== null && _a4 !== void 0 ? _a4 : valid);
       function validateKeyword() {
         if (def.errors === false) {
           assignValid();
@@ -1902,8 +1902,8 @@ var require_keyword = __commonJS({
         gen.assign(valid, (0, codegen_1._)`${_await}${(0, code_1.callValidateCode)(cxt, validateRef, passCxt, passSchema)}`, def.modifying);
       }
       function reportErrs(errors) {
-        var _a4;
-        gen.if((0, codegen_1.not)((_a4 = def.valid) !== null && _a4 !== void 0 ? _a4 : valid), errors);
+        var _a5;
+        gen.if((0, codegen_1.not)((_a5 = def.valid) !== null && _a5 !== void 0 ? _a5 : valid), errors);
       }
     }
     exports.funcKeywordCode = funcKeywordCode;
@@ -2871,7 +2871,7 @@ var require_compile = __commonJS({
     var validate_1 = require_validate();
     var SchemaEnv = class {
       constructor(env) {
-        var _a3;
+        var _a4;
         this.refs = {};
         this.dynamicAnchors = {};
         let schema;
@@ -2880,7 +2880,7 @@ var require_compile = __commonJS({
         this.schema = env.schema;
         this.schemaId = env.schemaId;
         this.root = env.root || this;
-        this.baseId = (_a3 = env.baseId) !== null && _a3 !== void 0 ? _a3 : (0, resolve_1.normalizeId)(schema === null || schema === void 0 ? void 0 : schema[env.schemaId || "$id"]);
+        this.baseId = (_a4 = env.baseId) !== null && _a4 !== void 0 ? _a4 : (0, resolve_1.normalizeId)(schema === null || schema === void 0 ? void 0 : schema[env.schemaId || "$id"]);
         this.schemaPath = env.schemaPath;
         this.localRefs = env.localRefs;
         this.meta = env.meta;
@@ -2976,14 +2976,14 @@ var require_compile = __commonJS({
     }
     exports.compileSchema = compileSchema;
     function resolveRef2(root, baseId, ref) {
-      var _a3;
+      var _a4;
       ref = (0, resolve_1.resolveUrl)(this.opts.uriResolver, baseId, ref);
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve4.call(this, root, ref);
+      let _sch = resolve7.call(this, root, ref);
       if (_sch === void 0) {
-        const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
+        const schema = (_a4 = root.localRefs) === null || _a4 === void 0 ? void 0 : _a4[ref];
         const { schemaId } = this.opts;
         if (schema)
           _sch = new SchemaEnv({ schema, schemaId, root, baseId });
@@ -3008,7 +3008,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve4(root, ref) {
+    function resolve7(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3052,8 +3052,8 @@ var require_compile = __commonJS({
       "definitions"
     ]);
     function getJsonPointer(parsedRef, { baseId, schema, root }) {
-      var _a3;
-      if (((_a3 = parsedRef.fragment) === null || _a3 === void 0 ? void 0 : _a3[0]) !== "/")
+      var _a4;
+      if (((_a4 = parsedRef.fragment) === null || _a4 === void 0 ? void 0 : _a4[0]) !== "/")
         return;
       for (const part of parsedRef.fragment.slice(1).split("/")) {
         if (typeof schema === "boolean")
@@ -3872,7 +3872,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve4(baseURI, relativeURI, options) {
+    function resolve7(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -3908,50 +3908,50 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative, options, skipNormalization) {
+    function resolveComponent(base, relative2, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
         base = parse3(serialize(base, options), options);
-        relative = parse3(serialize(relative, options), options);
+        relative2 = parse3(serialize(relative2, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative.scheme) {
-        target.scheme = relative.scheme;
-        target.userinfo = relative.userinfo;
-        target.host = relative.host;
-        target.port = relative.port;
-        target.path = removeDotSegments(relative.path || "");
-        target.query = relative.query;
+      if (!options.tolerant && relative2.scheme) {
+        target.scheme = relative2.scheme;
+        target.userinfo = relative2.userinfo;
+        target.host = relative2.host;
+        target.port = relative2.port;
+        target.path = removeDotSegments(relative2.path || "");
+        target.query = relative2.query;
       } else {
-        if (relative.userinfo !== void 0 || relative.host !== void 0 || relative.port !== void 0) {
-          target.userinfo = relative.userinfo;
-          target.host = relative.host;
-          target.port = relative.port;
-          target.path = removeDotSegments(relative.path || "");
-          target.query = relative.query;
+        if (relative2.userinfo !== void 0 || relative2.host !== void 0 || relative2.port !== void 0) {
+          target.userinfo = relative2.userinfo;
+          target.host = relative2.host;
+          target.port = relative2.port;
+          target.path = removeDotSegments(relative2.path || "");
+          target.query = relative2.query;
         } else {
-          if (!relative.path) {
+          if (!relative2.path) {
             target.path = base.path;
-            if (relative.query !== void 0) {
-              target.query = relative.query;
+            if (relative2.query !== void 0) {
+              target.query = relative2.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative.path[0] === "/") {
-              target.path = removeDotSegments(relative.path);
+            if (relative2.path[0] === "/") {
+              target.path = removeDotSegments(relative2.path);
             } else {
               const baseHasAuthority = base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0;
               if (baseHasAuthority && !base.path) {
-                target.path = "/" + relative.path;
+                target.path = "/" + relative2.path;
               } else if (!base.path) {
-                target.path = relative.path;
+                target.path = relative2.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative2.path;
               }
               target.path = base.scheme === void 0 && !baseHasAuthority && target.path[0] !== "/" ? removeDotSegmentsRelative(target.path) : removeDotSegments(target.path);
             }
-            target.query = relative.query;
+            target.query = relative2.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -3959,7 +3959,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative.fragment;
+      target.fragment = relative2.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -4263,7 +4263,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve4,
+      resolve: resolve7,
       resolveComponent,
       equal,
       serialize,
@@ -4367,11 +4367,11 @@ var require_core = __commonJS({
     };
     var MAX_EXPRESSION = 200;
     function requiredOptions(o) {
-      var _a3, _b, _c, _d, _e2, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t2, _u, _v, _w, _x, _y, _z, _0;
+      var _a4, _b2, _c, _d, _e2, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t2, _u, _v, _w, _x, _y, _z, _0;
       const s = o.strict;
-      const _optz = (_a3 = o.code) === null || _a3 === void 0 ? void 0 : _a3.optimize;
+      const _optz = (_a4 = o.code) === null || _a4 === void 0 ? void 0 : _a4.optimize;
       const optimize = _optz === true || _optz === void 0 ? 1 : _optz || 0;
-      const regExp = (_c = (_b = o.code) === null || _b === void 0 ? void 0 : _b.regExp) !== null && _c !== void 0 ? _c : defaultRegExp;
+      const regExp = (_c = (_b2 = o.code) === null || _b2 === void 0 ? void 0 : _b2.regExp) !== null && _c !== void 0 ? _c : defaultRegExp;
       const uriResolver = (_d = o.uriResolver) !== null && _d !== void 0 ? _d : uri_1.default;
       return {
         strictSchema: (_f = (_e2 = o.strictSchema) !== null && _e2 !== void 0 ? _e2 : s) !== null && _f !== void 0 ? _f : true,
@@ -4678,7 +4678,7 @@ var require_core = __commonJS({
       errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
         if (!errors || errors.length === 0)
           return "No errors";
-        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text, msg) => text + separator + msg);
+        return errors.map((e) => `${dataVar}${e.instancePath} ${e.message}`).reduce((text3, msg) => text3 + separator + msg);
       }
       $dataMetaSchema(metaSchema, keywordsJsonPointers) {
         const rules = this.RULES.all;
@@ -4843,7 +4843,7 @@ var require_core = __commonJS({
       }
     }
     function addRule(keyword, definition, dataType) {
-      var _a3;
+      var _a4;
       const post = definition === null || definition === void 0 ? void 0 : definition.post;
       if (dataType && post)
         throw new Error('keyword with "post" flag cannot have "type"');
@@ -4869,7 +4869,7 @@ var require_core = __commonJS({
       else
         ruleGroup.rules.push(rule);
       RULES.all[keyword] = rule;
-      (_a3 = definition.implements) === null || _a3 === void 0 ? void 0 : _a3.forEach((kwd) => this.addKeyword(kwd));
+      (_a4 = definition.implements) === null || _a4 === void 0 ? void 0 : _a4.forEach((kwd) => this.addKeyword(kwd));
     }
     function addBeforeRule(ruleGroup, rule, before) {
       const i = ruleGroup.rules.findIndex((_rule) => _rule.keyword === before);
@@ -5003,10 +5003,10 @@ var require_ref = __commonJS({
         gen.assign(names_1.default.errors, (0, codegen_1._)`${names_1.default.vErrors}.length`);
       }
       function addEvaluatedFrom(source) {
-        var _a3;
+        var _a4;
         if (!it2.opts.unevaluated)
           return;
-        const schEvaluated = (_a3 = sch === null || sch === void 0 ? void 0 : sch.validate) === null || _a3 === void 0 ? void 0 : _a3.evaluated;
+        const schEvaluated = (_a4 = sch === null || sch === void 0 ? void 0 : sch.validate) === null || _a4 === void 0 ? void 0 : _a4.evaluated;
         if (it2.props !== true) {
           if (schEvaluated && !schEvaluated.dynamicProps) {
             if (schEvaluated.props !== void 0) {
@@ -5714,8 +5714,8 @@ var require_contains = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util();
     var error62 = {
-      message: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1.str)`must contain at least ${min} valid item(s)` : (0, codegen_1.str)`must contain at least ${min} and no more than ${max} valid item(s)`,
-      params: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1._)`{minContains: ${min}}` : (0, codegen_1._)`{minContains: ${min}, maxContains: ${max}}`
+      message: ({ params: { min, max: max2 } }) => max2 === void 0 ? (0, codegen_1.str)`must contain at least ${min} valid item(s)` : (0, codegen_1.str)`must contain at least ${min} and no more than ${max2} valid item(s)`,
+      params: ({ params: { min, max: max2 } }) => max2 === void 0 ? (0, codegen_1._)`{minContains: ${min}}` : (0, codegen_1._)`{minContains: ${min}, maxContains: ${max2}}`
     };
     var def = {
       keyword: "contains",
@@ -5727,39 +5727,39 @@ var require_contains = __commonJS({
       code(cxt) {
         const { gen, schema, parentSchema, data, it: it2 } = cxt;
         let min;
-        let max;
+        let max2;
         const { minContains, maxContains } = parentSchema;
         if (it2.opts.next) {
           min = minContains === void 0 ? 1 : minContains;
-          max = maxContains;
+          max2 = maxContains;
         } else {
           min = 1;
         }
         const len = gen.const("len", (0, codegen_1._)`${data}.length`);
-        cxt.setParams({ min, max });
-        if (max === void 0 && min === 0) {
+        cxt.setParams({ min, max: max2 });
+        if (max2 === void 0 && min === 0) {
           (0, util_1.checkStrictMode)(it2, `"minContains" == 0 without "maxContains": "contains" keyword ignored`);
           return;
         }
-        if (max !== void 0 && min > max) {
+        if (max2 !== void 0 && min > max2) {
           (0, util_1.checkStrictMode)(it2, `"minContains" > "maxContains" is always invalid`);
           cxt.fail();
           return;
         }
         if ((0, util_1.alwaysValidSchema)(it2, schema)) {
           let cond = (0, codegen_1._)`${len} >= ${min}`;
-          if (max !== void 0)
-            cond = (0, codegen_1._)`${cond} && ${len} <= ${max}`;
+          if (max2 !== void 0)
+            cond = (0, codegen_1._)`${cond} && ${len} <= ${max2}`;
           cxt.pass(cond);
           return;
         }
         it2.items = true;
         const valid = gen.name("valid");
-        if (max === void 0 && min === 1) {
+        if (max2 === void 0 && min === 1) {
           validateItems(valid, () => gen.if(valid, () => gen.break()));
         } else if (min === 0) {
           gen.let(valid, true);
-          if (max !== void 0)
+          if (max2 !== void 0)
             gen.if((0, codegen_1._)`${data}.length > 0`, validateItemsWithCount);
         } else {
           gen.let(valid, false);
@@ -5784,10 +5784,10 @@ var require_contains = __commonJS({
         }
         function checkLimits(count) {
           gen.code((0, codegen_1._)`${count}++`);
-          if (max === void 0) {
+          if (max2 === void 0) {
             gen.if((0, codegen_1._)`${count} >= ${min}`, () => gen.assign(valid, true).break());
           } else {
-            gen.if((0, codegen_1._)`${count} > ${max}`, () => gen.assign(valid, false).break());
+            gen.if((0, codegen_1._)`${count} > ${max2}`, () => gen.assign(valid, false).break());
             if (min === 1)
               gen.assign(valid, true);
             else
@@ -6657,7 +6657,7 @@ var require_discriminator = __commonJS({
           return _valid;
         }
         function getMapping() {
-          var _a3;
+          var _a4;
           const oneOfMapping = {};
           const topRequired = hasRequired(parentSchema);
           let tagRequired = true;
@@ -6671,7 +6671,7 @@ var require_discriminator = __commonJS({
               if (sch === void 0)
                 throw new ref_error_1.default(it2.opts.uriResolver, it2.baseId, ref);
             }
-            const propSch = (_a3 = sch === null || sch === void 0 ? void 0 : sch.properties) === null || _a3 === void 0 ? void 0 : _a3[tagName];
+            const propSch = (_a4 = sch === null || sch === void 0 ? void 0 : sch.properties) === null || _a4 === void 0 ? void 0 : _a4[tagName];
             if (typeof propSch != "object") {
               throw new Error(`discriminator: oneOf subschemas (or referenced schemas) must have "properties/${tagName}"`);
             }
@@ -7240,9 +7240,9 @@ var require_dist = __commonJS({
       return f;
     };
     function addFormats(ajv, list, fs, exportName) {
-      var _a3;
-      var _b;
-      (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
+      var _a4;
+      var _b2;
+      (_a4 = (_b2 = ajv.opts.code).formats) !== null && _a4 !== void 0 ? _a4 : _b2.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
         ajv.addFormat(f, fs[f]);
     }
@@ -8992,20 +8992,20 @@ var require_attributes = __commonJS({
       var unsigned_long = a3.type === "unsigned long";
       var signed_long = a3.type === "long";
       var unsigned_fallback = a3.type === "limited unsigned long with fallback";
-      var min = a3.min, max = a3.max, setmin = a3.setmin;
+      var min = a3.min, max2 = a3.max, setmin = a3.setmin;
       if (min === void 0) {
         if (unsigned_long) min = 0;
         if (signed_long) min = -2147483648;
         if (unsigned_fallback) min = 1;
       }
-      if (max === void 0) {
-        if (unsigned_long || signed_long || unsigned_fallback) max = 2147483647;
+      if (max2 === void 0) {
+        if (unsigned_long || signed_long || unsigned_fallback) max2 = 2147483647;
       }
       return {
         get: function() {
           var v = this._getattr(a3.name);
           var n = a3.float ? parseFloat(v) : parseInt(v, 10);
-          if (v === null || !isFinite(n) || min !== void 0 && n < min || max !== void 0 && n > max) {
+          if (v === null || !isFinite(n) || min !== void 0 && n < min || max2 !== void 0 && n > max2) {
             return def.call(this);
           }
           if (unsigned_long || signed_long || unsigned_fallback) {
@@ -9679,8 +9679,8 @@ var require_select = __commonJS({
       // Non-standard, for compatibility purposes.
       ":contains": function(param) {
         return function(el) {
-          var text = el.innerText || el.textContent || el.value || "";
-          return text.indexOf(param) !== -1;
+          var text3 = el.innerText || el.textContent || el.value || "";
+          return text3.indexOf(param) !== -1;
         };
       },
       ":has": function(param) {
@@ -10347,9 +10347,9 @@ var require_Element = __commonJS({
         position = utils.toASCIILowerCase(String(position));
         this._insertAdjacent(position, textNode);
       } },
-      insertAdjacentHTML: { value: function insertAdjacentHTML(position, text) {
+      insertAdjacentHTML: { value: function insertAdjacentHTML(position, text3) {
         position = utils.toASCIILowerCase(String(position));
-        text = String(text);
+        text3 = String(text3);
         var context;
         switch (position) {
           case "beforebegin":
@@ -10373,7 +10373,7 @@ var require_Element = __commonJS({
           this.ownerDocument._address,
           context
         );
-        parser.parse(text, true);
+        parser.parse(text3, true);
         this._insertAdjacent(position, parser._asDocumentFragment());
       } },
       children: { get: function() {
@@ -12242,9 +12242,9 @@ var require_URL = __commonJS({
       },
       // See: http://tools.ietf.org/html/rfc3986#section-5.2
       // and https://url.spec.whatwg.org/#constructors
-      resolve: function(relative) {
+      resolve: function(relative2) {
         var base = this;
-        var r = new URL2(relative);
+        var r = new URL2(relative2);
         var t = new URL2();
         if (r.scheme !== void 0) {
           t.scheme = r.scheme;
@@ -12492,9 +12492,9 @@ var require_CSSStyleDeclaration = __commonJS({
       // Note that the styles don't get parsed until they're actually needed
       _parsed: { get: function() {
         if (!this._parsedStyles || this.cssText !== this._lastParsedText) {
-          var text = this.cssText;
-          this._parsedStyles = parseStyles(text);
-          this._lastParsedText = text;
+          var text3 = this.cssText;
+          this._parsedStyles = parseStyles(text3);
+          this._lastParsedText = text3;
           delete this._names;
         }
         return this._parsedStyles;
@@ -24239,15 +24239,15 @@ var require_turndown_cjs = __commonJS({
       var node2 = next(prev, element, isPre);
       while (node2 !== element) {
         if (node2.nodeType === 3 || node2.nodeType === 4) {
-          var text = node2.data.replace(/[ \r\n\t]+/g, " ");
-          if ((!prevText || / $/.test(prevText.data)) && !keepLeadingWs && text[0] === " ") {
-            text = text.substr(1);
+          var text3 = node2.data.replace(/[ \r\n\t]+/g, " ");
+          if ((!prevText || / $/.test(prevText.data)) && !keepLeadingWs && text3[0] === " ") {
+            text3 = text3.substr(1);
           }
-          if (!text) {
+          if (!text3) {
             node2 = remove(node2);
             continue;
           }
-          node2.data = text;
+          node2.data = text3;
           prevText = node2;
         } else if (node2.nodeType === 1) {
           if (isBlock2(node2) || node2.nodeName === "BR") {
@@ -25193,8 +25193,8 @@ var ZodType = class {
         } : {
           issues: ctx.common.issues
         };
-      } catch (err) {
-        if (err?.message?.toLowerCase()?.includes("encountered")) {
+      } catch (err2) {
+        if (err2?.message?.toLowerCase()?.includes("encountered")) {
           this["~standard"].async = true;
         }
         ctx.common = {
@@ -26001,14 +26001,14 @@ var ZodString = class _ZodString2 extends ZodType {
     return min;
   }
   get maxLength() {
-    let max = null;
+    let max2 = null;
     for (const ch of this._def.checks) {
       if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+        if (max2 === null || ch.value < max2)
+          max2 = ch.value;
       }
     }
-    return max;
+    return max2;
   }
 };
 ZodString.create = (params) => {
@@ -26222,20 +26222,20 @@ var ZodNumber = class _ZodNumber extends ZodType {
     return min;
   }
   get maxValue() {
-    let max = null;
+    let max2 = null;
     for (const ch of this._def.checks) {
       if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+        if (max2 === null || ch.value < max2)
+          max2 = ch.value;
       }
     }
-    return max;
+    return max2;
   }
   get isInt() {
     return !!this._def.checks.find((ch) => ch.kind === "int" || ch.kind === "multipleOf" && util.isInteger(ch.value));
   }
   get isFinite() {
-    let max = null;
+    let max2 = null;
     let min = null;
     for (const ch of this._def.checks) {
       if (ch.kind === "finite" || ch.kind === "int" || ch.kind === "multipleOf") {
@@ -26244,11 +26244,11 @@ var ZodNumber = class _ZodNumber extends ZodType {
         if (min === null || ch.value > min)
           min = ch.value;
       } else if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+        if (max2 === null || ch.value < max2)
+          max2 = ch.value;
       }
     }
-    return Number.isFinite(min) && Number.isFinite(max);
+    return Number.isFinite(min) && Number.isFinite(max2);
   }
 };
 ZodNumber.create = (params) => {
@@ -26413,14 +26413,14 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
     return min;
   }
   get maxValue() {
-    let max = null;
+    let max2 = null;
     for (const ch of this._def.checks) {
       if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+        if (max2 === null || ch.value < max2)
+          max2 = ch.value;
       }
     }
-    return max;
+    return max2;
   }
 };
 ZodBigInt.create = (params) => {
@@ -26547,14 +26547,14 @@ var ZodDate = class _ZodDate extends ZodType {
     return min != null ? new Date(min) : null;
   }
   get maxDate() {
-    let max = null;
+    let max2 = null;
     for (const ch of this._def.checks) {
       if (ch.kind === "max") {
-        if (max === null || ch.value < max)
-          max = ch.value;
+        if (max2 === null || ch.value < max2)
+          max2 = ch.value;
       }
     }
-    return max != null ? new Date(max) : null;
+    return max2 != null ? new Date(max2) : null;
   }
 };
 ZodDate.create = (params) => {
@@ -29355,8 +29355,8 @@ function explicitlyAborted(x2, startIndex = 0) {
 }
 function prefixIssues(path, issues) {
   return issues.map((iss) => {
-    var _a3;
-    (_a3 = iss).path ?? (_a3.path = []);
+    var _a4;
+    (_a4 = iss).path ?? (_a4.path = []);
     iss.path.unshift(path);
     return iss;
   });
@@ -29370,29 +29370,29 @@ function sizeCaps(defChecks) {
     const d = ch._zod.def;
     if (!/_(length|size)$|_equals$/.test(d.check))
       break;
-    const max = d.maximum ?? d.length ?? d.size;
-    if (max >= 0)
-      caps.push([max, ch]);
+    const max2 = d.maximum ?? d.length ?? d.size;
+    if (max2 >= 0)
+      caps.push([max2, ch]);
   }
   return caps;
 }
 function attachSchema(issues, start, inst) {
-  var _a3;
+  var _a4;
   for (let i = start; i < issues.length; i++) {
-    (_a3 = issues[i]).schema ?? (_a3.schema = inst);
+    (_a4 = issues[i]).schema ?? (_a4.schema = inst);
   }
 }
-function finalizeIssue(iss, ctx, config2) {
-  var _a3;
+function finalizeIssue(iss, ctx, config3) {
+  var _a4;
   const traits = iss.inst?._zod?.traits;
   if (traits?.has("$ZodType")) {
     if (traits.has("$ZodCheck"))
-      (_a3 = iss).schema ?? (_a3.schema = iss.inst);
+      (_a4 = iss).schema ?? (_a4.schema = iss.inst);
     else
       iss.schema = iss.inst;
   }
   const schemaError = iss.schema !== iss.inst ? iss.schema?._zod.def?.error : void 0;
-  const message = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+  const message = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(schemaError?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config3.customError?.(iss)) ?? unwrapMessage(config3.localeError?.(iss)) ?? "Invalid input";
   const full = {};
   for (const k of Object.keys(iss)) {
     if (k === "inst" || k === "schema" || k === "continue" || k === "input" || k === "__proto__")
@@ -29593,10 +29593,10 @@ function defineLazyInternal(inst, key, compute) {
           Object.defineProperty(this, key, { configurable: true, writable: true, value });
         broke = broke || outer;
         return value;
-      } catch (err) {
+      } catch (err2) {
         delete this[key];
         broke = broke || outer;
-        throw err;
+        throw err2;
       }
     },
     set(value) {
@@ -29868,7 +29868,7 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
   const processError = (error63, path = []) => {
-    var _a3;
+    var _a4;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
         issue2.errors.map((issues) => processError({ issues }, [...path, ...issue2.path]));
@@ -29900,7 +29900,7 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
             curr = curr.properties[el];
           } else {
             curr.items ?? (curr.items = []);
-            (_a3 = curr.items)[el] ?? (_a3[el] = { errors: [] });
+            (_a4 = curr.items)[el] ?? (_a4[el] = { errors: [] });
             curr = curr.items[el];
           }
           if (terminal) {
@@ -30277,10 +30277,10 @@ var sha512_base64url = /* @__PURE__ */ fixedBase64url(86);
 
 // node_modules/zod/v4/core/checks.js
 var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
-  var _a3;
+  var _a4;
   inst._zod ?? (inst._zod = {});
   inst._zod.def = def;
-  (_a3 = inst._zod).onattach ?? (_a3.onattach = []);
+  (_a4 = inst._zod).onattach ?? (_a4.onattach = []);
 });
 var _whenHasSize = (payload) => {
   const val = payload.value;
@@ -30453,9 +30453,9 @@ var $ZodCheckBigIntFormat = /* @__PURE__ */ $constructor("$ZodCheckBigIntFormat"
   };
 });
 var $ZodCheckMaxSize = /* @__PURE__ */ $constructor("$ZodCheckMaxSize", (inst, def) => {
-  var _a3;
+  var _a4;
   $ZodCheck.init(inst, def);
-  (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasSize);
+  (_a4 = inst._zod.def).when ?? (_a4.when = _whenHasSize);
   inst._zod.check = (payload) => {
     const input2 = payload.value;
     const size = input2.size;
@@ -30473,9 +30473,9 @@ var $ZodCheckMaxSize = /* @__PURE__ */ $constructor("$ZodCheckMaxSize", (inst, d
   };
 });
 var $ZodCheckMinSize = /* @__PURE__ */ $constructor("$ZodCheckMinSize", (inst, def) => {
-  var _a3;
+  var _a4;
   $ZodCheck.init(inst, def);
-  (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasSize);
+  (_a4 = inst._zod.def).when ?? (_a4.when = _whenHasSize);
   inst._zod.check = (payload) => {
     const input2 = payload.value;
     const size = input2.size;
@@ -30493,9 +30493,9 @@ var $ZodCheckMinSize = /* @__PURE__ */ $constructor("$ZodCheckMinSize", (inst, d
   };
 });
 var $ZodCheckSizeEquals = /* @__PURE__ */ $constructor("$ZodCheckSizeEquals", (inst, def) => {
-  var _a3;
+  var _a4;
   $ZodCheck.init(inst, def);
-  (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasSize);
+  (_a4 = inst._zod.def).when ?? (_a4.when = _whenHasSize);
   inst._zod.check = (payload) => {
     const input2 = payload.value;
     const size = input2.size;
@@ -30514,9 +30514,9 @@ var $ZodCheckSizeEquals = /* @__PURE__ */ $constructor("$ZodCheckSizeEquals", (i
   };
 });
 var $ZodCheckMaxLength = /* @__PURE__ */ $constructor("$ZodCheckMaxLength", (inst, def) => {
-  var _a3;
+  var _a4;
   $ZodCheck.init(inst, def);
-  (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasLength);
+  (_a4 = inst._zod.def).when ?? (_a4.when = _whenHasLength);
   inst._zod.check = (payload) => {
     const input2 = payload.value;
     const units = input2.length;
@@ -30536,9 +30536,9 @@ var $ZodCheckMaxLength = /* @__PURE__ */ $constructor("$ZodCheckMaxLength", (ins
   };
 });
 var $ZodCheckMinLength = /* @__PURE__ */ $constructor("$ZodCheckMinLength", (inst, def) => {
-  var _a3;
+  var _a4;
   $ZodCheck.init(inst, def);
-  (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasLength);
+  (_a4 = inst._zod.def).when ?? (_a4.when = _whenHasLength);
   inst._zod.check = (payload) => {
     const input2 = payload.value;
     const units = input2.length;
@@ -30558,9 +30558,9 @@ var $ZodCheckMinLength = /* @__PURE__ */ $constructor("$ZodCheckMinLength", (ins
   };
 });
 var $ZodCheckLengthEquals = /* @__PURE__ */ $constructor("$ZodCheckLengthEquals", (inst, def) => {
-  var _a3;
+  var _a4;
   $ZodCheck.init(inst, def);
-  (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasLength);
+  (_a4 = inst._zod.def).when ?? (_a4.when = _whenHasLength);
   inst._zod.check = (payload) => {
     const input2 = payload.value;
     const units = input2.length;
@@ -30581,10 +30581,10 @@ var $ZodCheckLengthEquals = /* @__PURE__ */ $constructor("$ZodCheckLengthEquals"
   };
 });
 var $ZodCheckStringFormat = /* @__PURE__ */ $constructor("$ZodCheckStringFormat", (inst, def) => {
-  var _a3, _b;
+  var _a4, _b2;
   $ZodCheck.init(inst, def);
   if (def.pattern)
-    (_a3 = inst._zod).check ?? (_a3.check = (payload) => {
+    (_a4 = inst._zod).check ?? (_a4.check = (payload) => {
       def.pattern.lastIndex = 0;
       if (def.pattern.test(payload.value))
         return;
@@ -30599,7 +30599,7 @@ var $ZodCheckStringFormat = /* @__PURE__ */ $constructor("$ZodCheckStringFormat"
       });
     });
   else
-    (_b = inst._zod).check ?? (_b.check = () => {
+    (_b2 = inst._zod).check ?? (_b2.check = () => {
     });
 });
 var $ZodCheckRegex = /* @__PURE__ */ $constructor("$ZodCheckRegex", (inst, def) => {
@@ -30801,7 +30801,7 @@ var version = {
 
 // node_modules/zod/v4/core/schemas.js
 var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
-  var _a3;
+  var _a4;
   inst ?? (inst = {});
   inst._zod.def = def;
   inst._zod.bag = inst._zod.bag || {};
@@ -30814,7 +30814,7 @@ var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
     }
   }
   if (checks.length === 0) {
-    (_a3 = inst._zod).deferred ?? (_a3.deferred = []);
+    (_a4 = inst._zod).deferred ?? (_a4.deferred = []);
     inst._zod.deferred?.push(() => {
       inst._zod.run = inst._zod.parse;
     });
@@ -31561,8 +31561,8 @@ function capSize(inst, size) {
   inst._zod.parse = (payload, ctx) => {
     const n = size(payload.value);
     if (n > cap && !ctx?.skipChecks && ctx?.direction !== "backward") {
-      for (const [max, ch] of sizeCaps(inst._zod.def.checks)) {
-        if (n > max && ch._zod.def.when(payload)) {
+      for (const [max2, ch] of sizeCaps(inst._zod.def.checks)) {
+        if (n > max2 && ch._zod.def.when(payload)) {
           const start = payload.issues.length;
           ch._zod.check(payload);
           payload.issues[start].continue = false;
@@ -33260,7 +33260,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve4) {
+function isRecursive(inst, stack, resolve7) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -33270,7 +33270,7 @@ function isRecursive(inst, stack, resolve4) {
   let result = NONE;
   const check2 = (child) => {
     if (result !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve4);
+      const answer = isRecursive(child, stack, resolve7);
       if (answer > result)
         result = answer;
     }
@@ -33281,7 +33281,7 @@ function isRecursive(inst, stack, resolve4) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve4) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve7) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -33345,7 +33345,7 @@ function isRecursive(inst, stack, resolve4) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve4 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve7 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -33422,8 +33422,8 @@ var memo = {
     return empty;
   },
   guard(inst) {
-    var _a3;
-    (_a3 = inst._zod).deferred ?? (_a3.deferred = []);
+    var _a4;
+    (_a4 = inst._zod).deferred ?? (_a4.deferred = []);
     inst._zod.deferred.push(() => {
       const base = inst._zod.parse;
       const wrapped = (payload, ctx) => {
@@ -33437,12 +33437,12 @@ var memo = {
     });
   },
   attach(inst) {
-    var _a3;
+    var _a4;
     let isRecursiveInst;
     let rechecked = false;
     let lastCtx;
     let lastBucket;
-    (_a3 = inst._zod).deferred ?? (_a3.deferred = []);
+    (_a4 = inst._zod).deferred ?? (_a4.deferred = []);
     inst._zod.deferred.push(() => {
       const base = inst._zod.parse;
       const wrapped = (payload, ctx) => {
@@ -37543,8 +37543,8 @@ function ko_default() {
 }
 
 // node_modules/zod/v4/locales/lt.js
-var capitalizeFirstCharacter = (text) => {
-  return text.charAt(0).toUpperCase() + text.slice(1);
+var capitalizeFirstCharacter = (text3) => {
+  return text3.charAt(0).toUpperCase() + text3.slice(1);
 };
 function getUnitTypeFromNumber(number4) {
   const abs = Math.abs(number4);
@@ -41164,9 +41164,9 @@ function compile(schema, options) {
     const clone2 = withParser(schema, parser);
     clone2._zod.bag.validator = compileValidator(schema, parser);
     return clone2;
-  } catch (err) {
+  } catch (err2) {
     if (options?.strict)
-      throw err;
+      throw err2;
     return schema;
   }
 }
@@ -41256,8 +41256,8 @@ ${code}
   try {
     const factory = new F2(...constantNames, factoryCode);
     fn = factory(...constantValues);
-  } catch (err) {
-    throw new ZodCompileUnsupportedError(`this schema (generated code failed to evaluate: ${err.message})`);
+  } catch (err2) {
+    throw new ZodCompileUnsupportedError(`this schema (generated code failed to evaluate: ${err2.message})`);
   }
   if (options?.debug) {
     fn.code = fullCode;
@@ -41295,9 +41295,9 @@ function compileChild(doc, ctx, schema, accessor, needsValue = true) {
   const varCounter = ctx.varCounter;
   try {
     return generateCheck(doc, ctx, schema, accessor, needsValue);
-  } catch (err) {
-    if (!(err instanceof ZodCompileUnsupportedError) || !err.islandable)
-      throw err;
+  } catch (err2) {
+    if (!(err2 instanceof ZodCompileUnsupportedError) || !err2.islandable)
+      throw err2;
     doc.content.length = contentLen;
     if (ctx.constants.size > constantCount) {
       const trailing = Array.from(ctx.constants.keys()).slice(constantCount);
@@ -41356,9 +41356,9 @@ function generateChecks(doc, ctx, schema, accessor) {
         break;
       }
       case "max_length": {
-        const max = numericOperand(def.maximum, "max_length");
-        const len = codePointLengthVar(doc, ctx, currentAccessor, `${currentAccessor}.length > ${max}`);
-        doc.write(`if (${len} > ${max}) return INVALID;`);
+        const max2 = numericOperand(def.maximum, "max_length");
+        const len = codePointLengthVar(doc, ctx, currentAccessor, `${currentAccessor}.length > ${max2}`);
+        doc.write(`if (${len} > ${max2}) return INVALID;`);
         break;
       }
       case "length_equals": {
@@ -42176,8 +42176,8 @@ function generateNullableCheck(doc, ctx, schema, accessor, buildsValue = true) {
   return outputVar;
 }
 function generateSizeGate(doc, schema, size) {
-  for (const [max, check2] of sizeCaps(schema._zod.def.checks)) {
-    doc.write(`if (${size} > ${numericOperand(max, check2._zod.def.check)}) return INVALID;`);
+  for (const [max2, check2] of sizeCaps(schema._zod.def.checks)) {
+    doc.write(`if (${size} > ${numericOperand(max2, check2._zod.def.check)}) return INVALID;`);
   }
 }
 function generateArrayCheck(doc, ctx, schema, accessor, buildsValue = true) {
@@ -43850,7 +43850,7 @@ function handleUnrepresentable(schema, ctx, json2, params, message) {
   return true;
 }
 function processSchema(schema, ctx, _params = { path: [], schemaPath: [] }) {
-  var _a3;
+  var _a4;
   const def = schema._zod.def;
   const seen = ctx.seen.get(schema);
   if (seen) {
@@ -43900,7 +43900,7 @@ function processSchema(schema, ctx, _params = { path: [], schemaPath: [] }) {
     delete result.schema.default;
   }
   if (ctx.io === "input" && "_prefault" in result.schema)
-    (_a3 = result.schema).default ?? (_a3.default = result.schema._prefault);
+    (_a4 = result.schema).default ?? (_a4.default = result.schema._prefault);
   delete result.schema._prefault;
   const _result = ctx.seen.get(schema);
   return _result.schema;
@@ -51783,7 +51783,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
+        await new Promise((resolve7) => setTimeout(resolve7, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error62) {
@@ -51800,7 +51800,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve4, reject) => {
+    return new Promise((resolve7, reject) => {
       const earlyReject = (error62) => {
         reject(error62);
       };
@@ -51878,7 +51878,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve4(parseResult.data);
+            resolve7(parseResult.data);
           }
         } catch (error62) {
           reject(error62);
@@ -52140,12 +52140,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve4, reject) => {
+    return new Promise((resolve7, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve4, interval);
+      const timeoutId = setTimeout(resolve7, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -53002,18 +53002,18 @@ var ExperimentalMcpServerTasks = class {
   constructor(_mcpServer) {
     this._mcpServer = _mcpServer;
   }
-  registerToolTask(name, config2, handler) {
-    const execution = { taskSupport: "required", ...config2.execution };
+  registerToolTask(name, config3, handler) {
+    const execution = { taskSupport: "required", ...config3.execution };
     if (execution.taskSupport === "forbidden") {
       throw new Error(`Cannot register task-based tool '${name}' with taskSupport 'forbidden'. Use registerTool() instead.`);
     }
     const mcpServerInternal = this._mcpServer;
-    return mcpServerInternal._createRegisteredTool(name, config2.title, config2.description, config2.inputSchema, config2.outputSchema, config2.annotations, execution, config2._meta, handler);
+    return mcpServerInternal._createRegisteredTool(name, config3.title, config3.description, config3.inputSchema, config3.outputSchema, config3.annotations, execution, config3._meta, handler);
   }
 };
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js
-function toolInputElementCount(value, max) {
+function toolInputElementCount(value, max2) {
   let count = 0;
   const stack = [value];
   while (stack.length > 0) {
@@ -53022,7 +53022,7 @@ function toolInputElementCount(value, max) {
       continue;
     if (Array.isArray(node2)) {
       for (const child of node2) {
-        if (++count > max)
+        if (++count > max2)
           return count;
         if (child !== null && typeof child === "object")
           stack.push(child);
@@ -53031,7 +53031,7 @@ function toolInputElementCount(value, max) {
       for (const key in node2) {
         if (!Object.prototype.hasOwnProperty.call(node2, key))
           continue;
-        if (++count > max)
+        if (++count > max2)
           return count;
         const child = node2[key];
         if (child !== null && typeof child === "object")
@@ -53285,7 +53285,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
+      await new Promise((resolve7) => setTimeout(resolve7, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -53486,12 +53486,12 @@ var McpServer = class {
       return registeredResourceTemplate;
     }
   }
-  registerResource(name, uriOrTemplate, config2, readCallback) {
+  registerResource(name, uriOrTemplate, config3, readCallback) {
     if (typeof uriOrTemplate === "string") {
       if (this._registeredResources[uriOrTemplate]) {
         throw new Error(`Resource ${uriOrTemplate} is already registered`);
       }
-      const registeredResource = this._createRegisteredResource(name, config2.title, uriOrTemplate, config2, readCallback);
+      const registeredResource = this._createRegisteredResource(name, config3.title, uriOrTemplate, config3, readCallback);
       this.setResourceRequestHandlers();
       this.sendResourceListChanged();
       return registeredResource;
@@ -53499,7 +53499,7 @@ var McpServer = class {
       if (this._registeredResourceTemplates[name]) {
         throw new Error(`Resource template ${name} is already registered`);
       }
-      const registeredResourceTemplate = this._createRegisteredResourceTemplate(name, config2.title, uriOrTemplate, config2, readCallback);
+      const registeredResourceTemplate = this._createRegisteredResourceTemplate(name, config3.title, uriOrTemplate, config3, readCallback);
       this.setResourceRequestHandlers();
       this.sendResourceListChanged();
       return registeredResourceTemplate;
@@ -53697,11 +53697,11 @@ var McpServer = class {
   /**
    * Registers a tool with a config object and callback.
    */
-  registerTool(name, config2, cb) {
+  registerTool(name, config3, cb) {
     if (this._registeredTools[name]) {
       throw new Error(`Tool ${name} is already registered`);
     }
-    const { title, description, inputSchema, outputSchema, annotations, _meta } = config2;
+    const { title, description, inputSchema, outputSchema, annotations, _meta } = config3;
     return this._createRegisteredTool(name, title, description, inputSchema, outputSchema, annotations, { taskSupport: "forbidden" }, _meta, cb);
   }
   prompt(name, ...rest) {
@@ -53725,11 +53725,11 @@ var McpServer = class {
   /**
    * Registers a prompt with a config object and callback.
    */
-  registerPrompt(name, config2, cb) {
+  registerPrompt(name, config3, cb) {
     if (this._registeredPrompts[name]) {
       throw new Error(`Prompt ${name} is already registered`);
     }
-    const { title, description, argsSchema } = config2;
+    const { title, description, argsSchema } = config3;
     const registeredPrompt = this._createRegisteredPrompt(name, title, description, argsSchema, cb);
     this.setPromptRequestHandlers();
     this.sendPromptListChanged();
@@ -53949,29 +53949,297 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve4) => {
+    return new Promise((resolve7) => {
       const json2 = serializeMessage(message);
       if (this._stdout.write(json2)) {
-        resolve4();
+        resolve7();
       } else {
-        this._stdout.once("drain", resolve4);
+        this._stdout.once("drain", resolve7);
       }
     });
   }
 };
 
 // src/client.ts
+import { readFileSync as readFileSync2 } from "node:fs";
+import { resolve as resolve2, dirname } from "node:path";
+
+// src/prAttachment.ts
+import { basename, extname } from "node:path";
+var SCREENSHOT_EXTENSIONS = [".png", ".jpg", ".jpeg"];
+function isSupportedScreenshot(fileName) {
+  const extension = extname(fileName).toLowerCase();
+  return SCREENSHOT_EXTENSIONS.includes(extension);
+}
+function attachmentName(filePath, override) {
+  const name = override ?? basename(filePath);
+  if (name === "") {
+    throw new Error("Attachment name is empty");
+  }
+  if (name.includes("/") || name.includes("\\")) {
+    throw new Error(`Attachment name "${name}" contains a path separator`);
+  }
+  if (name.includes("..")) {
+    throw new Error(`Attachment name "${name}" contains ".."`);
+  }
+  if (!isSupportedScreenshot(name)) {
+    const extension = extname(name) || "(none)";
+    throw new Error(
+      `Attachment name "${name}" has unsupported extension "${extension}" \u2014 screenshots only (${SCREENSHOT_EXTENSIONS.join(", ")})`
+    );
+  }
+  return name;
+}
+function pullRequestAttachmentPath(pullRequestId, fileName) {
+  return `/pullRequests/${pullRequestId}/attachments/${encodeURIComponent(fileName)}?api-version=7.1`;
+}
+function markdownImage(alt, url2) {
+  return `![${alt.replace(/[[\]]/g, (bracket) => `\\${bracket}`)}](${url2})`;
+}
+
+// src/config.ts
 import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { resolve } from "node:path";
+var fieldRef = external_exports.string().regex(/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+$/, "expected a field reference like 'Microsoft.VSTS.Common.Priority'");
+var regexSource = external_exports.string().refine((source) => {
+  try {
+    new RegExp(source);
+    return true;
+  } catch {
+    return false;
+  }
+}, "not a valid regular expression");
+var RESERVED_FLAG_NAMES = /* @__PURE__ */ new Set([
+  "id",
+  "title",
+  "type",
+  "state",
+  "description",
+  "acceptanceCriteria",
+  "assignedTo",
+  "tags",
+  "areaPath",
+  "iterationPath",
+  "url",
+  "resolvedReason",
+  "resolvedBy",
+  "relations",
+  "artifacts",
+  "prio",
+  "priority"
+]);
+var flagSchema = external_exports.union([
+  fieldRef.transform((field) => ({ field, description: void 0 })),
+  external_exports.object({ field: fieldRef, description: external_exports.string().min(1).optional() }).strict()
+]);
+var fileSchema = external_exports.object({
+  $schema: external_exports.string().optional(),
+  organization: external_exports.string().min(1).optional(),
+  project: external_exports.string().min(1).optional(),
+  repository: external_exports.string().min(1).optional(),
+  defaultTargetBranch: external_exports.string().min(1).optional(),
+  branchTicketPattern: regexSource.optional(),
+  priority: external_exports.object({
+    field: fieldRef,
+    values: external_exports.array(external_exports.string().min(1)).min(1).optional(),
+    defaultsByType: external_exports.record(external_exports.string(), external_exports.string().min(1)).optional()
+  }).strict().optional(),
+  flags: external_exports.record(external_exports.string().regex(/^[a-z][A-Za-z0-9]*$/, "flag names are camelCase identifiers"), flagSchema).refine((flags) => Object.keys(flags).every((name) => !RESERVED_FLAG_NAMES.has(name)), "a flag name collides with a core work item property").optional(),
+  candidates: external_exports.object({
+    types: external_exports.array(external_exports.string().min(1)).min(1).optional(),
+    typeRank: external_exports.record(external_exports.string(), external_exports.number().int()).optional(),
+    notStartedStates: external_exports.array(external_exports.string().min(1)).min(1).optional(),
+    mergedStates: external_exports.array(external_exports.string().min(1)).min(1).optional(),
+    excludedTags: external_exports.array(external_exports.string().min(1)).optional()
+  }).strict().optional(),
+  pullRequest: external_exports.object({
+    placeholderTitlePatterns: external_exports.array(regexSource).optional(),
+    placeholderDescriptionPatterns: external_exports.array(regexSource).optional()
+  }).strict().optional()
+}).strict();
+var DEFAULT_CANDIDATE_TYPES = ["Bug", "User Story", "Product Backlog Item", "Requirement", "Issue"];
+var DEFAULT_NOT_STARTED_STATES = ["New", "To Do", "Proposed"];
+var DEFAULT_MERGED_STATES = ["Closed", "Done", "Removed"];
+var DEFAULT_BRANCH_TICKET_PATTERN = "(?:^|/)(\\d+)(?=[._/-]|$)";
+var DEFAULT_TARGET_BRANCH = "main";
+function parseServerConfig(json2) {
+  const file2 = fileSchema.parse(json2 ?? {});
+  const types = file2.candidates?.types ?? DEFAULT_CANDIDATE_TYPES;
+  const flags = {};
+  for (const [name, flag] of Object.entries(file2.flags ?? {})) {
+    flags[name] = flag.description === void 0 ? { field: flag.field } : { field: flag.field, description: flag.description };
+  }
+  return {
+    organization: file2.organization,
+    project: file2.project,
+    repository: file2.repository,
+    defaultTargetBranch: file2.defaultTargetBranch ?? DEFAULT_TARGET_BRANCH,
+    branchTicketPattern: file2.branchTicketPattern ?? DEFAULT_BRANCH_TICKET_PATTERN,
+    priority: file2.priority,
+    flags,
+    candidates: {
+      types,
+      typeRank: file2.candidates?.typeRank ?? Object.fromEntries(types.map((type, index) => [type, index])),
+      notStartedStates: file2.candidates?.notStartedStates ?? DEFAULT_NOT_STARTED_STATES,
+      mergedStates: file2.candidates?.mergedStates ?? DEFAULT_MERGED_STATES,
+      excludedTags: file2.candidates?.excludedTags ?? []
+    },
+    pullRequest: {
+      placeholderTitlePatterns: file2.pullRequest?.placeholderTitlePatterns ?? [],
+      placeholderDescriptionPatterns: file2.pullRequest?.placeholderDescriptionPatterns ?? []
+    }
+  };
+}
+var DEFAULT_CONFIG = parseServerConfig({});
+function loadProjectConfig(path) {
+  let text3;
+  try {
+    text3 = readFileSync(path, "utf-8");
+  } catch {
+    return DEFAULT_CONFIG;
+  }
+  try {
+    return parseServerConfig(JSON.parse(text3));
+  } catch (error62) {
+    const detail = error62 instanceof external_exports.ZodError ? external_exports.prettifyError(error62) : String(error62);
+    throw new Error(`Invalid ${path}: ${detail}`);
+  }
+}
+function projectDir() {
+  return process.env.CLAUDE_PROJECT_DIR || process.cwd();
+}
+function projectConfigPath(root = projectDir()) {
+  return resolve(root, ".claude", "azure-devops.json");
+}
+
+// src/client.ts
+var TRUSTED_HOST = /(^|\.)(dev\.azure\.com|visualstudio\.com)$/;
+function isTrustedAzureDevOpsUrl(url2) {
+  const parsed = new URL(url2);
+  return parsed.protocol === "https:" && TRUSTED_HOST.test(parsed.hostname);
+}
 var AzureDevOpsClient = class {
-  constructor(config2) {
-    this.config = config2;
-    const project = encodeURIComponent(config2.project);
-    this.baseUrl = `https://dev.azure.com/${config2.org}/${project}/_apis`;
-    this.authHeader = "Basic " + Buffer.from(`:${config2.pat}`).toString("base64");
+  constructor(config3) {
+    this.config = config3;
+    const project = encodeURIComponent(config3.project);
+    this.baseUrl = `https://dev.azure.com/${config3.org}/${project}/_apis`;
+    this.authHeader = "Basic " + Buffer.from(`:${config3.pat}`).toString("base64");
   }
   baseUrl;
   authHeader;
+  get repoPath() {
+    return `/git/repositories/${encodeURIComponent(this.config.repo)}`;
+  }
+  /** Web URL of a pull request, for display to the user. */
+  pullRequestWebUrl(id) {
+    return `https://dev.azure.com/${this.config.org}/${encodeURIComponent(this.config.project)}/_git/${encodeURIComponent(this.config.repo)}/pullrequest/${id}`;
+  }
+  /** List pull requests whose source is the given branch. */
+  async findPullRequests(branch, status) {
+    const sourceRef = encodeURIComponent(`refs/heads/${branch}`);
+    const result = await this.request(
+      `${this.repoPath}/pullrequests?searchCriteria.sourceRefName=${sourceRef}&searchCriteria.status=${status}&api-version=7.1`
+    );
+    return result.value;
+  }
+  /** Fetch a single pull request by ID. */
+  async getPullRequest(id) {
+    return this.request(
+      `${this.repoPath}/pullrequests/${id}?api-version=7.1`
+    );
+  }
+  /** Update title and/or description of a pull request. */
+  async updatePullRequest(id, patch) {
+    return this.request(
+      `${this.repoPath}/pullrequests/${id}?api-version=7.1`,
+      { method: "PATCH", body: JSON.stringify(patch) }
+    );
+  }
+  /** Create a pull request, optionally linked to work items. */
+  async createPullRequest(body) {
+    return this.request(
+      `${this.repoPath}/pullrequests?api-version=7.1`,
+      { method: "POST", body: JSON.stringify(body) }
+    );
+  }
+  /** Add a reviewer to a pull request by identity id. */
+  async addPullRequestReviewer(id, reviewerId, isRequired) {
+    return this.request(
+      `${this.repoPath}/pullrequests/${id}/reviewers/${encodeURIComponent(reviewerId)}?api-version=7.1`,
+      { method: "PUT", body: JSON.stringify({ isRequired }) }
+    );
+  }
+  /** Fetch an absolute Azure DevOps URL and return the raw response body. */
+  async fetchBinary(url2) {
+    if (!isTrustedAzureDevOpsUrl(url2)) {
+      throw new Error(`Refusing to send credentials to untrusted URL "${new URL(url2).origin}"`);
+    }
+    const response = await fetch(url2, { headers: { Authorization: this.authHeader } });
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(`Azure DevOps API ${response.status}: ${response.statusText} \u2014 ${body.slice(0, 300)}`);
+    }
+    return Buffer.from(await response.arrayBuffer());
+  }
+  /** Resolve pipeline definitions by exact name (case-insensitive). */
+  async findBuildDefinitions(name) {
+    const result = await this.request(
+      `/build/definitions?name=${encodeURIComponent(name)}&api-version=7.1`
+    );
+    return result.value;
+  }
+  /** List builds, newest first. */
+  async listBuilds(filter) {
+    const query = [`$top=${filter.top}`, "queryOrder=queueTimeDescending", "api-version=7.1"];
+    if (filter.definitionId !== void 0) query.push(`definitions=${filter.definitionId}`);
+    if (filter.branch !== void 0) {
+      query.push(`branchName=${encodeURIComponent(`refs/heads/${filter.branch}`)}`);
+    }
+    if (filter.result !== void 0) query.push(`resultFilter=${filter.result}`);
+    const result = await this.request(`/build/builds?${query.join("&")}`);
+    return result.value;
+  }
+  async getBuild(id) {
+    return this.request(`/build/builds/${id}?api-version=7.1`);
+  }
+  async getBuildTimeline(id) {
+    const result = await this.request(
+      `/build/builds/${id}/timeline?api-version=7.1`
+    );
+    return result.records;
+  }
+  /** Plain-text log of one timeline record. */
+  async getBuildLog(buildId, logId) {
+    const buffer = await this.fetchBinary(`${this.baseUrl}/build/builds/${buildId}/logs/${logId}?api-version=7.1`);
+    return buffer.toString("utf8");
+  }
+  async getTestRunsForBuild(buildUri) {
+    const result = await this.request(
+      `/test/runs?buildUri=${encodeURIComponent(buildUri)}&api-version=7.1`
+    );
+    return result.value;
+  }
+  async getFailedTestResults(runId, top) {
+    const result = await this.request(
+      `/test/runs/${runId}/results?outcomes=Failed&$top=${top}&api-version=7.1`
+    );
+    return result.value;
+  }
+  async listBuildArtifacts(buildId) {
+    const result = await this.request(
+      `/build/builds/${buildId}/artifacts?api-version=7.1`
+    );
+    return result.value;
+  }
+  /**
+   * Download an artifact. With `subPath` (relative to the artifact root,
+   * e.g. "/index.html") only that file; otherwise the whole artifact as zip.
+   */
+  async downloadArtifact(artifact, subPath) {
+    const base = artifact.resource.downloadUrl.replace(/\?.*$/, "");
+    const url2 = subPath === void 0 ? `${base}?format=zip` : `${base}?format=file&subPath=${encodeURIComponent(subPath).replace(/%2F/g, "/")}`;
+    return this.fetchBinary(url2);
+  }
   /** Build the API URL for a work item (used for relation links). */
   workItemUrl(id) {
     return `${this.baseUrl}/wit/workitems/${id}`;
@@ -54007,13 +54275,64 @@ var AzureDevOpsClient = class {
     );
   }
   /** Fetch multiple work items by IDs (batch, max 200). */
-  async getWorkItems(ids) {
+  async getWorkItems(ids, options = {}) {
     if (ids.length === 0) return [];
     const idsParam = ids.slice(0, 200).join(",");
+    const errorPolicy = options.omitErrors ? "&errorPolicy=Omit" : "";
     const result = await this.request(
-      `/wit/workitems?ids=${idsParam}&$expand=all&api-version=7.1`
+      `/wit/workitems?ids=${idsParam}&$expand=all${errorPolicy}&api-version=7.1`
+    );
+    return result.value.filter((item) => item !== null);
+  }
+  /** The identity the PAT belongs to (what WIQL calls @Me). */
+  async getAuthenticatedUser() {
+    const data = JSON.parse(
+      (await this.fetchBinary(`https://dev.azure.com/${this.config.org}/_apis/connectionData`)).toString("utf8")
+    );
+    const user = data.authenticatedUser;
+    const uniqueName = user.properties?.Account?.$value;
+    if (!uniqueName) throw new Error("connectionData returned no account name for the PAT owner");
+    return { id: user.id, displayName: user.providerDisplayName, uniqueName };
+  }
+  /** Active pull requests created by the given identity. */
+  async listActivePullRequestsByCreator(creatorId) {
+    const result = await this.request(
+      `${this.repoPath}/pullrequests?searchCriteria.status=active&searchCriteria.creatorId=${encodeURIComponent(creatorId)}&api-version=7.1`
     );
     return result.value;
+  }
+  /** Files a pull request changes against its target, from its latest iteration. */
+  async getPullRequestChangedFiles(id) {
+    const iterations = await this.request(
+      `${this.repoPath}/pullrequests/${id}/iterations?api-version=7.1`
+    );
+    const latest = iterations.value.at(-1);
+    if (latest === void 0) return [];
+    const files = [];
+    let skip = 0;
+    for (; ; ) {
+      const page = await this.request(
+        `${this.repoPath}/pullrequests/${id}/iterations/${latest.id}/changes?$compareTo=0&$top=2000&$skip=${skip}&api-version=7.1`
+      );
+      for (const entry of page.changeEntries) {
+        if (entry.item.path !== void 0 && !entry.item.isFolder) files.push(entry.item.path);
+      }
+      if (!page.nextSkip) return files;
+      skip = page.nextSkip;
+    }
+  }
+  /** Ids of every work item below `rootId` in the parent/child tree, at any depth. */
+  async getDescendantIds(rootId) {
+    const result = await this.request(
+      `/wit/wiql?api-version=7.1`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          query: `SELECT [System.Id] FROM WorkItemLinks WHERE [Source].[System.Id] = ${rootId} AND [System.Links.LinkType] = 'System.LinkTypes.Hierarchy-Forward' MODE (Recursive)`
+        })
+      }
+    );
+    return result.workItemRelations.filter((relation) => relation.source !== null).map((relation) => relation.target.id);
   }
   /** Execute a WIQL query and return matching work item IDs. */
   async queryWiql(wiql, top = 20) {
@@ -54059,22 +54378,22 @@ var AzureDevOpsClient = class {
     );
   }
   /** Add a comment to a work item. */
-  async addComment(id, text) {
+  async addComment(id, text3) {
     return this.request(
       `/wit/workitems/${id}/comments?api-version=7.1-preview.4`,
       {
         method: "POST",
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text: text3 })
       }
     );
   }
   /** Update an existing comment on a work item. */
-  async updateComment(id, commentId, text) {
+  async updateComment(id, commentId, text3) {
     return this.request(
       `/wit/workitems/${id}/comments/${commentId}?api-version=7.1-preview.4`,
       {
         method: "PATCH",
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text: text3 })
       }
     );
   }
@@ -54110,7 +54429,7 @@ var AzureDevOpsClient = class {
   }
   /**
    * Upload a binary as an attachment. Returns the attachment id + URL — the
-   * caller still needs to link it to a work item via a relation update.
+   * caller still needs to link it to a work item via `addAttachmentRelation`.
    */
   async uploadAttachment(fileName, content) {
     const url2 = `${this.baseUrl}/wit/attachments?fileName=${encodeURIComponent(fileName)}&api-version=7.1`;
@@ -54130,10 +54449,41 @@ var AzureDevOpsClient = class {
     }
     return response.json();
   }
+  /**
+   * Upload a binary as an attachment of a pull request. Only `url` is read
+   * from the response — the shape of the rest is not verified.
+   */
+  async uploadPullRequestAttachment(pullRequestId, fileName, content) {
+    const url2 = `${this.baseUrl}${this.repoPath}${pullRequestAttachmentPath(pullRequestId, fileName)}`;
+    const response = await fetch(url2, {
+      method: "POST",
+      headers: {
+        Authorization: this.authHeader,
+        "Content-Type": "application/octet-stream"
+      },
+      body: new Uint8Array(content)
+    });
+    if (!response.ok) {
+      const body2 = await response.text().catch(() => "");
+      throw new Error(
+        `Azure DevOps API ${response.status}: ${response.statusText} \u2014 ${body2}`
+      );
+    }
+    const body = await response.text();
+    let result = null;
+    try {
+      result = JSON.parse(body);
+    } catch {
+    }
+    if (typeof result?.url !== "string" || result.url === "") {
+      throw new Error(`Pull request attachment response carries no url \u2014 ${body.slice(0, 300)}`);
+    }
+    return { url: result.url };
+  }
 };
 function loadEnvFile(path) {
   try {
-    const content = readFileSync(path, "utf-8");
+    const content = readFileSync2(path, "utf-8");
     const vars = {};
     for (const line of content.split(/\r?\n/)) {
       const trimmed = line.trim();
@@ -54147,30 +54497,15 @@ function loadEnvFile(path) {
     return {};
   }
 }
-function projectDir() {
-  return process.env.CLAUDE_PROJECT_DIR || process.cwd();
-}
-function loadProjectConfig(path) {
-  try {
-    const json2 = JSON.parse(readFileSync(path, "utf-8"));
-    const vars = {};
-    if (json2.organization) vars.AZURE_DEVOPS_ORG = json2.organization;
-    if (json2.project) vars.AZURE_DEVOPS_PROJECT = json2.project;
-    return vars;
-  } catch {
-    return {};
-  }
-}
-function createClientFromEnv() {
+function createClientFromEnv(config3) {
   const root = projectDir();
-  const scriptDir = dirname(resolve(process.argv[1]));
-  const configPath = resolve(root, ".claude", "azure-devops.json");
-  const projectConfig = loadProjectConfig(configPath);
+  const scriptDir = dirname(resolve2(process.argv[1]));
+  const configPath = projectConfigPath(root);
   const candidates = [
-    resolve(root, ".claude", "azure-devops.env"),
-    resolve(root, ".claude", "mcp-servers", "azure-devops", ".env"),
+    resolve2(root, ".claude", "azure-devops.env"),
+    resolve2(root, ".claude", "mcp-servers", "azure-devops", ".env"),
     // legacy: server copied into the project
-    resolve(scriptDir, "..", ".env")
+    resolve2(scriptDir, "..", ".env")
   ];
   let envFile = {};
   for (const candidate of candidates) {
@@ -54183,21 +54518,77 @@ function createClientFromEnv() {
   if (Object.keys(envFile).length === 0) {
     console.error(`[azure-devops-mcp] No env file found. Tried: ${candidates.join(", ")}`);
   }
-  const org = process.env.AZURE_DEVOPS_ORG || projectConfig.AZURE_DEVOPS_ORG || envFile.AZURE_DEVOPS_ORG;
-  const project = process.env.AZURE_DEVOPS_PROJECT || projectConfig.AZURE_DEVOPS_PROJECT || envFile.AZURE_DEVOPS_PROJECT;
+  const org = process.env.AZURE_DEVOPS_ORG || config3.organization || envFile.AZURE_DEVOPS_ORG;
+  const project = process.env.AZURE_DEVOPS_PROJECT || config3.project || envFile.AZURE_DEVOPS_PROJECT;
   const pat = process.env.AZURE_DEVOPS_PAT || envFile.AZURE_DEVOPS_PAT;
-  console.error(`[azure-devops-mcp] org=${org ?? "(not set)"}, project=${project ?? "(not set)"}, pat-length=${(pat ?? "").length}`);
-  if (!org || !project || !pat) {
+  const repo = process.env.AZURE_DEVOPS_REPO || config3.repository || envFile.AZURE_DEVOPS_REPO || project;
+  console.error(`[azure-devops-mcp] org=${org ?? "(not set)"}, project=${project ?? "(not set)"}, repo=${repo ?? "(not set)"}, pat-length=${(pat ?? "").length}`);
+  if (!org || !project || !repo || !pat) {
     throw new Error(
       `Missing config: organization/project in ${configPath} (or AZURE_DEVOPS_ORG/AZURE_DEVOPS_PROJECT), AZURE_DEVOPS_PAT as env var or in ${candidates[0]}`
     );
   }
-  return new AzureDevOpsClient({ org, project, pat });
+  return new AzureDevOpsClient({ org, project, repo, pat });
 }
 
 // src/tools/read.ts
 import { mkdirSync, writeFileSync } from "node:fs";
-import { resolve as resolve2, join } from "node:path";
+import { resolve as resolve3, join } from "node:path";
+
+// src/candidates.ts
+var NO_PRIO_RANK = 99;
+function quoteWiql(value) {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+function buildCandidateWiql(config3, descendantIds) {
+  const quoted = (values) => values.map(quoteWiql).join(", ");
+  const conditions = [
+    "[System.TeamProject] = @project",
+    `[System.WorkItemType] IN (${quoted(config3.types)})`,
+    `[System.State] IN (${quoted(config3.notStartedStates)})`
+  ];
+  if (descendantIds === void 0) {
+    conditions.push("[System.AssignedTo] = @Me");
+  } else {
+    conditions.push(`[System.Id] IN (${descendantIds.map((id) => Math.trunc(id)).join(", ")})`, "([System.AssignedTo] = @Me OR [System.AssignedTo] = '')");
+  }
+  return `SELECT [System.Id] FROM WorkItems WHERE ${conditions.join(" AND ")} ORDER BY [System.CreatedDate] ASC`;
+}
+function parsePrio(value, values) {
+  if (typeof value === "number") return value;
+  if (typeof value !== "string") return null;
+  const match = /^\s*(\d+)/.exec(value);
+  if (match) return Number(match[1]);
+  const index = values?.indexOf(value) ?? -1;
+  return index >= 0 ? index + 1 : null;
+}
+function rankCandidates(items, config3, excludeTags = config3.excludedTags, predecessorStates = /* @__PURE__ */ new Map()) {
+  const excludedTags = new Set(excludeTags.map((tag) => tag.toLowerCase()));
+  const mergedStates = new Set(config3.mergedStates.map((state) => state.toLowerCase()));
+  const ranked = [];
+  const excluded = [];
+  for (const item of items) {
+    const matchedTag = item.tags.find((tag) => excludedTags.has(tag.toLowerCase()));
+    if (matchedTag !== void 0) {
+      excluded.push({ id: item.id, title: item.title, reason: `tag ${matchedTag}` });
+      continue;
+    }
+    const blocking = (item.predecessorIds ?? []).find((id) => !mergedStates.has((predecessorStates.get(id) ?? "").toLowerCase()));
+    if (blocking !== void 0) {
+      excluded.push({ id: item.id, title: item.title, reason: `waiting for predecessor #${blocking} (${predecessorStates.get(blocking) ?? "unknown"})` });
+      continue;
+    }
+    ranked.push(item);
+  }
+  const unrankedType = Math.max(-1, ...Object.values(config3.typeRank)) + 1;
+  const typeRank = (type) => config3.typeRank[type] ?? unrankedType;
+  ranked.sort((left, right) => (left.prio ?? NO_PRIO_RANK) - (right.prio ?? NO_PRIO_RANK) || typeRank(left.type) - typeRank(right.type) || left.createdDate.localeCompare(right.createdDate));
+  return { ranked, excluded };
+}
+function findReviewer(reviewers, reviewerId) {
+  const wanted = reviewerId.toLowerCase();
+  return reviewers?.find((reviewer) => reviewer.id.toLowerCase() === wanted);
+}
 
 // src/mapper.ts
 var import_turndown = __toESM(require_turndown_cjs(), 1);
@@ -55750,7 +56141,7 @@ function extractRelations(raw) {
   }
   return { relations, artifacts };
 }
-function mapWorkItem(raw) {
+function mapWorkItem(raw, config3 = { flags: {} }) {
   const fields = raw.fields;
   const htmlLink = raw._links?.html?.href;
   const assignedTo = fields["System.AssignedTo"];
@@ -55770,6 +56161,7 @@ function mapWorkItem(raw) {
     areaPath: fields["System.AreaPath"] ?? "",
     iterationPath: fields["System.IterationPath"] ?? "",
     url: htmlLink ?? raw.url,
+    ...Object.fromEntries(Object.entries(config3.flags).map(([name, flag]) => [name, fields[flag.field] === true])),
     resolvedReason: fields["Microsoft.VSTS.Common.ResolvedReason"] || void 0,
     resolvedBy: resolvedBy?.displayName || void 0,
     relations,
@@ -55784,6 +56176,21 @@ function mapWorkItemSummary(raw) {
     state: raw.fields["System.State"] ?? ""
   };
 }
+function mapCandidate(raw, priority) {
+  const prioLabel = priority === void 0 ? void 0 : raw.fields[priority.field];
+  return {
+    id: raw.id,
+    title: raw.fields["System.Title"] ?? "",
+    type: raw.fields["System.WorkItemType"] ?? "",
+    state: raw.fields["System.State"] ?? "",
+    prio: parsePrio(prioLabel, priority?.values),
+    prioLabel: typeof prioLabel === "string" || typeof prioLabel === "number" ? String(prioLabel) : "",
+    tags: parseTags(raw.fields["System.Tags"]),
+    createdDate: typeof raw.fields["System.CreatedDate"] === "string" ? raw.fields["System.CreatedDate"] : "",
+    assignedTo: raw.fields["System.AssignedTo"]?.displayName ?? "",
+    predecessorIds: (raw.relations ?? []).filter((relation) => relation.rel === "System.LinkTypes.Dependency-Reverse").map((relation) => workItemIdFromUrl(relation.url)).filter((id) => id !== void 0)
+  };
+}
 function mapComment(raw) {
   return {
     id: raw.id,
@@ -55794,14 +56201,14 @@ function mapComment(raw) {
 }
 
 // src/tools/read.ts
-function registerReadTools(server2, client2) {
+function registerReadTools(server2, client2, config3) {
   server2.tool(
     "ado_get_work_item",
     "Fetch a single Azure DevOps work item by ID. Returns title, description, acceptance criteria, type, state, assignee, tags, relations (parent/child/related/duplicates) and artifact links (branches, PRs, commits). HTML fields are converted to Markdown. For full context including the resolved content of linked items, prefer ado_get_work_item_with_context.",
     { id: external_exports.number().int().positive().describe("Work item ID") },
     async ({ id }) => {
       const raw = await client2.getWorkItem(id);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config3);
       return {
         content: [{ type: "text", text: JSON.stringify(workItem, null, 2) }]
       };
@@ -55816,10 +56223,10 @@ function registerReadTools(server2, client2) {
     },
     async ({ id, includeComments }) => {
       const rawMain = await client2.getWorkItem(id);
-      const main = mapWorkItem(rawMain);
+      const main = mapWorkItem(rawMain, config3);
       const linkedIds = main.relations.map((r) => r.id).filter((wid) => typeof wid === "number" && wid !== id);
       const uniqueIds = [...new Set(linkedIds)];
-      const linkedItems = uniqueIds.length ? (await client2.getWorkItems(uniqueIds)).map(mapWorkItem) : [];
+      const linkedItems = uniqueIds.length ? (await client2.getWorkItems(uniqueIds)).map((raw) => mapWorkItem(raw, config3)) : [];
       const byId = new Map(linkedItems.map((wi) => [wi.id, wi]));
       const parents = [];
       const children = [];
@@ -55897,6 +56304,50 @@ function registerReadTools(server2, client2) {
     }
   );
   server2.tool(
+    "ado_list_candidate_work_items",
+    `List work items assigned to the PAT owner (with epicId: below that epic, assigned to the PAT owner or unassigned) that nobody has started yet (types ${config3.candidates.types.join("/")}, states ${config3.candidates.notStartedStates.join("/")}), ranked to pick the next one: ${config3.priority ? `${config3.priority.field} ascending (none last), then ` : ""}by type (${typeOrder(config3)}), then oldest first. Work items carrying an excluded tag, or with a predecessor (Dependency-Reverse link) not yet ${config3.candidates.mergedStates.join("/")}, are listed separately with the reason. The query reads at most the oldest 200 matching items; when it hits that cap the output carries "truncated": true and newer tickets are missing from the ranking.`,
+    {
+      top: external_exports.number().int().min(1).max(50).default(10).describe("Max ranked candidates to return (default 10)"),
+      excludeTags: external_exports.array(external_exports.string().min(1)).default(config3.candidates.excludedTags).describe(`Tags that exclude a work item, case-insensitive (default: ${config3.candidates.excludedTags.join(", ") || "none"})`),
+      epicId: external_exports.number().int().positive().optional().describe('Only tickets below this work item (any depth); then unassigned tickets count too \u2014 assignedTo is "" for them')
+    },
+    async ({ top, excludeTags, epicId }) => {
+      let epic;
+      let descendantIds;
+      if (epicId !== void 0) {
+        descendantIds = await client2.getDescendantIds(epicId);
+        const [epicItem] = await client2.getWorkItems([epicId], { omitErrors: true });
+        epic = { epicId, epicTitle: epicItem?.fields["System.Title"] ?? "(not found)", descendants: descendantIds.length };
+        if (descendantIds.length === 0) {
+          return { content: [{ type: "text", text: JSON.stringify({ ...epic, candidates: [], total: 0, excluded: [] }, null, 2) }] };
+        }
+      }
+      const wiql = buildCandidateWiql(config3.candidates, descendantIds);
+      const wiqlCap = 200;
+      const result = await client2.queryWiql(wiql, wiqlCap);
+      const truncated = result.workItems.length >= wiqlCap;
+      const candidates = (await client2.getWorkItems(result.workItems.map((wi) => wi.id))).map((raw) => mapCandidate(raw, config3.priority));
+      const predecessorIds = [...new Set(candidates.flatMap((candidate) => candidate.predecessorIds))];
+      const predecessorStates = new Map(
+        // A deleted or unreadable predecessor is omitted, stays unknown and therefore blocks — it must not fail the listing.
+        (await client2.getWorkItems(predecessorIds, { omitErrors: true })).map((raw) => [raw.id, raw.fields["System.State"] ?? ""])
+      );
+      const { ranked, excluded } = rankCandidates(candidates, config3.candidates, excludeTags, predecessorStates);
+      return {
+        content: [{ type: "text", text: JSON.stringify({ ...epic, candidates: ranked.slice(0, top), total: ranked.length, excluded, ...truncated ? { truncated: true } : {} }, null, 2) }]
+      };
+    }
+  );
+  server2.tool(
+    "ado_whoami",
+    "The Azure DevOps identity the PAT belongs to \u2014 the one WIQL calls @Me. Use its uniqueName (email) when assigning a work item to yourself; the git user name need not match an ADO identity.",
+    {},
+    async () => {
+      const user = await client2.getAuthenticatedUser();
+      return { content: [{ type: "text", text: JSON.stringify(user, null, 2) }] };
+    }
+  );
+  server2.tool(
     "ado_get_work_item_comments",
     "Get comments/discussion for an Azure DevOps work item. Useful for understanding context and decisions.",
     {
@@ -55920,14 +56371,14 @@ function registerReadTools(server2, client2) {
     },
     async ({ workItemId, outputDir }) => {
       const raw = await client2.getWorkItem(workItemId);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config3);
       const attachments = workItem.artifacts.attachments;
       if (attachments.length === 0) {
         return {
           content: [{ type: "text", text: `No attachments found on work item #${workItemId}.` }]
         };
       }
-      const dir = outputDir ?? resolve2(projectDir(), ".claude", "input", String(workItemId));
+      const dir = resolve3(projectDir(), outputDir ?? join(".claude", "input", String(workItemId)));
       mkdirSync(dir, { recursive: true });
       const results = [];
       for (let i = 0; i < attachments.length; i++) {
@@ -55944,14 +56395,69 @@ function registerReadTools(server2, client2) {
     }
   );
 }
+function typeOrder(config3) {
+  const rank = config3.candidates.typeRank;
+  return Object.keys(rank).sort((left, right) => rank[left] - rank[right]).join(" before ") || "any";
+}
 function escapeWiql(value) {
   return value.replace(/'/g, "''");
 }
 
 // src/tools/write.ts
-import { readFileSync as readFileSync2, statSync } from "node:fs";
-import { basename, isAbsolute, resolve as resolve3 } from "node:path";
-function registerWriteTools(server2, client2) {
+import { readFileSync as readFileSync3, statSync } from "node:fs";
+import { basename as basename2, isAbsolute, resolve as resolve4 } from "node:path";
+
+// src/relations.ts
+var LINK_TYPE_REL = {
+  Related: "System.LinkTypes.Related",
+  Parent: "System.LinkTypes.Hierarchy-Reverse",
+  Child: "System.LinkTypes.Hierarchy-Forward"
+};
+var isWorkItemLink = (rel) => rel.startsWith("System.LinkTypes.") || rel.startsWith("Microsoft.VSTS.Common.");
+function linkTypeName(rel) {
+  const known = Object.keys(LINK_TYPE_REL).find((type) => LINK_TYPE_REL[type] === rel);
+  return known ?? rel;
+}
+function findRelations(relations, targetId, linkType) {
+  const target = new RegExp(`/workitems/${targetId}$`, "i");
+  return (relations ?? []).map((relation, index) => ({ relation, index })).filter(({ relation }) => isWorkItemLink(relation.rel) && target.test(relation.url)).filter(({ relation }) => linkType === void 0 || relation.rel === LINK_TYPE_REL[linkType]).map(({ relation, index }) => ({ index, rel: relation.rel }));
+}
+function planUnlink(rev2, relations, targetId, linkType) {
+  const matches = findRelations(relations, targetId, linkType);
+  if (matches.length === 0) {
+    return { kind: "none" };
+  }
+  if (matches.length > 1) {
+    return { kind: "ambiguous", matches };
+  }
+  const match = matches[0];
+  return {
+    kind: "remove",
+    match,
+    operations: [
+      { op: "test", path: "/rev", value: rev2 },
+      // `value: undefined` only satisfies the operation type; JSON.stringify drops it, so ADO receives a
+      // plain remove. A `null` here would be sent and is not part of a JSON-patch remove.
+      { op: "remove", path: `/relations/${match.index}`, value: void 0 }
+    ]
+  };
+}
+
+// src/tools/write.ts
+function priorityParam(config3) {
+  const priority = config3.priority;
+  if (priority === void 0) return {};
+  const base = priority.values ? external_exports.enum(priority.values) : external_exports.union([external_exports.string().min(1), external_exports.number().int()]);
+  const defaults = Object.entries(priority.defaultsByType ?? {}).map(([type, value]) => `${type} \u2192 '${value}'`).join(", ");
+  return { prio: base.optional().describe(`Priority (field ${priority.field})${defaults ? `. Defaults: ${defaults}` : ""}`) };
+}
+function flagParams(config3) {
+  return Object.fromEntries(Object.entries(config3.flags).map(([name, flag]) => [
+    name,
+    external_exports.boolean().optional().describe(flag.description ?? `Set the boolean field ${flag.field}`)
+  ]));
+}
+function registerWriteTools(server2, client2, config3) {
   server2.tool(
     "ado_create_work_item",
     "Create a new Azure DevOps work item. Returns the created item with its ID.",
@@ -55962,9 +56468,12 @@ function registerWriteTools(server2, client2) {
       assignedTo: external_exports.string().optional().describe("Display name or email of the assignee"),
       tags: external_exports.string().optional().describe("Semicolon-separated tags (e.g. 'Bug;Frontend')"),
       areaPath: external_exports.string().optional().describe("Area path (defaults to project root)"),
-      iterationPath: external_exports.string().optional().describe("Iteration path (defaults to project root)")
+      iterationPath: external_exports.string().optional().describe("Iteration path (defaults to project root)"),
+      ...priorityParam(config3)
     },
-    async ({ type, title, description, assignedTo, tags, areaPath, iterationPath }) => {
+    async (args) => {
+      const { type, title, description, assignedTo, tags, areaPath, iterationPath } = args;
+      const prio = args.prio;
       const ops = [
         { op: "add", path: "/fields/System.Title", value: title }
       ];
@@ -55973,8 +56482,9 @@ function registerWriteTools(server2, client2) {
       if (tags !== void 0) ops.push({ op: "add", path: "/fields/System.Tags", value: tags });
       if (areaPath !== void 0) ops.push({ op: "add", path: "/fields/System.AreaPath", value: areaPath });
       if (iterationPath !== void 0) ops.push({ op: "add", path: "/fields/System.IterationPath", value: iterationPath });
+      if (prio !== void 0 && config3.priority) ops.push({ op: "add", path: `/fields/${config3.priority.field}`, value: prio });
       const raw = await client2.createWorkItem(type, ops);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config3);
       return {
         content: [
           {
@@ -55998,7 +56508,7 @@ ${JSON.stringify(workItem, null, 2)}`
       const raw = await client2.updateWorkItem(id, [
         { op: "replace", path: "/fields/System.State", value: state }
       ]);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config3);
       return {
         content: [
           {
@@ -56013,27 +56523,33 @@ ${JSON.stringify(workItem, null, 2)}`
   );
   server2.tool(
     "ado_update_work_item",
-    "Update fields of an Azure DevOps work item. All fields are optional \u2014 only provided fields are changed. Supports title, description (Markdown), acceptance criteria (Markdown), state, and assignedTo.",
+    `Update fields of an Azure DevOps work item. All fields are optional \u2014 only provided fields are changed. Supports title, description (Markdown), acceptance criteria (Markdown), state, assignedTo${Object.keys(config3.flags).length ? `, and the boolean flags ${Object.keys(config3.flags).join(", ")}` : ""}.`,
     {
       id: external_exports.number().int().positive().describe("Work item ID"),
       title: external_exports.string().min(1).optional().describe("New title"),
       description: external_exports.string().optional().describe("New description (Markdown \u2014 converted to HTML automatically; raw HTML passes through if input starts with '<')"),
       acceptanceCriteria: external_exports.string().optional().describe("New acceptance criteria (Markdown \u2014 converted to HTML automatically; raw HTML passes through if input starts with '<')"),
       state: external_exports.string().min(1).optional().describe("New state (e.g. Active, Resolved, Closed)"),
-      assignedTo: external_exports.string().optional().describe("Display name or email of the assignee")
+      assignedTo: external_exports.string().optional().describe("Display name or email of the assignee"),
+      ...flagParams(config3)
     },
-    async ({ id, title, description, acceptanceCriteria, state, assignedTo }) => {
+    async (args) => {
+      const { id, title, description, acceptanceCriteria, state, assignedTo } = args;
       const ops = [];
       if (title !== void 0) ops.push({ op: "replace", path: "/fields/System.Title", value: title });
       if (description !== void 0) ops.push({ op: "replace", path: "/fields/System.Description", value: markdownToHtml(description) });
       if (acceptanceCriteria !== void 0) ops.push({ op: "replace", path: "/fields/Microsoft.VSTS.Common.AcceptanceCriteria", value: markdownToHtml(acceptanceCriteria) });
       if (state !== void 0) ops.push({ op: "replace", path: "/fields/System.State", value: state });
       if (assignedTo !== void 0) ops.push({ op: "replace", path: "/fields/System.AssignedTo", value: assignedTo });
+      for (const [name, flag] of Object.entries(config3.flags)) {
+        const value = args[name];
+        if (typeof value === "boolean") ops.push({ op: "replace", path: `/fields/${flag.field}`, value });
+      }
       if (ops.length === 0) {
         return { content: [{ type: "text", text: "No fields provided \u2014 nothing to update." }] };
       }
       const raw = await client2.updateWorkItem(id, ops);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config3);
       const updatedFields = ops.map((o) => o.path.split("/").pop()).join(", ");
       return {
         content: [
@@ -56057,23 +56573,18 @@ ${JSON.stringify(workItem, null, 2)}`
       comment: external_exports.string().optional().describe("Optional comment on the link")
     },
     async ({ sourceId, targetId, linkType, comment }) => {
-      const linkTypeMap = {
-        Related: "System.LinkTypes.Related",
-        Parent: "System.LinkTypes.Hierarchy-Reverse",
-        Child: "System.LinkTypes.Hierarchy-Forward"
-      };
       const raw = await client2.updateWorkItem(sourceId, [
         {
           op: "add",
           path: "/relations/-",
           value: {
-            rel: linkTypeMap[linkType],
+            rel: LINK_TYPE_REL[linkType],
             url: client2.workItemUrl(targetId),
             attributes: { comment: comment ?? "" }
           }
         }
       ]);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config3);
       return {
         content: [
           {
@@ -56087,22 +56598,62 @@ ${JSON.stringify(workItem, null, 2)}`
     }
   );
   server2.tool(
+    "ado_unlink_work_items",
+    "Remove a link/relation between two Azure DevOps work items (the counterpart of ado_link_work_items). Removes nothing unless exactly one relation from sourceId to targetId matches; pass linkType when e.g. a Related and a Child link both exist. ADO removes the reverse direction itself.",
+    {
+      sourceId: external_exports.number().int().positive().describe("Work item to remove the link FROM"),
+      targetId: external_exports.number().int().positive().describe("Work item the link points to"),
+      linkType: external_exports.enum(["Related", "Parent", "Child"]).optional().describe("Only remove a link of this type")
+    },
+    async ({ sourceId, targetId, linkType }) => {
+      const current = await client2.getWorkItem(sourceId);
+      if (current.rev === void 0) {
+        throw new Error(`Work item #${sourceId} came back without a revision; refusing to patch its relations blind.`);
+      }
+      const plan = planUnlink(current.rev, current.relations, targetId, linkType);
+      const typeLabel = linkType ? ` (${linkType})` : "";
+      if (plan.kind === "none") {
+        return {
+          content: [{ type: "text", text: `No link #${sourceId} \u2192 #${targetId}${typeLabel} found \u2014 nothing changed.` }]
+        };
+      }
+      if (plan.kind === "ambiguous") {
+        const found = plan.matches.map((match) => linkTypeName(match.rel)).join(", ");
+        return {
+          content: [{ type: "text", text: `Several links #${sourceId} \u2192 #${targetId} (${found}) \u2014 nothing changed. Pass linkType to pick one.` }]
+        };
+      }
+      const raw = await client2.updateWorkItem(sourceId, plan.operations);
+      const workItem = mapWorkItem(raw, config3);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Removed link #${sourceId} \u2192 #${targetId} (${linkTypeName(plan.match.rel)}).
+
+${JSON.stringify(workItem, null, 2)}`
+          }
+        ]
+      };
+    }
+  );
+  server2.tool(
     "ado_upload_attachment",
     "Upload a local file as an attachment to an Azure DevOps work item. Reads the file from disk (MCP runs locally), uploads its bytes to the attachments endpoint, and links the resulting attachment to the work item. Prefer this over posting large content as a comment.",
     {
       workItemId: external_exports.number().int().positive().describe("Work item ID to attach the file to"),
-      filePath: external_exports.string().min(1).describe("Absolute or workspace-relative path to the local file"),
+      filePath: external_exports.string().min(1).describe("Absolute or project-relative path to the local file"),
       fileName: external_exports.string().optional().describe("Override the attachment file name (defaults to basename of filePath)"),
-      comment: external_exports.string().optional().describe("Optional comment shown next to the attachment in the Azure DevOps UI")
+      comment: external_exports.string().optional().describe("Optional comment shown next to the attachment in the ADO UI")
     },
     async ({ workItemId, filePath, fileName, comment }) => {
-      const absPath = isAbsolute(filePath) ? filePath : resolve3(projectDir(), filePath);
+      const absPath = isAbsolute(filePath) ? filePath : resolve4(projectDir(), filePath);
       const stat = statSync(absPath);
       if (!stat.isFile()) {
         throw new Error(`Not a file: ${absPath}`);
       }
-      const content = readFileSync2(absPath);
-      const name = fileName ?? basename(absPath);
+      const content = readFileSync3(absPath);
+      const name = fileName ?? basename2(absPath);
       const uploaded = await client2.uploadAttachment(name, content);
       const raw = await client2.updateWorkItem(workItemId, [
         {
@@ -56115,7 +56666,7 @@ ${JSON.stringify(workItem, null, 2)}`
           }
         }
       ]);
-      const workItem = mapWorkItem(raw);
+      const workItem = mapWorkItem(raw, config3);
       return {
         content: [
           {
@@ -56133,7 +56684,7 @@ ${JSON.stringify(workItem.artifacts.attachments, null, 2)}`
   );
   server2.tool(
     "ado_add_work_item_comment",
-    "Add a comment to an Azure DevOps work item. Use sparingly \u2014 branches, commits, and PRs are already auto-linked via the '#<ticketId>' suffix in commit messages. Only post comments for non-derivable context a QA/UAT reviewer needs (how to run new tests, scope deviation, manual follow-up steps, known caveats, open clarifying questions).",
+    "Add a comment to an Azure DevOps work item. Use sparingly \u2014 branches, commits, and PRs are usually linked to the work item already. Only post comments for non-derivable context a reviewer or tester needs (how to run new tests, scope deviation, manual follow-up steps, known caveats, open clarifying questions).",
     {
       id: external_exports.number().int().positive().describe("Work item ID"),
       comment: external_exports.string().min(1).max(4e3).describe("Comment text (Markdown \u2014 converted to HTML automatically; raw HTML passes through if input starts with '<')")
@@ -56193,14 +56744,1196 @@ Comment ID: ${result.id}`
   );
 }
 
+// src/tools/pullRequests.ts
+import { readFileSync as readFileSync4, statSync as statSync2 } from "node:fs";
+import { isAbsolute as isAbsolute2, resolve as resolve5 } from "node:path";
+
+// src/overlap.ts
+function normalizePath(path) {
+  return path.replace(/\\/g, "/").replace(/^\/+/, "").toLowerCase();
+}
+function stripHeads(branch) {
+  return branch.replace(/^refs\/heads\//, "");
+}
+function ticketIdFromBranch(branch, pattern = DEFAULT_BRANCH_TICKET_PATTERN) {
+  const match = new RegExp(pattern).exec(stripHeads(branch));
+  if (!match) return null;
+  const id = Number(match[1] ?? match[0]);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+function prIdFromArtifactUrl(url2) {
+  const match = /^vstfs:\/\/\/Git\/PullRequestId\/.*%2f(\d+)$/i.exec(url2);
+  return match ? Number(match[1]) : null;
+}
+function findFileOverlaps(paths, pullRequests, excludeBranch, branchTicketPattern = DEFAULT_BRANCH_TICKET_PATTERN) {
+  const planned = new Set(paths.map(normalizePath));
+  const excluded = excludeBranch === void 0 ? void 0 : stripHeads(excludeBranch);
+  const overlaps = [];
+  for (const pullRequest of pullRequests) {
+    const sourceBranch = stripHeads(pullRequest.sourceBranch);
+    if (sourceBranch === excluded) continue;
+    const shared = [...new Set(pullRequest.files.map(normalizePath))].filter((file2) => planned.has(file2));
+    if (shared.length === 0) continue;
+    overlaps.push({
+      pullRequestId: pullRequest.id,
+      title: pullRequest.title,
+      sourceBranch,
+      ticketId: ticketIdFromBranch(sourceBranch, branchTicketPattern),
+      files: shared
+    });
+  }
+  return overlaps;
+}
+
+// src/pullRequest.ts
+var PR_DESCRIPTION_MAX_LENGTH = 4e3;
+var TRUNCATION_NOTICE = "\n\n\u2026 (truncated to fit the Azure DevOps 4000-character limit)";
+var SOURCE_BRANCH_TOKEN = "{sourceBranch}";
+function escapeRegex2(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function isPlaceholderTitle(title, sourceBranch, config3) {
+  if (title === void 0) return false;
+  const trimmed = title.trim();
+  if (trimmed === "") return true;
+  return config3.placeholderTitlePatterns.some((pattern) => new RegExp(pattern.split(SOURCE_BRANCH_TOKEN).join(escapeRegex2(sourceBranch))).test(trimmed));
+}
+function isPlaceholderDescription(description, config3) {
+  if (description === void 0) return true;
+  const trimmed = description.trim();
+  return trimmed === "" || config3.placeholderDescriptionPatterns.some((pattern) => new RegExp(pattern).test(trimmed));
+}
+function fitDescription(description) {
+  if (description.length <= PR_DESCRIPTION_MAX_LENGTH) {
+    return { text: description, truncated: false };
+  }
+  const keep = PR_DESCRIPTION_MAX_LENGTH - TRUNCATION_NOTICE.length;
+  return { text: description.slice(0, keep) + TRUNCATION_NOTICE, truncated: true };
+}
+function planPullRequestUpdate(current, desired, force, config3) {
+  const plan = { patch: {}, kept: [], truncated: false };
+  if (desired.title !== void 0) {
+    if (force || isPlaceholderTitle(current.title, current.sourceBranch, config3)) {
+      plan.patch.title = desired.title;
+    } else {
+      plan.kept.push("title (not a placeholder)");
+    }
+  }
+  if (desired.description !== void 0) {
+    if (force || isPlaceholderDescription(current.description, config3)) {
+      const fitted = fitDescription(desired.description);
+      plan.patch.description = fitted.text;
+      plan.truncated = fitted.truncated;
+    } else {
+      plan.kept.push("description (already filled)");
+    }
+  }
+  return plan;
+}
+
+// src/tools/pullRequests.ts
+function stripHeads2(ref) {
+  return ref.replace(/^refs\/heads\//, "");
+}
+function mapPullRequest(client2, raw) {
+  return {
+    id: raw.pullRequestId,
+    title: raw.title,
+    description: raw.description ?? "",
+    status: raw.status,
+    sourceBranch: stripHeads2(raw.sourceRefName),
+    targetBranch: stripHeads2(raw.targetRefName),
+    isDraft: raw.isDraft ?? false,
+    createdBy: raw.createdBy?.displayName ?? "",
+    reviewers: (raw.reviewers ?? []).map(({ id, displayName, vote, isRequired }) => ({ id, displayName, vote, isRequired: isRequired ?? false })),
+    url: client2.pullRequestWebUrl(raw.pullRequestId)
+  };
+}
+function text(value) {
+  return { content: [{ type: "text", text: value }] };
+}
+function registerPullRequestTools(server2, client2, config3) {
+  server2.tool(
+    "ado_find_pull_request",
+    "Find pull requests whose source is the given branch. Returns an empty list (not an error) when none exists.",
+    {
+      branch: external_exports.string().min(1).describe("Source branch name without refs/heads/ (e.g. feature/123-login-form)"),
+      status: external_exports.enum(["active", "completed", "abandoned", "all"]).default("active").describe("PR status filter")
+    },
+    async ({ branch, status }) => {
+      const pullRequests = (await client2.findPullRequests(branch, status)).map((raw) => mapPullRequest(client2, raw));
+      if (pullRequests.length === 0) {
+        return text(`No ${status} pull request found for branch "${branch}".
+
+[]`);
+      }
+      return text(JSON.stringify(pullRequests, null, 2));
+    }
+  );
+  server2.tool(
+    "ado_update_pull_request",
+    "Set the title and/or description of a pull request. Without force, only placeholder values are replaced: an empty title or description, or one matching the placeholder patterns of the project config (pullRequest.placeholderTitlePatterns / placeholderDescriptionPatterns in .claude/azure-devops.json). Text a person wrote is left alone and reported as kept. Descriptions over 4000 characters are truncated (reported in the result).",
+    {
+      id: external_exports.number().int().positive().describe("Pull request ID"),
+      title: external_exports.string().min(1).optional().describe("New title"),
+      description: external_exports.string().min(1).optional().describe("New description (Markdown)"),
+      force: external_exports.boolean().default(false).describe("Overwrite even non-placeholder values \u2014 only when the user explicitly asked for it")
+    },
+    async ({ id, title, description, force }) => {
+      const current = await client2.getPullRequest(id);
+      const plan = planPullRequestUpdate(
+        { title: current.title, description: current.description, sourceBranch: stripHeads2(current.sourceRefName) },
+        { title, description },
+        force,
+        config3.pullRequest
+      );
+      const keptNote = plan.kept.length ? `
+Kept: ${plan.kept.join(", ")}.` : "";
+      if (Object.keys(plan.patch).length === 0) {
+        return text(`Pull request #${id} unchanged.${keptNote}
+
+${JSON.stringify(mapPullRequest(client2, current), null, 2)}`);
+      }
+      const updated = await client2.updatePullRequest(id, plan.patch);
+      const truncatedNote = plan.truncated ? "\nDescription was truncated to the 4000-character limit." : "";
+      return text(
+        `Pull request #${id} updated: ${Object.keys(plan.patch).join(", ")}.${keptNote}${truncatedNote}
+
+${JSON.stringify(mapPullRequest(client2, updated), null, 2)}`
+      );
+    }
+  );
+  server2.tool(
+    "ado_create_pull_request",
+    "Create a pull request. Refuses if an active PR for the branch already exists and returns that PR instead. Optionally links a work item.",
+    {
+      branch: external_exports.string().min(1).describe("Source branch name without refs/heads/"),
+      title: external_exports.string().min(1).describe("PR title"),
+      description: external_exports.string().default("").describe("PR description (Markdown); truncated to 4000 characters"),
+      targetBranch: external_exports.string().min(1).default(config3.defaultTargetBranch).describe(`Target branch without refs/heads/ (default: ${config3.defaultTargetBranch})`),
+      workItemId: external_exports.number().int().positive().optional().describe("Work item to link to the PR")
+    },
+    async ({ branch, title, description, targetBranch, workItemId }) => {
+      const existing = await client2.findPullRequests(branch, "active");
+      if (existing.length > 0) {
+        return text(
+          `An active pull request for branch "${branch}" already exists \u2014 nothing created.
+
+${JSON.stringify(existing.map((raw) => mapPullRequest(client2, raw)), null, 2)}`
+        );
+      }
+      const fitted = fitDescription(description);
+      const created = await client2.createPullRequest({
+        sourceRefName: `refs/heads/${branch}`,
+        targetRefName: `refs/heads/${targetBranch}`,
+        title,
+        description: fitted.text,
+        workItemRefs: workItemId !== void 0 ? [{ id: String(workItemId) }] : []
+      });
+      const truncatedNote = fitted.truncated ? "\nDescription was truncated to the 4000-character limit." : "";
+      return text(
+        `Created pull request #${created.pullRequestId}.${truncatedNote}
+
+${JSON.stringify(mapPullRequest(client2, created), null, 2)}`
+      );
+    }
+  );
+  server2.tool(
+    "ado_add_pull_request_reviewer",
+    "Add a reviewer to a pull request by identity id (GUID). Leaves an existing reviewer untouched \u2014 including their vote \u2014 and reports it as unchanged. The id of someone who reviewed before is in the reviewers list of ado_find_pull_request (status 'completed' or 'all').",
+    {
+      id: external_exports.number().int().positive().describe("Pull request ID"),
+      // z.guid, not z.uuid: ADO identity ids are not RFC 4122 (version nibble can be anything).
+      reviewerId: external_exports.guid().describe("Identity id (GUID) of the reviewer"),
+      required: external_exports.boolean().default(true).describe("Add as required reviewer")
+    },
+    async ({ id, reviewerId, required: required2 }) => {
+      const current = await client2.getPullRequest(id);
+      const existing = findReviewer(current.reviewers, reviewerId);
+      if (existing !== void 0) {
+        const isRequired = existing.isRequired ?? false;
+        const optionalNote = required2 && !isRequired ? " Present but optional \u2014 not changed; make them required by hand if needed." : "";
+        return text(
+          `Pull request #${id} unchanged: ${existing.displayName} is already a reviewer (required: ${isRequired}, vote: ${existing.vote}).${optionalNote}`
+        );
+      }
+      const added = await client2.addPullRequestReviewer(id, reviewerId, required2);
+      return text(
+        `Added ${added.displayName} to pull request #${id} as ${added.isRequired ? "required" : "optional"} reviewer.
+
+${JSON.stringify({ id: added.id, displayName: added.displayName, isRequired: added.isRequired ?? false }, null, 2)}`
+      );
+    }
+  );
+  server2.tool(
+    "ado_upload_pull_request_attachment",
+    "Upload a local screenshot as an attachment of a pull request and return its URL plus a ready-to-paste Markdown image line for the description. Screenshots only (png/jpg), no video or GIF; the image must show demo/test data only. Azure DevOps refuses a second attachment with the same name on the same PR.",
+    {
+      pullRequestId: external_exports.number().int().positive().describe("Pull request ID"),
+      filePath: external_exports.string().min(1).describe("Absolute or project-relative path to the local image"),
+      fileName: external_exports.string().optional().describe("Override the stored attachment name (defaults to the basename of filePath)"),
+      altText: external_exports.string().optional().describe("Alt text of the Markdown image line (defaults to the attachment name)")
+    },
+    async ({ pullRequestId, filePath, fileName, altText }) => {
+      const absPath = isAbsolute2(filePath) ? filePath : resolve5(projectDir(), filePath);
+      const stat = statSync2(absPath);
+      if (!stat.isFile()) {
+        throw new Error(`Not a file: ${absPath}`);
+      }
+      const name = attachmentName(absPath, fileName);
+      const content = readFileSync4(absPath);
+      const uploaded = await client2.uploadPullRequestAttachment(pullRequestId, name, content);
+      return text(
+        `Attached "${name}" (${stat.size} bytes) to pull request #${pullRequestId}.
+
+Attachment URL: ${uploaded.url}
+
+Markdown:
+${markdownImage(altText ?? name, uploaded.url)}`
+      );
+    }
+  );
+  server2.tool(
+    "ado_find_pr_file_overlaps",
+    "Which active pull requests change any of the given files. Compared against the PAT owner's own active PRs and, with epicId, every active PR linked to a ticket below that epic (any depth). Paths match ignoring a leading slash, backslashes and case. Useful to defer a work item instead of building on files an unmerged PR rewrites. ticketId of an overlap comes from branchTicketPattern of the project config.",
+    {
+      paths: external_exports.array(external_exports.string().min(1)).describe("Repo-relative paths the ticket changes or plans to change"),
+      epicId: external_exports.number().int().positive().optional().describe("Also check active PRs linked to tickets below this epic"),
+      excludeBranch: external_exports.string().min(1).optional().describe("The work item's own branch \u2014 its PR is never an overlap")
+    },
+    async ({ paths, epicId, excludeBranch }) => {
+      const me = await client2.getAuthenticatedUser();
+      const pullRequests = new Map(
+        (await client2.listActivePullRequestsByCreator(me.id)).map((raw) => [raw.pullRequestId, raw])
+      );
+      if (epicId !== void 0) {
+        const descendantIds = await client2.getDescendantIds(epicId);
+        const linkedPrIds = /* @__PURE__ */ new Set();
+        for (let start = 0; start < descendantIds.length; start += 200) {
+          for (const item of await client2.getWorkItems(descendantIds.slice(start, start + 200), { omitErrors: true })) {
+            for (const relation of item.relations ?? []) {
+              const prId = prIdFromArtifactUrl(relation.url);
+              if (prId !== null) linkedPrIds.add(prId);
+            }
+          }
+        }
+        for (const prId of linkedPrIds) {
+          if (pullRequests.has(prId)) continue;
+          const raw = await client2.getPullRequest(prId).catch(() => void 0);
+          if (raw?.status === "active") pullRequests.set(prId, raw);
+        }
+      }
+      const withFiles = [];
+      for (const raw of pullRequests.values()) {
+        withFiles.push({ id: raw.pullRequestId, title: raw.title, sourceBranch: raw.sourceRefName, files: await client2.getPullRequestChangedFiles(raw.pullRequestId) });
+      }
+      const overlaps = findFileOverlaps(paths, withFiles, excludeBranch, config3.branchTicketPattern);
+      return text(JSON.stringify({
+        checkedPullRequests: withFiles.map((pullRequest) => ({ id: pullRequest.id, sourceBranch: stripHeads2(pullRequest.sourceBranch) })),
+        overlaps: overlaps.map((overlap) => ({ ...overlap, url: client2.pullRequestWebUrl(overlap.pullRequestId) }))
+      }, null, 2));
+    }
+  );
+}
+
+// src/tools/builds.ts
+import { mkdirSync as mkdirSync2, writeFileSync as writeFileSync2 } from "node:fs";
+import { dirname as dirname2 } from "node:path";
+
+// node_modules/fflate/esm/index.mjs
+import { createRequire } from "module";
+var require2 = createRequire("/");
+var _a3;
+var Worker;
+var isMarkedAsUntransferable;
+try {
+  _a3 = require2("worker_threads"), Worker = _a3.Worker, isMarkedAsUntransferable = _a3.isMarkedAsUntransferable;
+} catch (e) {
+}
+var u8 = Uint8Array;
+var u16 = Uint16Array;
+var i32 = Int32Array;
+var fleb = new u8([
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  1,
+  1,
+  1,
+  2,
+  2,
+  2,
+  2,
+  3,
+  3,
+  3,
+  3,
+  4,
+  4,
+  4,
+  4,
+  5,
+  5,
+  5,
+  5,
+  0,
+  /* unused */
+  0,
+  0,
+  /* impossible */
+  0
+]);
+var fdeb = new u8([
+  0,
+  0,
+  0,
+  0,
+  1,
+  1,
+  2,
+  2,
+  3,
+  3,
+  4,
+  4,
+  5,
+  5,
+  6,
+  6,
+  7,
+  7,
+  8,
+  8,
+  9,
+  9,
+  10,
+  10,
+  11,
+  11,
+  12,
+  12,
+  13,
+  13,
+  /* unused */
+  0,
+  0
+]);
+var clim = new u8([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
+var freb = function(eb, start) {
+  var b = new u16(31);
+  for (var i = 0; i < 31; ++i) {
+    b[i] = start += 1 << eb[i - 1];
+  }
+  var r = new i32(b[30]);
+  for (var i = 1; i < 30; ++i) {
+    for (var j2 = b[i]; j2 < b[i + 1]; ++j2) {
+      r[j2] = j2 - b[i] << 5 | i;
+    }
+  }
+  return { b, r };
+};
+var _a3 = freb(fleb, 2);
+var fl = _a3.b;
+var revfl = _a3.r;
+fl[28] = 258, revfl[258] = 28;
+var _b = freb(fdeb, 0);
+var fd = _b.b;
+var revfd = _b.r;
+var rev = new u16(32768);
+for (i = 0; i < 32768; ++i) {
+  x2 = (i & 43690) >> 1 | (i & 21845) << 1;
+  x2 = (x2 & 52428) >> 2 | (x2 & 13107) << 2;
+  x2 = (x2 & 61680) >> 4 | (x2 & 3855) << 4;
+  rev[i] = ((x2 & 65280) >> 8 | (x2 & 255) << 8) >> 1;
+}
+var x2;
+var i;
+var hMap = (function(cd, mb, r) {
+  var s = cd.length;
+  var i = 0;
+  var l = new u16(mb);
+  for (; i < s; ++i) {
+    if (cd[i])
+      ++l[cd[i] - 1];
+  }
+  var le2 = new u16(mb);
+  for (i = 1; i < mb; ++i) {
+    le2[i] = le2[i - 1] + l[i - 1] << 1;
+  }
+  var co;
+  if (r) {
+    co = new u16(1 << mb);
+    var rvb = 15 - mb;
+    for (i = 0; i < s; ++i) {
+      if (cd[i]) {
+        var sv = i << 4 | cd[i];
+        var r_1 = mb - cd[i];
+        var v = le2[cd[i] - 1]++ << r_1;
+        for (var m = v | (1 << r_1) - 1; v <= m; ++v) {
+          co[rev[v] >> rvb] = sv;
+        }
+      }
+    }
+  } else {
+    co = new u16(s);
+    for (i = 0; i < s; ++i) {
+      if (cd[i]) {
+        co[i] = rev[le2[cd[i] - 1]++] >> 15 - cd[i];
+      }
+    }
+  }
+  return co;
+});
+var flt = new u8(288);
+for (i = 0; i < 144; ++i)
+  flt[i] = 8;
+var i;
+for (i = 144; i < 256; ++i)
+  flt[i] = 9;
+var i;
+for (i = 256; i < 280; ++i)
+  flt[i] = 7;
+var i;
+for (i = 280; i < 288; ++i)
+  flt[i] = 8;
+var i;
+var fdt = new u8(32);
+for (i = 0; i < 32; ++i)
+  fdt[i] = 5;
+var i;
+var flrm = /* @__PURE__ */ hMap(flt, 9, 1);
+var fdrm = /* @__PURE__ */ hMap(fdt, 5, 1);
+var max = function(a3) {
+  var m = a3[0];
+  for (var i = 1; i < a3.length; ++i) {
+    if (a3[i] > m)
+      m = a3[i];
+  }
+  return m;
+};
+var bits = function(d, p, m) {
+  var o = p / 8 | 0;
+  return (d[o] | d[o + 1] << 8) >> (p & 7) & m;
+};
+var bits16 = function(d, p) {
+  var o = p / 8 | 0;
+  return (d[o] | d[o + 1] << 8 | d[o + 2] << 16) >> (p & 7);
+};
+var shft = function(p) {
+  return (p + 7) / 8 | 0;
+};
+var slc = function(v, s, e) {
+  if (s == null || s < 0)
+    s = 0;
+  if (e == null || e > v.length)
+    e = v.length;
+  return new u8(v.subarray(s, e));
+};
+var ec = [
+  "unexpected EOF",
+  "invalid block type",
+  "invalid length/literal",
+  "invalid distance",
+  "stream finished",
+  "no stream handler",
+  ,
+  // determined by compression function
+  "no callback",
+  "invalid UTF-8 data",
+  "extra field too long",
+  "date not in range 1980-2099",
+  "filename too long",
+  "stream finishing",
+  "invalid zip data"
+  // determined by unknown compression method
+];
+var err = function(ind, msg, nt2) {
+  var e = new Error(msg || ec[ind]);
+  e.code = ind;
+  if (Error.captureStackTrace)
+    Error.captureStackTrace(e, err);
+  if (!nt2)
+    throw e;
+  return e;
+};
+var inflt = function(dat, st2, buf, dict) {
+  var sl = dat.length, dl = dict ? dict.length : 0;
+  if (!sl || st2.f && !st2.l)
+    return buf || new u8(0);
+  var noBuf = !buf;
+  var resize = noBuf || st2.i != 2;
+  var noSt = st2.i;
+  if (noBuf)
+    buf = new u8(sl * 3);
+  var cbuf = function(l2) {
+    var bl = buf.length;
+    if (l2 > bl) {
+      var nbuf = new u8(Math.max(bl * 2, l2));
+      nbuf.set(buf);
+      buf = nbuf;
+    }
+  };
+  var final = st2.f || 0, pos = st2.p || 0, bt2 = st2.b || 0, lm = st2.l, dm = st2.d, lbt = st2.m, dbt = st2.n;
+  var tbts = sl * 8;
+  do {
+    if (!lm) {
+      final = bits(dat, pos, 1);
+      var type = bits(dat, pos + 1, 3);
+      pos += 3;
+      if (!type) {
+        var s = shft(pos) + 4, l = dat[s - 4] | dat[s - 3] << 8, t = s + l;
+        if (t > sl) {
+          if (noSt)
+            err(0);
+          break;
+        }
+        if (resize)
+          cbuf(bt2 + l);
+        buf.set(dat.subarray(s, t), bt2);
+        st2.b = bt2 += l, st2.p = pos = t * 8, st2.f = final;
+        continue;
+      } else if (type == 1)
+        lm = flrm, dm = fdrm, lbt = 9, dbt = 5;
+      else if (type == 2) {
+        var hLit = bits(dat, pos, 31) + 257, hcLen = bits(dat, pos + 10, 15) + 4;
+        var tl = hLit + bits(dat, pos + 5, 31) + 1;
+        pos += 14;
+        var ldt = new u8(tl);
+        var clt = new u8(19);
+        for (var i = 0; i < hcLen; ++i) {
+          clt[clim[i]] = bits(dat, pos + i * 3, 7);
+        }
+        pos += hcLen * 3;
+        var clb = max(clt), clbmsk = (1 << clb) - 1;
+        var clm = hMap(clt, clb, 1);
+        for (var i = 0; i < tl; ) {
+          var r = clm[bits(dat, pos, clbmsk)];
+          pos += r & 15;
+          var s = r >> 4;
+          if (s < 16) {
+            ldt[i++] = s;
+          } else {
+            var c2 = 0, n = 0;
+            if (s == 16)
+              n = 3 + bits(dat, pos, 3), pos += 2, c2 = ldt[i - 1];
+            else if (s == 17)
+              n = 3 + bits(dat, pos, 7), pos += 3;
+            else if (s == 18)
+              n = 11 + bits(dat, pos, 127), pos += 7;
+            while (n--)
+              ldt[i++] = c2;
+          }
+        }
+        var lt2 = ldt.subarray(0, hLit), dt2 = ldt.subarray(hLit);
+        lbt = max(lt2);
+        dbt = max(dt2);
+        lm = hMap(lt2, lbt, 1);
+        dm = hMap(dt2, dbt, 1);
+      } else
+        err(1);
+      if (pos > tbts) {
+        if (noSt)
+          err(0);
+        break;
+      }
+    }
+    if (resize)
+      cbuf(bt2 + 131072);
+    var lms = (1 << lbt) - 1, dms = (1 << dbt) - 1;
+    var lpos = pos;
+    for (; ; lpos = pos) {
+      var c2 = lm[bits16(dat, pos) & lms], sym = c2 >> 4;
+      pos += c2 & 15;
+      if (pos > tbts) {
+        if (noSt)
+          err(0);
+        break;
+      }
+      if (!c2)
+        err(2);
+      if (sym < 256)
+        buf[bt2++] = sym;
+      else if (sym == 256) {
+        lpos = pos, lm = null;
+        break;
+      } else {
+        var add = sym - 254;
+        if (sym > 264) {
+          var i = sym - 257, b = fleb[i];
+          add = bits(dat, pos, (1 << b) - 1) + fl[i];
+          pos += b;
+        }
+        var d = dm[bits16(dat, pos) & dms], dsym = d >> 4;
+        if (!d)
+          err(3);
+        pos += d & 15;
+        var dt2 = fd[dsym];
+        if (dsym > 3) {
+          var b = fdeb[dsym];
+          dt2 += bits16(dat, pos) & (1 << b) - 1, pos += b;
+        }
+        if (pos > tbts) {
+          if (noSt)
+            err(0);
+          break;
+        }
+        if (resize)
+          cbuf(bt2 + 131072);
+        var end = bt2 + add;
+        if (bt2 < dt2) {
+          var shift = dl - dt2, dend = Math.min(dt2, end);
+          if (shift + bt2 < 0)
+            err(3);
+          for (; bt2 < dend; ++bt2)
+            buf[bt2] = dict[shift + bt2];
+        }
+        for (; bt2 < end; ++bt2)
+          buf[bt2] = buf[bt2 - dt2];
+      }
+    }
+    st2.l = lm, st2.p = lpos, st2.b = bt2, st2.f = final;
+    if (lm)
+      final = 1, st2.m = lbt, st2.d = dm, st2.n = dbt;
+  } while (!final);
+  return bt2 != buf.length && noBuf ? slc(buf, 0, bt2) : buf.subarray(0, bt2);
+};
+var et2 = /* @__PURE__ */ new u8(0);
+var b2 = function(d, b) {
+  return d[b] | d[b + 1] << 8;
+};
+var b4 = function(d, b) {
+  return (d[b] | d[b + 1] << 8 | d[b + 2] << 16 | d[b + 3] << 24) >>> 0;
+};
+var b8 = function(d, b) {
+  return b4(d, b) + b4(d, b + 4) * 4294967296;
+};
+function inflateSync(data, opts) {
+  return inflt(data, { i: 2 }, opts && opts.out, opts && opts.dictionary);
+}
+var td = typeof TextDecoder != "undefined" && /* @__PURE__ */ new TextDecoder();
+var tds = 0;
+try {
+  td.decode(et2, { stream: true });
+  tds = 1;
+} catch (e) {
+}
+var dutf8 = function(d) {
+  for (var r = "", i = 0; ; ) {
+    var c2 = d[i++];
+    var eb = (c2 > 127) + (c2 > 223) + (c2 > 239);
+    if (i + eb > d.length)
+      return { s: r, r: slc(d, i - 1) };
+    if (!eb)
+      r += String.fromCharCode(c2);
+    else if (eb == 3) {
+      c2 = ((c2 & 15) << 18 | (d[i++] & 63) << 12 | (d[i++] & 63) << 6 | d[i++] & 63) - 65536, r += String.fromCharCode(55296 | c2 >> 10, 56320 | c2 & 1023);
+    } else if (eb & 1)
+      r += String.fromCharCode((c2 & 31) << 6 | d[i++] & 63);
+    else
+      r += String.fromCharCode((c2 & 15) << 12 | (d[i++] & 63) << 6 | d[i++] & 63);
+  }
+};
+function strFromU8(dat, latin1) {
+  if (latin1) {
+    var r = "";
+    for (var i = 0; i < dat.length; i += 16384)
+      r += String.fromCharCode.apply(null, dat.subarray(i, i + 16384));
+    return r;
+  } else if (td) {
+    return td.decode(dat);
+  } else {
+    var _a4 = dutf8(dat), s = _a4.s, r = _a4.r;
+    if (r.length)
+      err(8);
+    return s;
+  }
+}
+var slzh = function(d, b) {
+  return b + 30 + b2(d, b + 26) + b2(d, b + 28);
+};
+var zh = function(d, b, z3) {
+  var fnl = b2(d, b + 28), efl = b2(d, b + 30), fn = strFromU8(d.subarray(b + 46, b + 46 + fnl), !(b2(d, b + 8) & 2048)), es = b + 46 + fnl;
+  var _a4 = z64hs(d, es, efl, z3, b4(d, b + 20), b4(d, b + 24), b4(d, b + 42)), sc = _a4[0], su = _a4[1], off = _a4[2];
+  return [b2(d, b + 10), sc, su, fn, es + efl + b2(d, b + 32), off];
+};
+var z64hs = function(d, b, l, z3, sc, su, off) {
+  var nsc = sc == 4294967295, nsu = su == 4294967295, noff = off == 4294967295, e = b + l;
+  var nf = nsc + nsu + noff;
+  if (z3 && nf) {
+    for (; b + 4 < e; b += 4 + b2(d, b + 2)) {
+      if (b2(d, b) == 1) {
+        return [
+          nsc ? b8(d, b + 4 + 8 * nsu) : sc,
+          nsu ? b8(d, b + 4) : su,
+          noff ? b8(d, b + 4 + 8 * (nsu + nsc)) : off,
+          1
+        ];
+      }
+    }
+    if (z3 < 2)
+      err(13);
+  }
+  return [sc, su, off, 0];
+};
+function unzipSync(data, opts) {
+  var files = {};
+  var e = data.length - 22;
+  for (; b4(data, e) != 101010256; --e) {
+    if (!e || data.length - e > 65558)
+      err(13);
+  }
+  ;
+  var c2 = b2(data, e + 8);
+  if (!c2)
+    return {};
+  var o = b4(data, e + 16);
+  var z3 = b4(data, e - 20) == 117853008;
+  if (z3) {
+    var ze2 = b4(data, e - 12);
+    z3 = b4(data, ze2) == 101075792;
+    if (z3) {
+      c2 = b4(data, ze2 + 32);
+      o = b4(data, ze2 + 48);
+    }
+  }
+  var fltr = opts && opts.filter;
+  for (var i = 0; i < c2; ++i) {
+    var _a4 = zh(data, o, z3), c_2 = _a4[0], sc = _a4[1], su = _a4[2], fn = _a4[3], no = _a4[4], off = _a4[5], b = slzh(data, off);
+    o = no;
+    if (!fltr || fltr({
+      name: fn,
+      size: sc,
+      originalSize: su,
+      compression: c_2
+    })) {
+      if (!c_2)
+        files[fn] = slc(data, b, b + sc);
+      else if (c_2 == 8)
+        files[fn] = inflateSync(data.subarray(b, b + sc), { out: new u8(su) });
+      else
+        err(14, "unknown compression type " + c_2);
+    }
+  }
+  return files;
+}
+
+// src/files.ts
+import { isAbsolute as isAbsolute3, relative, resolve as resolve6, sep } from "node:path";
+function resolveInside(root, entryName) {
+  const normalized = entryName.replace(/\\/g, "/");
+  if (isAbsolute3(normalized) || /^[a-zA-Z]:/.test(normalized)) {
+    throw new Error(`Archive entry "${entryName}" has an absolute path`);
+  }
+  const rootPath = resolve6(root);
+  const target = resolve6(rootPath, normalized);
+  const fromRoot = relative(rootPath, target);
+  if (fromRoot === "" || fromRoot.startsWith("..") || isAbsolute3(fromRoot)) {
+    throw new Error(`Archive entry "${entryName}" escapes the target directory`);
+  }
+  return target.endsWith(sep) ? target.slice(0, -1) : target;
+}
+function artifactDir(buildId, artifactName) {
+  const root = resolve6(projectDir(), ".claude", "artifacts");
+  return resolveInside(root, `build-${buildId}/${artifactName}`);
+}
+
+// src/playwrightReport.ts
+var MASK = "***";
+var MIN_MASK_LENGTH = 3;
+function readEmbeddedReport(indexHtml) {
+  const match = indexHtml.match(
+    /<(template|script)[^>]*id="playwrightReportBase64"[^>]*>([\s\S]*?)<\/\1>/
+  );
+  if (!match) {
+    throw new Error("index.html contains no embedded Playwright report (playwrightReportBase64)");
+  }
+  const base643 = match[2].trim().replace(/^data:application\/zip;base64,/, "");
+  const entries = unzipSync(Buffer.from(base643, "base64"));
+  const parsed = /* @__PURE__ */ new Map();
+  for (const [name, bytes] of Object.entries(entries)) {
+    if (name.endsWith(".json")) parsed.set(name, JSON.parse(strFromU8(bytes)));
+  }
+  return parsed;
+}
+function findFailedTests(report) {
+  const failed = [];
+  for (const [name, content] of report) {
+    if (name === "report.json") continue;
+    const tests = content.tests ?? [];
+    for (const test of tests) {
+      if (test.outcome !== "unexpected" && test.outcome !== "flaky") continue;
+      failed.push({
+        title: test.title,
+        titlePath: test.path,
+        projectName: test.projectName,
+        file: test.location.file,
+        line: test.location.line,
+        outcome: test.outcome,
+        attempts: test.results.map((result) => ({
+          retry: result.retry,
+          status: result.status,
+          errors: (result.errors ?? []).map(
+            (error62) => typeof error62 === "string" ? error62 : error62.message ?? ""
+          ),
+          attachments: result.attachments ?? []
+        }))
+      });
+    }
+  }
+  const rank = (test) => test.outcome === "unexpected" ? 0 : 1;
+  return failed.sort(
+    (a3, b) => rank(a3) - rank(b) || a3.projectName.localeCompare(b.projectName) || a3.file.localeCompare(b.file) || a3.line - b.line
+  );
+}
+function selectFailedTests(tests, options) {
+  const needle = options.filter?.trim().toLowerCase();
+  const matches = (test) => {
+    if (needle === void 0 || needle === "") {
+      return true;
+    }
+    const haystack = [test.title, ...test.titlePath, test.projectName, test.file].join(" ").toLowerCase();
+    return haystack.includes(needle);
+  };
+  const matching = tests.filter(matches);
+  return {
+    analysed: matching.slice(0, options.maxTests),
+    overCap: matching.slice(options.maxTests),
+    filteredOut: tests.length - matching.length
+  };
+}
+function stripQuery(url2) {
+  const index = url2.search(/[?#]/);
+  return index === -1 ? url2 : url2.slice(0, index);
+}
+function parseLines(text3) {
+  return text3.split("\n").filter((line) => line.trim() !== "").map((line) => JSON.parse(line));
+}
+function collectSecrets(events) {
+  const values = /* @__PURE__ */ new Set();
+  for (const event of events) {
+    if (event.type !== "before") continue;
+    if (event.method !== "fill" && event.method !== "type" && event.method !== "press") continue;
+    const value = event.params?.value ?? event.params?.text;
+    if (typeof value === "string" && value.length >= MIN_MASK_LENGTH) values.add(value);
+  }
+  return [...values].sort((a3, b) => b.length - a3.length);
+}
+function redact(text3, secrets) {
+  let result = text3;
+  for (const secret of secrets) result = result.split(secret).join(MASK);
+  return result;
+}
+var IGNORED_METHODS = /* @__PURE__ */ new Set(["newPage", "title", "screenshot", "innerText"]);
+var TRACE_FILE = /(^|\/)\d*-?trace\.trace$/;
+var NETWORK_FILE = /(^|\/)\d*-?trace\.network$/;
+function readContext(events, clean) {
+  const starts = /* @__PURE__ */ new Map();
+  const findings = { actions: [], pageTitles: [], consoleErrors: [] };
+  for (const event of events) {
+    if (event.type === "before" && event.callId) {
+      starts.set(event.callId, event);
+      continue;
+    }
+    if (event.type === "console" && event.messageType === "error" && event.text) {
+      findings.consoleErrors.push(clean(event.text).slice(0, 300));
+      continue;
+    }
+    if (event.type !== "after" || !event.callId) continue;
+    const start = starts.get(event.callId);
+    if (!start?.method) continue;
+    if (start.method === "title" && typeof event.result?.value === "string") {
+      findings.pageTitles.push(clean(event.result.value));
+    }
+    if (IGNORED_METHODS.has(start.method)) continue;
+    const selector = start.params?.selector;
+    const url2 = start.params?.url;
+    const target = typeof selector === "string" ? selector : typeof url2 === "string" ? stripQuery(url2) : void 0;
+    findings.actions.push({
+      method: start.method,
+      target: target !== void 0 ? clean(target) : void 0,
+      durationMs: start.startTime !== void 0 && event.endTime !== void 0 ? Math.round(event.endTime - start.startTime) : void 0,
+      error: event.error?.message ? clean(event.error.message.split("\n")[0]) : void 0
+    });
+  }
+  return findings;
+}
+function summarizeTrace(zipBytes, lastActions = 15) {
+  const entries = unzipSync(zipBytes, {
+    filter: (file2) => TRACE_FILE.test(file2.name) || NETWORK_FILE.test(file2.name)
+  });
+  const names = Object.keys(entries).sort();
+  const contexts = names.filter((name) => TRACE_FILE.test(name)).map((name) => parseLines(strFromU8(entries[name])));
+  const networkEvents = names.filter((name) => NETWORK_FILE.test(name)).flatMap((name) => parseLines(strFromU8(entries[name])));
+  const secrets = collectSecrets(contexts.flat());
+  const clean = (text3) => redact(text3, secrets);
+  const findings = contexts.map((events) => readContext(events, clean));
+  const actions = findings.flatMap((finding) => finding.actions);
+  const network = networkEvents.filter((event) => event.snapshot).map((event) => {
+    const snapshot = event.snapshot;
+    return {
+      status: snapshot.response.status,
+      method: snapshot.request.method,
+      url: clean(stripQuery(snapshot.request.url)),
+      document: (snapshot.response.content?.mimeType ?? "").startsWith("text/html")
+    };
+  }).filter((entry) => entry.status >= 400 || entry.document);
+  return {
+    actions: actions.slice(-lastActions),
+    totalActions: actions.length,
+    failedActions: actions.filter((action) => action.error !== void 0),
+    consoleErrors: [...new Set(findings.flatMap((finding) => finding.consoleErrors))],
+    network,
+    pageTitles: [...new Set(findings.flatMap((finding) => finding.pageTitles))],
+    maskedValues: secrets.length
+  };
+}
+function traceSecrets(zipBytes) {
+  const entries = unzipSync(zipBytes, { filter: (file2) => TRACE_FILE.test(file2.name) });
+  return collectSecrets(Object.values(entries).flatMap((bytes) => parseLines(strFromU8(bytes))));
+}
+function errorContextExcerpt(markdown, secrets, maxLength = 4e3) {
+  const sections = markdown.split(/^(?=# )/m);
+  const wanted = sections.filter((section) => /^# (Error details|Page snapshot)\b/.test(section));
+  const excerpt = stripAnsi(redact(wanted.join("").trim(), secrets));
+  return excerpt.length <= maxLength ? excerpt : `${excerpt.slice(0, maxLength)}
+\u2026 (truncated, ${excerpt.length} characters in total)`;
+}
+function stripAnsi(text3) {
+  return text3.replace(/\u001b\[[0-9;]*m/g, "");
+}
+
+// src/tools/builds.ts
+function text2(value) {
+  return { content: [{ type: "text", text: value }] };
+}
+function mapBuild(build) {
+  return {
+    id: build.id,
+    pipeline: build.definition.name,
+    buildNumber: build.buildNumber,
+    status: build.status,
+    result: build.result ?? null,
+    branch: build.sourceBranch.replace(/^refs\/heads\//, ""),
+    commit: build.sourceVersion.slice(0, 9),
+    reason: build.reason,
+    requestedFor: build.requestedFor?.displayName ?? "",
+    queueTime: build.queueTime ?? null,
+    finishTime: build.finishTime ?? null,
+    url: build._links?.web?.href ?? ""
+  };
+}
+async function requireArtifact(client2, buildId, name) {
+  const artifacts = await client2.listBuildArtifacts(buildId);
+  const artifact = artifacts.find((candidate) => candidate.name === name);
+  if (!artifact) {
+    const available = artifacts.map((candidate) => candidate.name).join(", ") || "none";
+    throw new Error(`Build ${buildId} has no artifact "${name}" (available: ${available})`);
+  }
+  return artifact;
+}
+function lastLines(log, count) {
+  const lines = log.split(/\r?\n/).map((line) => line.replace(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z /, "")).filter((line) => line.trim() !== "");
+  return lines.slice(-count).join("\n");
+}
+function registerBuildTools(server2, client2) {
+  server2.tool(
+    "ado_list_builds",
+    "List pipeline runs, newest first. Filter by pipeline (name, e.g. 'CI', or definition id), branch and result.",
+    {
+      pipeline: external_exports.string().optional().describe("Pipeline name (exact, case-insensitive) or numeric definition id"),
+      branch: external_exports.string().optional().describe("Branch without refs/heads/ (e.g. main)"),
+      result: external_exports.enum(["succeeded", "partiallySucceeded", "failed", "canceled"]).optional().describe("Only runs with this result"),
+      top: external_exports.number().int().min(1).max(50).default(10).describe("Maximum number of runs")
+    },
+    async ({ pipeline, branch, result, top }) => {
+      let definitionId;
+      if (pipeline !== void 0) {
+        if (/^\d+$/.test(pipeline)) {
+          definitionId = Number(pipeline);
+        } else {
+          const definitions = await client2.findBuildDefinitions(pipeline);
+          if (definitions.length === 0) return text2(`No pipeline named "${pipeline}".`);
+          definitionId = definitions[0].id;
+        }
+      }
+      const builds = await client2.listBuilds({ definitionId, branch, result, top });
+      return text2(JSON.stringify(builds.map(mapBuild), null, 2));
+    }
+  );
+  server2.tool(
+    "ado_get_build_failures",
+    "Failed steps of a pipeline run: step name, error messages and the last lines of the step's log. Returns an empty list for a run without failed steps.",
+    {
+      buildId: external_exports.number().int().positive().describe("Build (run) id"),
+      logLines: external_exports.number().int().min(0).max(200).default(40).describe("Log lines per failed step (0 = none)")
+    },
+    async ({ buildId, logLines }) => {
+      const [build, records] = await Promise.all([client2.getBuild(buildId), client2.getBuildTimeline(buildId)]);
+      const failedTasks = records.filter((record2) => record2.type === "Task" && record2.result === "failed").sort((a3, b) => (a3.order ?? 0) - (b.order ?? 0));
+      const failures = [];
+      for (const task of failedTasks) {
+        const errors = (task.issues ?? []).filter((issue2) => issue2.type === "error").map((issue2) => issue2.message);
+        const logTail = logLines > 0 && task.log ? lastLines(await client2.getBuildLog(buildId, task.log.id), logLines) : void 0;
+        failures.push({ step: task.name, errors, logTail });
+      }
+      return text2(JSON.stringify({ build: mapBuild(build), failedSteps: failures }, null, 2));
+    }
+  );
+  server2.tool(
+    "ado_get_test_failures",
+    "Failed test results published by a pipeline run (PublishTestResults), with error message and stack trace. Returns an empty list when the run published no failed results.",
+    {
+      buildId: external_exports.number().int().positive().describe("Build (run) id"),
+      top: external_exports.number().int().min(1).max(200).default(25).describe("Maximum failed results per test run")
+    },
+    async ({ buildId, top }) => {
+      const build = await client2.getBuild(buildId);
+      const runs = await client2.getTestRunsForBuild(build.uri);
+      const result = [];
+      for (const run of runs) {
+        const failed = await client2.getFailedTestResults(run.id, top);
+        result.push({
+          run: run.name,
+          total: run.totalTests,
+          passed: run.passedTests,
+          failed: failed.map((test) => ({
+            title: test.testCaseTitle,
+            automatedTestName: test.automatedTestName,
+            durationMs: test.durationInMs ?? null,
+            errorMessage: (test.errorMessage ?? "").slice(0, 1e3),
+            stackTrace: (test.stackTrace ?? "").slice(0, 1500)
+          }))
+        });
+      }
+      return text2(JSON.stringify({ build: mapBuild(build), testRuns: result }, null, 2));
+    }
+  );
+  server2.tool(
+    "ado_download_build_artifact",
+    "Download a pipeline artifact into <project>/.claude/artifacts/build-<id>/<name>/ (keep it gitignored). With path, only that one file (relative to the artifact root, e.g. 'index.html'); without, the whole artifact \u2014 which can be hundreds of MB for an E2E report. Playwright traces in it can contain secrets (e.g. typed passwords) in clear text: never copy them out of that directory or quote their raw content.",
+    {
+      buildId: external_exports.number().int().positive().describe("Build (run) id"),
+      name: external_exports.string().min(1).describe("Artifact name (e.g. playwright-report)"),
+      path: external_exports.string().min(1).optional().describe("Single file inside the artifact, relative to its root")
+    },
+    async ({ buildId, name, path }) => {
+      const artifact = await requireArtifact(client2, buildId, name);
+      const targetDir = artifactDir(buildId, name);
+      if (path !== void 0) {
+        const target = resolveInside(targetDir, path);
+        const bytes = await client2.downloadArtifact(artifact, `/${path.replace(/^\/+/, "")}`);
+        mkdirSync2(dirname2(target), { recursive: true });
+        writeFileSync2(target, bytes);
+        return text2(`Downloaded ${path} (${bytes.length} bytes) to ${target}`);
+      }
+      const zip = await client2.downloadArtifact(artifact);
+      const entries = unzipSync(zip);
+      let files = 0;
+      for (const [entryName, bytes] of Object.entries(entries)) {
+        if (entryName.endsWith("/")) continue;
+        const inner = entryName.startsWith(`${name}/`) ? entryName.slice(name.length + 1) : entryName;
+        const target = resolveInside(targetDir, inner);
+        mkdirSync2(dirname2(target), { recursive: true });
+        writeFileSync2(target, bytes);
+        files++;
+      }
+      return text2(`Extracted ${files} files (${zip.length} bytes zipped) to ${targetDir}`);
+    }
+  );
+  server2.tool(
+    "ado_get_playwright_failures",
+    "Diagnose failed Playwright tests of a pipeline run from its HTML-report artifact, without downloading the whole report: reads the report index, then fetches only the failed tests' trace, screenshot and error-context. Per test it returns the error, a trace summary (last actions, failed actions, console errors, HTTP >= 400 and page loads, page titles), the error-context excerpt (error + page snapshot) and the local screenshot path. Fill values (passwords) are masked; headers, cookies and request bodies are never read.",
+    {
+      buildId: external_exports.number().int().positive().describe("Build (run) id"),
+      artifact: external_exports.string().min(1).default("playwright-report").describe("Name of the HTML-report artifact"),
+      maxTests: external_exports.number().int().min(1).max(20).default(5).describe("Failed tests to analyse in depth; the rest are listed by title"),
+      testFilter: external_exports.string().min(1).optional().describe("Analyse only failures whose test title, suite, project name or file path contains this text (case-insensitive), e.g. 'TC-01' or 'checkout'. Without it the first maxTests failures are analysed, which on a run with many failures may never reach the ones you are after."),
+      lastActions: external_exports.number().int().min(1).max(50).default(12).describe("Trace actions to show per test")
+    },
+    async ({ buildId, artifact: artifactName, maxTests, testFilter, lastActions }) => {
+      const artifact = await requireArtifact(client2, buildId, artifactName);
+      const targetDir = artifactDir(buildId, artifactName);
+      const indexHtml = (await client2.downloadArtifact(artifact, "/index.html")).toString("utf8");
+      const failedTests = findFailedTests(readEmbeddedReport(indexHtml));
+      const fetchAttachment = async (attachmentPath) => {
+        const bytes = await client2.downloadArtifact(artifact, `/${attachmentPath}`);
+        const target = resolveInside(targetDir, attachmentPath);
+        mkdirSync2(dirname2(target), { recursive: true });
+        writeFileSync2(target, bytes);
+        return { bytes, target };
+      };
+      const selection = selectFailedTests(failedTests, { filter: testFilter, maxTests });
+      const analysed = [];
+      for (const test of selection.analysed) {
+        const attempt = test.attempts[test.attempts.length - 1];
+        const byName = (name) => attempt.attachments.find((attachment) => attachment.name === name && attachment.path);
+        const trace = byName("trace");
+        const traceBytes = trace?.path ? (await fetchAttachment(trace.path)).bytes : void 0;
+        const secrets = traceBytes ? traceSecrets(traceBytes) : [];
+        const errorContext = byName("error-context");
+        const errorContextFile = errorContext?.path ? await fetchAttachment(errorContext.path) : void 0;
+        const errorContextText = errorContextFile ? errorContextExcerpt(errorContextFile.bytes.toString("utf8"), secrets) : void 0;
+        const screenshot = byName("screenshot");
+        const screenshotPath = screenshot?.path ? (await fetchAttachment(screenshot.path)).target : void 0;
+        analysed.push({
+          test: [...test.titlePath.filter((part) => part !== ""), test.title].join(" \u203A "),
+          project: test.projectName,
+          location: `${test.file}:${test.line}`,
+          outcome: test.outcome,
+          attempts: test.attempts.map((each) => `${each.retry}:${each.status}`).join(", "),
+          errors: attempt.errors.map(
+            (error62) => stripAnsi(redact(error62, secrets)).split("\n").filter((line) => line.trim() !== "").slice(0, 6).join("\n")
+          ),
+          trace: traceBytes ? summarizeTrace(traceBytes, lastActions) : "no trace attachment",
+          errorContext: errorContextText ?? "no error-context attachment",
+          errorContextFile: errorContextFile?.target ?? null,
+          screenshot: screenshotPath ?? "no screenshot attachment"
+        });
+      }
+      const summary = {
+        buildId,
+        failed: failedTests.filter((test) => test.outcome === "unexpected").length,
+        flaky: failedTests.filter((test) => test.outcome === "flaky").length,
+        analysed: analysed.length,
+        downloadedTo: targetDir,
+        // Separate from `filteredOut` on purpose: these matched and were merely
+        // capped, so raising maxTests reaches them. See selectFailedTests().
+        notAnalysed: selection.overCap.map((test) => `${test.outcome} [${test.projectName}] ${test.title} (${test.file}:${test.line})`),
+        ...testFilter === void 0 ? {} : {
+          testFilter,
+          filteredOut: selection.filteredOut,
+          // An empty result under a filter must not read like "no failures".
+          ...analysed.length === 0 && failedTests.length > 0 ? {
+            note: `No failed test matches ${JSON.stringify(testFilter)}. This run HAS ${failedTests.length} failed test(s) \u2014 they are all excluded by the filter, not absent. Drop testFilter or widen it.`,
+            allFailures: failedTests.map(
+              (test) => `${test.outcome} [${test.projectName}] ${test.title} (${test.file}:${test.line})`
+            )
+          } : {}
+        },
+        tests: analysed
+      };
+      return text2(JSON.stringify(summary, null, 2));
+    }
+  );
+}
+
 // src/index.ts
 var server = new McpServer({
   name: "azure-devops",
   version: "1.0.0"
 });
-var client = createClientFromEnv();
-registerReadTools(server, client);
-registerWriteTools(server, client);
+var config2 = loadProjectConfig(projectConfigPath());
+var client = createClientFromEnv(config2);
+registerReadTools(server, client, config2);
+registerWriteTools(server, client, config2);
+registerPullRequestTools(server, client, config2);
+registerBuildTools(server, client);
 var transport = new StdioServerTransport();
 await server.connect(transport);
 /*! Bundled license information:

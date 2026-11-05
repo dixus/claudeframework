@@ -1,0 +1,2 @@
+# Per-module tsc output for the tests; dist/ holds only the committed bundle.
+.test-build/

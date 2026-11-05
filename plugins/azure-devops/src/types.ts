@@ -45,6 +45,8 @@ export interface WorkItem {
   areaPath: string;
   iterationPath: string;
   url: string;
+  /** Configured boolean flags (`flags` in .claude/azure-devops.json), keyed by flag name. */
+  [flag: string]: unknown;
   /** Resolution metadata (only set when the item is Resolved/Closed). */
   resolvedReason?: string;
   resolvedBy?: string;
@@ -112,6 +114,8 @@ export interface AdoRelation {
 /** Raw response from the Work Items API. */
 export interface AdoWorkItemResponse {
   id: number;
+  /** Revision; a JSON-patch `test /rev` rejects an update after a field change (link edits do not raise it). */
+  rev?: number;
   fields: AdoWorkItemFields;
   relations?: AdoRelation[];
   _links?: { html?: { href: string } };
@@ -121,6 +125,11 @@ export interface AdoWorkItemResponse {
 /** Raw response from WIQL query. */
 export interface AdoWiqlResponse {
   workItems: Array<{ id: number; url: string }>;
+}
+
+/** Raw response from a WIQL query over WorkItemLinks (source is null for the root rows). */
+export interface AdoWiqlLinksResponse {
+  workItemRelations: Array<{ rel: string | null; source: { id: number } | null; target: { id: number } }>;
 }
 
 /** Raw response from the Comments API. */
@@ -137,5 +146,97 @@ export interface AdoCommentsResponse {
 export interface AdoConfig {
   org: string;
   project: string;
+  /** Git repository name; defaults to the project name. */
+  repo: string;
   pat: string;
+}
+
+/** Raw build from the Azure DevOps Build REST API. */
+export interface AdoBuildResponse {
+  id: number;
+  buildNumber: string;
+  status: string;
+  result?: string;
+  uri: string;
+  sourceBranch: string;
+  sourceVersion: string;
+  queueTime?: string;
+  finishTime?: string;
+  reason: string;
+  definition: { id: number; name: string };
+  requestedFor?: { displayName: string };
+  _links?: { web?: { href: string } };
+}
+
+/** One record of a build timeline (stage, job or task). */
+export interface AdoTimelineRecord {
+  id: string;
+  parentId?: string;
+  type: string;
+  name: string;
+  state: string;
+  result?: string;
+  order?: number;
+  log?: { id: number };
+  issues?: Array<{ type: string; message: string }>;
+}
+
+export interface AdoTestRunResponse {
+  id: number;
+  name: string;
+  totalTests: number;
+  passedTests: number;
+  unanalyzedTests: number;
+}
+
+export interface AdoTestResultResponse {
+  testCaseTitle: string;
+  automatedTestName: string;
+  automatedTestStorage?: string;
+  outcome: string;
+  durationInMs?: number;
+  errorMessage?: string;
+  stackTrace?: string;
+}
+
+export interface AdoArtifactResponse {
+  name: string;
+  resource: { type: string; downloadUrl: string };
+}
+
+/** Reviewer entry of a pull request (IdentityRefWithVote). */
+export interface PullRequestReviewer {
+  id: string;
+  displayName: string;
+  vote: number;
+  isRequired?: boolean;
+}
+
+/** Raw pull request from the Azure DevOps Git REST API. */
+export interface AdoPullRequestResponse {
+  pullRequestId: number;
+  title: string;
+  description?: string;
+  status: string;
+  sourceRefName: string;
+  targetRefName: string;
+  isDraft?: boolean;
+  createdBy?: { displayName: string };
+  creationDate?: string;
+  reviewers?: PullRequestReviewer[];
+}
+
+/** Normalized pull request returned by the MCP tools. */
+export interface PullRequest {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  sourceBranch: string;
+  targetBranch: string;
+  isDraft: boolean;
+  createdBy: string;
+  /** Identity ids here are what ado_add_pull_request_reviewer takes. */
+  reviewers: PullRequestReviewer[];
+  url: string;
 }
