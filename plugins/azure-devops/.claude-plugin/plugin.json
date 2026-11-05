@@ -1,0 +1,7 @@
+{
+  "name": "azure-devops",
+  "description": "MCP server for Azure DevOps work items (read, search, create, update, link, comment, attachments). Organization and project come from the consuming project's .claude/azure-devops.json.",
+  "author": { "name": "dixus", "url": "https://github.com/dixus" },
+  "homepage": "https://github.com/dixus/claudeframework",
+  "license": "MIT"
+}

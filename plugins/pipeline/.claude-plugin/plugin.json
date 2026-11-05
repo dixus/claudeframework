@@ -1,0 +1,7 @@
+{
+  "name": "pipeline",
+  "description": "Spec-driven delivery pipeline: spec, implement, review, fix, ship, plus changelog/release, self-improvement skills, agents and guard hooks.",
+  "author": { "name": "dixus", "url": "https://github.com/dixus" },
+  "homepage": "https://github.com/dixus/claudeframework",
+  "license": "MIT"
+}

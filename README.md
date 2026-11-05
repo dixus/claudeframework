@@ -34,26 +34,34 @@ Claude Code is powerful but context-hungry. Without structure:
 
 ## Quick start
 
-**1. Add the framework to your project:**
+**1. Add the framework to your project** — it is a Claude Code plugin marketplace with two plugins:
 
-Option A — **Symlink** (recommended): keeps all projects in sync with one source of truth.
+| Plugin | Contents |
+|---|---|
+| `pipeline` | all skills (`/pipeline:ship`, `/pipeline:0_spec`, …), the `code-reviewer` and `explorer` agents, the guard hooks and the instincts |
+| `azure-devops` | the Azure DevOps work-item MCP server (optional, see below) |
 
-```bash
-git clone https://github.com/dixus/claudeframework.git ~/claudeframework
-ln -s ~/claudeframework/.claude/skills  your-project/.claude/skills
-ln -s ~/claudeframework/.claude/agents  your-project/.claude/agents
-ln -s ~/claudeframework/.claude/rules   your-project/.claude/rules
-ln -s ~/claudeframework/.claude/scripts your-project/.claude/scripts
-```
-
-Only the shared framework pieces are linked. Project-specific directories (`context/` with the project's lessons, `hooks/`, `input/`, `specs/`, `reviews/`, `handoffs/`, `settings.json`) stay local. Update the framework once, every project gets the latest skills. On Windows, or to let the framework do the linking for you (junctions, backups, lesson-cycle files), run `/deploy <path-to-your-project>` from this repo instead.
-
-Option B — **Copy**: full ownership, diverge freely.
+Run once in your project and commit the `.claude/settings.json` it writes:
 
 ```bash
-git clone https://github.com/dixus/claudeframework.git
-cp -r claudeframework/.claude your-project/
+claude plugin marketplace add dixus/claudeframework --scope project
+claude plugin install pipeline@claudeframework --scope project
 ```
+
+The result in `.claude/settings.json` — pin `ref` to a branch or tag to control when projects get updates:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "claudeframework": { "source": { "source": "github", "repo": "dixus/claudeframework", "ref": "main" } }
+  },
+  "enabledPlugins": { "pipeline@claudeframework": true }
+}
+```
+
+Every checkout and every git worktree of the project then gets the same plugin version. Each developer confirms the folder trust dialog once; until then Claude Code ignores project marketplaces without a message. Project-specific directories (`context/` with the project's lessons, `input/`, `specs/`, `reviews/`, `handoffs/`, own hooks, permissions in `settings.json`) stay in the project — plugins cannot grant permissions.
+
+Rules: plugins cannot ship always-loaded rule files. The `pipeline` plugin injects `rules/instincts.md` through a SessionStart hook; a project that keeps its own `.claude/rules/instincts.md` uses that file instead.
 
 **2. Update `CLAUDE.md`** in your project root with your tech stack, commands, and architecture.
 
@@ -216,21 +224,18 @@ The framework ships with an optional MCP (Model Context Protocol) server that gi
 
 ### Setup (one-time per developer)
 
-1. Update `.mcp.json` at the repo root — replace `your-org` and `your-project` with your Azure DevOps organisation and project
-2. Create a PAT at `https://dev.azure.com/<your-org>/_usersSettings/tokens` with **Work Items > Read & Write** scope
-3. Create `.claude/mcp-servers/azure-devops/.env` (gitignored):
+1. Enable the plugin in the project: `claude plugin install azure-devops@claudeframework --scope project`
+2. Commit `.claude/azure-devops.json` with the organisation and project:
+   ```json
+   { "organization": "your-org", "project": "your-project" }
+   ```
+3. Create a PAT at `https://dev.azure.com/<your-org>/_usersSettings/tokens` with **Work Items > Read & Write** scope and put it into `.claude/azure-devops.env` (add the file to `.gitignore`):
    ```
    AZURE_DEVOPS_PAT=your-token-here
    ```
-4. Build the server:
-   ```bash
-   cd .claude/mcp-servers/azure-devops
-   npm install
-   npm run build
-   ```
-5. Reload VS Code (`Ctrl+Shift+P` → *Developer: Reload Window*)
+4. Restart Claude Code.
 
-Each developer maintains their own `.env`. Without a PAT the MCP server simply doesn't start and the framework falls back to the non-MCP path.
+The plugin ships a prebuilt bundle (`plugins/azure-devops/dist/index.js`), so nothing is built on install. Environment variables `AZURE_DEVOPS_ORG`, `AZURE_DEVOPS_PROJECT` and `AZURE_DEVOPS_PAT` override the files. Each developer maintains their own PAT. Without a PAT the MCP server simply doesn't start and the framework falls back to the non-MCP path.
 
 ### Available tools (13)
 
@@ -440,6 +445,31 @@ npm run build      # Production build
 - [Skills reference](.claude/docs/skills-reference.md)
 - [Knowledge base](.claude/docs/knowledge-base.md)
 - [Changelog](.claude/docs/README.md#changelog) — one row per framework change, maintained with every skill/feature update
+
+---
+
+## Developing the framework
+
+The plugins live in `plugins/<name>/`; `.claude-plugin/marketplace.json` lists them. Never edit the installed copy under `~/.claude/plugins/cache/` — it is replaced on every update.
+
+**Work on a plugin locally** without touching the installed version: start Claude Code in any project with the checkout loaded in place —
+
+```bash
+claude --plugin-dir ~/claudeframework/plugins/pipeline
+```
+
+A `--plugin-dir` plugin replaces the installed plugin of the same name for that session (silently). After editing skills or hooks run `/reload-plugins`. Validate before pushing: `claude plugin validate .`
+
+**Tests:** `node plugins/pipeline/scripts/tests/lesson-cycle.test.mjs`, `node plugins/pipeline/hooks/protect-secrets.cases.js`, `node tools/leak-check.test.mjs`. After changing the MCP server: `cd plugins/azure-devops && npm install && npm run build` and commit `dist/index.js`.
+
+**An improvement made in a project comes back like this:**
+
+1. Make the change in the framework checkout, not in the project — the project only consumes the plugin.
+2. Test it against the project with `claude --plugin-dir <checkout>/plugins/<name>` from the project folder.
+3. Remove everything project-specific (names, hosts, org, conventions); project values belong in the project's own files (`.claude/rules/`, `.claude/azure-devops.json`, CLAUDE.md).
+4. Push to the framework. Projects pinned to a moving `ref` get it with `/plugin marketplace update claudeframework`; projects pinned to a tag get it when the tag moves.
+
+**Leak guard (recommended for every maintainer clone):** `node tools/leak-check.mjs --install` adds a pre-push hook that refuses a push when the pushed tree, an added line of a new commit, or a new commit's message/author matches a term from `.git/info/blocklist.txt` — a private, never-committed list (one regex per line). Without that list every push is refused.
 
 ---
 

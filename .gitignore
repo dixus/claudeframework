@@ -7,6 +7,8 @@ out/
 
 # Build
 dist/
+# The plugin MCP server ships its bundle: plugins are not npm-installed on install.
+!plugins/azure-devops/dist/
 *.tsbuildinfo
 
 # Env files

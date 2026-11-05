@@ -1,0 +1,17 @@
+{
+  "name": "claudeframework",
+  "owner": { "name": "dixus", "url": "https://github.com/dixus" },
+  "description": "Spec-driven Claude Code pipeline and an Azure DevOps MCP server.",
+  "plugins": [
+    {
+      "name": "pipeline",
+      "source": "./plugins/pipeline",
+      "description": "Spec → implement → review → fix → ship pipeline, changelog/release, self-improvement skills, agents and guard hooks."
+    },
+    {
+      "name": "azure-devops",
+      "source": "./plugins/azure-devops",
+      "description": "Azure DevOps work-item MCP server, configured per project."
+    }
+  ]
+}
